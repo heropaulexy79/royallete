@@ -1,0 +1,20 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Menu items: Anyone can view, anyone/admin can manage
+    match /foodItems/{itemId} {
+      allow read, write: if true;
+    }
+
+    // Orders: Anyone can create an order, read or update order status
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+
+    // General fallback for all collections in this project
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

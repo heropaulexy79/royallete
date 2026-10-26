@@ -1,10 +1,10 @@
-export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'assigned' | 'delivered';
+export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
 
 export interface User {
   id: string;
   name: string;
   phone: string;
-  role: 'customer' | 'admin' | 'rider';
+  role: 'customer' | 'admin';
 }
 
 export interface FoodItem {
@@ -12,9 +12,10 @@ export interface FoodItem {
   name: string;
   price: number;
   category: string;
+  description?: string;
   image_url: string;
   is_available: boolean;
-  restaurant_id: string;
+  restaurant_id?: string;
 }
 
 export interface OrderItem {
@@ -28,20 +29,10 @@ export interface Order {
   id?: string;
   customer_name: string;
   phone: string;
-  address: string;
+  order_notes?: string;
   items: OrderItem[];
   status: OrderStatus;
   total_price: number;
-  payment_method: 'cod' | 'paystack';
-  payment_status: 'pending' | 'paid';
+  payment_method: 'whatsapp';
   created_at: any; // Firestore Timestamp
-  rider_id?: string;
-  rider_name?: string;
-}
-
-export interface Rider {
-  id: string;
-  name: string;
-  phone: string;
-  is_available: boolean;
 }

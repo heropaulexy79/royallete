@@ -6,19 +6,45 @@ import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useParams } from 'next/navigation';
 import { Order, OrderStatus } from '@/types/schema';
-import { Check, Clock, Package, Bike, Home, Utensils, AlertCircle } from 'lucide-react';
+import { Check, Clock, Package, Utensils, MessageSquare, CheckCircle2, FileText, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
+import Link from 'next/link';
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string, icon: any, color: string, description: string }> = {
-  pending: { label: 'Order Received', icon: Clock, color: 'text-amber-500', description: 'Your order has been received and is waiting for restaurant approval.' },
-  accepted: { label: 'Order Accepted', icon: Check, color: 'text-emerald-500', description: 'The restaurant has accepted your order and will start preparing shortly.' },
-  preparing: { label: 'Preparing', icon: Utensils, color: 'text-orange-500', description: 'Our chefs are working their magic to prepare your delicious meal.' },
-  ready: { label: 'Ready for Pickup', icon: Package, color: 'text-brand-primary', description: 'Your order is packed and ready! We are waiting for a rider.' },
-  assigned: { label: 'On the Way', icon: Bike, color: 'text-blue-500', description: 'Our rider is en route to your location. Get ready!' },
-  delivered: { label: 'Delivered', icon: Home, color: 'text-brand-secondary', description: 'Enjoy your meal! The order has been successfully delivered.' },
+  pending: { 
+    label: 'Order Placed on WhatsApp', 
+    icon: Clock, 
+    color: 'text-amber-500', 
+    description: 'Your order details have been received. The kitchen has been notified.' 
+  },
+  preparing: { 
+    label: 'Preparing in Kitchen', 
+    icon: Utensils, 
+    color: 'text-orange-500', 
+    description: 'Our chefs are cooking your fresh meal right now!' 
+  },
+  ready: { 
+    label: 'Ready for Pickup / Dine-in', 
+    icon: Package, 
+    color: 'text-emerald-500', 
+    description: 'Your food is hot, packed, and ready for you to collect!' 
+  },
+  completed: { 
+    label: 'Order Completed', 
+    icon: CheckCircle2, 
+    color: 'text-brand-primary', 
+    description: 'Thank you for ordering with Royallete! We hope you enjoyed your meal.' 
+  },
+  cancelled: {
+    label: 'Order Cancelled',
+    icon: Clock,
+    color: 'text-red-500',
+    description: 'This order was cancelled.'
+  }
 };
 
-const STEPS: OrderStatus[] = ['pending', 'accepted', 'preparing', 'ready', 'assigned', 'delivered'];
+const STEPS: OrderStatus[] = ['pending', 'preparing', 'ready', 'completed'];
 
 export default function TrackingPage() {
   const { id } = useParams();
@@ -27,25 +53,25 @@ export default function TrackingPage() {
 
   useEffect(() => {
     if (!id || id === 'demo-id') {
-      // Mock for demo
       setOrder({
-        customer_name: 'John Doe',
-        phone: '1234567890',
-        address: '123 Luxury Lane, Royal City',
-        items: [],
+        customer_name: 'Customer',
+        phone: '07030574580',
+        order_notes: 'Pickup ready in 20 mins',
+        items: [
+          { food_item_id: '1', name: 'Royal Jollof Rice Special', price: 4000, quantity: 2 }
+        ],
         status: 'preparing',
-        total_price: 5000,
-        payment_method: 'cod',
-        payment_status: 'pending',
+        total_price: 8000,
+        payment_method: 'whatsapp',
         created_at: new Date(),
       });
       setLoading(false);
       return;
     }
 
-    const unsub = onSnapshot(doc(db, 'orders', id as string), (doc) => {
-      if (doc.exists()) {
-        setOrder({ id: doc.id, ...doc.data() } as Order);
+    const unsub = onSnapshot(doc(db, 'orders', id as string), (docSnap) => {
+      if (docSnap.exists()) {
+        setOrder({ id: docSnap.id, ...docSnap.data() } as Order);
       }
       setLoading(false);
     });
@@ -58,7 +84,7 @@ export default function TrackingPage() {
       <main className="min-h-screen bg-slate-50">
         <Navbar />
         <div className="flex items-center justify-center p-20">
-          <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-primary border-t-transparent" />
         </div>
       </main>
     );
@@ -68,131 +94,132 @@ export default function TrackingPage() {
     return (
       <main className="min-h-screen bg-slate-50">
         <Navbar />
-        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-          <AlertCircle size={64} className="text-red-500 mx-auto mb-6" />
-          <h1 className="text-3xl font-bold mb-4">Order Not Found</h1>
-          <p className="text-slate-500 mb-8">We couldn't find the order you're looking for. Please check your order ID.</p>
+        <div className="max-w-md mx-auto py-20 text-center px-4">
+          <h2 className="text-2xl font-bold text-brand-dark mb-4">Order Not Found</h2>
+          <p className="text-slate-500 mb-6">We couldn't locate this order in our system.</p>
+          <Link href="/menu" className="btn-primary">Back to Menu</Link>
         </div>
       </main>
     );
   }
 
-  const currentStepIndex = STEPS.indexOf(order.status);
+  const currentStatusIndex = STEPS.indexOf(order.status as OrderStatus);
+  const currentConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+  const StatusIcon = currentConfig.icon;
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 pb-20">
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="mb-12">
-          <h1 className="text-3xl font-black text-brand-dark mb-2">Track Order</h1>
-          <p className="text-slate-500">Order ID: <span className="font-mono text-brand-primary">#{id?.toString().slice(-8).toUpperCase()}</span></p>
-        </div>
 
-        {/* Current Status Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mb-8 overflow-hidden relative"
-        >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-bl-full -mr-8 -mt-8" />
-          
-          <div className="flex items-start gap-6 relative">
-            <div className={`p-4 rounded-2xl bg-slate-50 ${STATUS_CONFIG[order.status].color}`}>
-              {React.createElement(STATUS_CONFIG[order.status].icon, { size: 32 })}
-            </div>
-            <div>
-              <span className="text-xs font-bold text-brand-primary uppercase tracking-tighter">Current Status</span>
-              <h2 className="text-2xl font-black text-brand-dark mb-2">{STATUS_CONFIG[order.status].label}</h2>
-              <p className="text-slate-500">{STATUS_CONFIG[order.status].description}</p>
-            </div>
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Status Header */}
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mb-8 text-center relative overflow-hidden">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-xs font-bold text-slate-600 mb-4 uppercase tracking-wider">
+            Order Ref: #{order.id ? order.id.slice(-6).toUpperCase() : 'DEMO'}
           </div>
-        </motion.div>
 
-        {/* Progress Tracker */}
-        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mb-8">
-          <div className="relative">
-            {STEPS.map((step, idx) => {
-              const isCompleted = idx <= currentStepIndex;
-              const isCurrent = idx === currentStepIndex;
-              const Config = STATUS_CONFIG[step];
+          <div className="w-20 h-20 rounded-full bg-brand-primary/10 flex items-center justify-center mx-auto mb-4">
+            <StatusIcon size={40} className={currentConfig.color} />
+          </div>
 
-              return (
-                <div key={step} className="flex gap-6 mb-8 last:mb-0 relative">
-                  {/* Line */}
-                  {idx !== STEPS.length - 1 && (
-                    <div className={`absolute left-[15px] top-8 w-0.5 h-full ${idx < currentStepIndex ? 'bg-brand-secondary' : 'bg-slate-100'}`} />
-                  )}
+          <h1 className="text-3xl font-black text-brand-dark mb-2">{currentConfig.label}</h1>
+          <p className="text-slate-500 max-w-md mx-auto text-sm">{currentConfig.description}</p>
 
-                  {/* Dot */}
-                  <div className={`z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 ${
-                    isCurrent ? 'bg-brand-primary ring-4 ring-brand-primary/20 scale-125' : 
-                    isCompleted ? 'bg-brand-secondary' : 'bg-slate-100'
-                  }`}>
-                    {isCompleted ? <Check size={16} className="text-white" /> : <div className="w-2 h-2 rounded-full bg-slate-300" />}
+          {/* Stepper */}
+          <div className="mt-10 max-w-2xl mx-auto">
+            <div className="flex justify-between relative">
+              <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 z-0" />
+              <div 
+                className="absolute top-1/2 left-0 h-1 bg-brand-primary -translate-y-1/2 z-0 transition-all duration-500" 
+                style={{ width: `${Math.max(0, currentStatusIndex / (STEPS.length - 1)) * 100}%` }}
+              />
+
+              {STEPS.map((step, index) => {
+                const isPassed = index <= currentStatusIndex;
+                const isCurrent = index === currentStatusIndex;
+
+                return (
+                  <div key={step} className="relative z-10 flex flex-col items-center">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                      isCurrent 
+                        ? 'bg-brand-primary text-white ring-4 ring-brand-primary/20 scale-110' 
+                        : isPassed 
+                        ? 'bg-brand-primary text-white' 
+                        : 'bg-white border-2 border-slate-200 text-slate-400'
+                    }`}>
+                      {isPassed ? <Check size={16} /> : index + 1}
+                    </div>
+                    <span className={`text-[11px] font-bold mt-2 uppercase tracking-tight hidden sm:block ${
+                      isCurrent ? 'text-brand-dark font-black' : isPassed ? 'text-slate-600' : 'text-slate-400'
+                    }`}>
+                      {STATUS_CONFIG[step].label.split(' ')[0]}
+                    </span>
                   </div>
-
-                  {/* Content */}
-                  <div className={`flex-1 pb-4 ${isCurrent ? 'opacity-100' : isCompleted ? 'opacity-100' : 'opacity-40'}`}>
-                    <h3 className={`font-bold ${isCurrent ? 'text-brand-dark text-lg' : 'text-slate-600'}`}>{Config.label}</h3>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Delivery Details */}
-        <div className="bg-brand-dark text-white rounded-3xl p-8 shadow-xl">
-          <h3 className="text-xl font-bold mb-6">Delivery Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <UserIcon size={20} className="text-brand-primary" />
-                <div>
-                  <p className="text-xs text-slate-400 font-bold uppercase">Customer</p>
-                  <p className="font-bold">{order.customer_name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone size={20} className="text-brand-primary" />
-                <div>
-                  <p className="text-xs text-slate-400 font-bold uppercase">Phone</p>
-                  <p className="font-bold">{order.phone}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <MapPin size={24} className="text-brand-primary mt-1" />
-              <div>
-                <p className="text-xs text-slate-400 font-bold uppercase">Address</p>
-                <p className="font-bold leading-relaxed">{order.address}</p>
-              </div>
-            </div>
-          </div>
-          
-          {order.rider_name && (
-            <div className="mt-8 pt-8 border-t border-slate-700">
-               <div className="flex items-center gap-4 bg-slate-800/50 p-4 rounded-2xl">
-                  <div className="w-12 h-12 bg-blue-500/20 text-blue-500 rounded-xl flex items-center justify-center">
-                    <Bike size={24} />
-                  </div>
+        {/* Order Details & WhatsApp Contact */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <h3 className="font-bold text-brand-dark text-lg mb-4 flex items-center gap-2">
+              <ShoppingBag size={20} className="text-brand-primary" /> Ordered Dishes
+            </h3>
+            <div className="space-y-3 mb-6">
+              {order.items.map((item, index) => (
+                <div key={index} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-none">
                   <div>
-                    <p className="text-xs text-slate-400 font-bold uppercase">Assigned Rider</p>
-                    <p className="font-black text-lg">{order.rider_name}</p>
+                    <span className="font-bold text-brand-dark text-sm">{item.quantity}x {item.name}</span>
+                    <p className="text-xs text-slate-400">₦{item.price.toLocaleString()} each</p>
                   </div>
-               </div>
+                  <span className="font-bold text-brand-dark text-sm">
+                    ₦{(item.price * item.quantity).toLocaleString()}
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
+
+            {order.order_notes && (
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-xs text-amber-900 mb-4 flex items-start gap-2.5">
+                <FileText size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <strong className="font-bold block mb-0.5">Order Notes:</strong>
+                  {order.order_notes}
+                </div>
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+              <span className="font-bold text-slate-600">Total Price</span>
+              <span className="text-2xl font-black text-brand-primary">₦{order.total_price.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* WhatsApp Support Box */}
+          <div className="bg-brand-dark text-white rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 bg-[#25D366]/20 text-[#25D366] rounded-2xl flex items-center justify-center mb-4">
+                <MessageSquare size={24} />
+              </div>
+              <h4 className="font-black text-lg mb-2">Need to update your order?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                Connect with our kitchen directly on WhatsApp for real-time pickup updates or questions.
+              </p>
+            </div>
+
+            <a
+              href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-12 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg shadow-[#25D366]/20 transition-all"
+            >
+              <MessageSquare size={18} /> Chat with Restaurant
+            </a>
+          </div>
         </div>
       </div>
     </main>
   );
-}
-
-function UserIcon({ size, className }: { size: number, className?: string }) {
-  return <Clock size={size} className={className} />; // Fallback for User icon
-}
-
-function MapPin({ size, className }: { size: number, className?: string }) {
-  return <Package size={size} className={className} />; // Fallback
 }

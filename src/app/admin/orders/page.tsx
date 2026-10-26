@@ -3,238 +3,322 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
-import { Order, OrderStatus, Rider } from '@/types/schema';
-import { Check, Clock, Package, Bike, ArrowRight, Eye, User, Phone, MapPin, TrendingUp, DollarSign, ShoppingBag } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { Order, OrderStatus } from '@/types/schema';
+import { 
+  Check, 
+  Clock, 
+  Package, 
+  ArrowRight, 
+  Eye, 
+  User, 
+  Phone, 
+  MessageSquare,
+  FileText, 
+  CheckCircle2, 
+  XCircle,
+  Utensils,
+  ShoppingBag
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_FLOW: Record<OrderStatus, OrderStatus | null> = {
-  pending: 'accepted',
-  accepted: 'preparing',
+  pending: 'preparing',
   preparing: 'ready',
-  ready: 'assigned',
-  assigned: 'delivered',
-  delivered: null,
+  ready: 'completed',
+  completed: null,
+  cancelled: null,
 };
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'New',
-  accepted: 'Accepted',
-  preparing: 'Preparing',
-  ready: 'Ready',
-  assigned: 'Dispatched',
-  delivered: 'Delivered',
+  pending: 'New WhatsApp Order',
+  preparing: 'Preparing in Kitchen',
+  ready: 'Ready for Pickup / Dine-in',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+};
+
+const STATUS_COLORS: Record<OrderStatus, string> = {
+  pending: 'bg-amber-100 text-amber-800 border-amber-200',
+  preparing: 'bg-orange-100 text-orange-800 border-orange-200',
+  ready: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  completed: 'bg-slate-100 text-slate-700 border-slate-200',
+  cancelled: 'bg-red-100 text-red-700 border-red-200',
 };
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [riders, setRiders] = useState<Rider[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showRiderPanel, setShowRiderPanel] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('active');
 
   useEffect(() => {
-    // Listen to orders
     const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'));
-    const unsubOrders = onSnapshot(q, (snapshot) => {
+    const unsub = onSnapshot(q, (snapshot) => {
       setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
       setLoading(false);
+    }, (error) => {
+      console.warn("Firestore snapshot listener error in admin orders:", error);
+      setLoading(false);
     });
-
-    // Fetch riders
-    const fetchRiders = async () => {
-      const snapshot = await getDocs(collection(db, 'riders'));
-      setRiders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Rider)));
-      
-      // If no riders exist, seed some mock riders
-      if (snapshot.docs.length === 0) {
-        setRiders([
-          { id: 'rider1', name: 'Deji Adekunle', phone: '08123456789', is_available: true },
-          { id: 'rider2', name: 'Emeka Obi', phone: '08198765432', is_available: true },
-        ]);
-      }
-    };
-    fetchRiders();
-
-    return () => unsubOrders();
+    return () => unsub();
   }, []);
 
-  const handleUpdateStatus = async (orderId: string, currentStatus: OrderStatus) => {
-    const nextStatus = STATUS_FLOW[currentStatus];
-    if (nextStatus === 'assigned') {
-      const order = orders.find(o => o.id === orderId);
-      setSelectedOrder(order || null);
-      setShowRiderPanel(true);
-      return;
-    }
-    
-    if (nextStatus) {
-      await updateDoc(doc(db, 'orders', orderId), { status: nextStatus });
+  const handleUpdateStatus = async (orderId: string, nextStatus: OrderStatus) => {
+    await updateDoc(doc(db, 'orders', orderId), { status: nextStatus });
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status: nextStatus });
     }
   };
 
-  const assignRider = async (rider: Rider) => {
-    if (!selectedOrder) return;
-    await updateDoc(doc(db, 'orders', selectedOrder.id!), { 
-      status: 'assigned',
-      rider_id: rider.id,
-      rider_name: rider.name
-    });
-    setShowRiderPanel(false);
-    setSelectedOrder(null);
-  };
-
-  const stats = {
-    totalOrders: orders.length,
-    todayRevenue: orders.reduce((acc, o) => acc + o.total_price, 0),
-    activeOrders: orders.filter(o => o.status !== 'delivered').length
-  };
+  const filteredOrders = orders.filter((order) => {
+    if (filter === 'active') return order.status === 'pending' || order.status === 'preparing' || order.status === 'ready';
+    if (filter === 'completed') return order.status === 'completed' || order.status === 'cancelled';
+    return true;
+  });
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 pb-24 sm:pb-0">
       <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header & Stats */}
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
+
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+        <div className="flex flex-col gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-4xl font-black text-brand-dark mb-2">Live Orders</h1>
-            <p className="text-slate-500">Manage real-time incoming orders and delivery status.</p>
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2">
+              <MessageSquare size={13} /> WhatsApp Live Orders
+            </div>
+            <h1 className="text-2xl sm:text-4xl font-black text-brand-dark">Kitchen & Order Management</h1>
+            <p className="text-slate-500 text-sm sm:text-base">Track and prepare customer orders submitted via WhatsApp.</p>
           </div>
-          
-          <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center">
-              <ShoppingBag className="text-brand-primary mb-1" size={20} />
-              <span className="text-2xl font-black text-brand-dark">{stats.totalOrders}</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Total</span>
-            </div>
-            <div className="bg-brand-secondary p-4 rounded-2xl shadow-sm flex flex-col items-center text-white">
-              <TrendingUp className="mb-1" size={20} />
-              <span className="text-2xl font-black">{stats.activeOrders}</span>
-              <span className="text-[10px] font-bold text-emerald-100 uppercase">Active</span>
-            </div>
-            <div className="bg-brand-dark p-4 rounded-2xl shadow-sm flex flex-col items-center text-white">
-              <DollarSign className="text-brand-primary mb-1" size={20} />
-              <span className="text-xl font-black">₦{stats.todayRevenue.toLocaleString()}</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Revenue</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Live Orders Table */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Order</th>
-                  <th className="px-6 py-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Items</th>
-                  <th className="px-6 py-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Total</th>
-                  <th className="px-6 py-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <AnimatePresence>
-                  {orders.map((order) => (
-                    <motion.tr 
-                      key={order.id}
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="hover:bg-slate-50/50 transition-colors"
-                    >
-                      <td className="px-6 py-6">
-                        <span className="font-mono text-xs font-bold bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">#{order.id?.slice(-5)}</span>
-                        <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold">{order.payment_method}</p>
-                      </td>
-                      <td className="px-6 py-6">
-                        <p className="font-bold text-brand-dark">{order.customer_name}</p>
-                        <p className="text-xs text-slate-500 truncate max-w-[200px]">{order.address}</p>
-                      </td>
-                      <td className="px-6 py-6 text-sm text-slate-500">
-                        {order.items.length} dishes
-                      </td>
-                      <td className="px-6 py-6 font-bold text-brand-dark">
-                        ₦{order.total_price.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-6">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                          order.status === 'pending' ? 'bg-amber-100 text-amber-600' :
-                          order.status === 'delivered' ? 'bg-emerald-100 text-emerald-600' :
-                          'bg-blue-100 text-blue-600'
-                        }`}>
-                          {STATUS_LABELS[order.status]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-6">
-                        {STATUS_FLOW[order.status] ? (
-                          <button 
-                            onClick={() => handleUpdateStatus(order.id!, order.status)}
-                            className="btn-primary py-2 px-4 text-xs flex items-center gap-2 whitespace-nowrap"
-                          >
-                            Mark {STATUS_LABELS[STATUS_FLOW[order.status]!]} <ArrowRight size={14} />
-                          </button>
-                        ) : (
-                          <span className="text-emerald-500 font-bold text-xs flex items-center gap-1">
-                            <Check size={14} /> Completed
-                          </span>
-                        )}
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Rider Assignment Modal */}
-      <AnimatePresence>
-        {showRiderPanel && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowRiderPanel(false)}
-              className="absolute inset-0 bg-brand-dark/60 backdrop-blur-sm"
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl"
+          <div className="flex bg-white rounded-xl sm:rounded-2xl p-1 border border-slate-200 shadow-sm self-start w-full sm:w-auto overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => setFilter('active')}
+              className={`flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                filter === 'active' ? 'bg-brand-dark text-white' : 'text-slate-600 hover:text-brand-dark'
+              }`}
             >
-              <h2 className="text-2xl font-black text-brand-dark mb-2">Assign Rider</h2>
-              <p className="text-slate-500 mb-8">Select a rider for Order #{selectedOrder?.id?.slice(-5)}</p>
-              
-              <div className="space-y-4">
-                {riders.map((rider) => (
-                  <button
-                    key={rider.id}
-                    onClick={() => assignRider(rider)}
-                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-brand-primary hover:bg-brand-primary/5 transition-all group"
+              Active ({orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length})
+            </button>
+            <button
+              onClick={() => setFilter('all')}
+              className={`flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                filter === 'all' ? 'bg-brand-dark text-white' : 'text-slate-600 hover:text-brand-dark'
+              }`}
+            >
+              All ({orders.length})
+            </button>
+            <button
+              onClick={() => setFilter('completed')}
+              className={`flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                filter === 'completed' ? 'bg-brand-dark text-white' : 'text-slate-600 hover:text-brand-dark'
+              }`}
+            >
+              Done ({orders.filter(o => o.status === 'completed').length})
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="py-20 flex justify-center items-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+            {/* Orders List */}
+            <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+              {filteredOrders.map((order) => {
+                const nextStatus = STATUS_FLOW[order.status];
+                const cleanPhone = (order.phone || '').replace(/\D/g, '');
+                const waChatUrl = cleanPhone ? `https://wa.me/${cleanPhone.startsWith('0') ? '234' + cleanPhone.slice(1) : cleanPhone}` : null;
+
+                return (
+                  <div 
+                    key={order.id} 
+                    className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-slate-400 group-hover:text-brand-primary shadow-sm">
-                        <Bike size={24} />
+                    <div className="flex flex-col gap-2 mb-3 pb-3 border-b border-slate-100">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-bold text-base text-brand-dark leading-snug">{order.customer_name}</h3>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-0.5">
+                            <span className="font-mono">#{order.id?.slice(-6).toUpperCase()}</span>
+                            <span>•</span>
+                            <span>{order.phone}</span>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border flex-shrink-0 ${STATUS_COLORS[order.status] || 'bg-slate-100 text-slate-600'}`}>
+                          {STATUS_LABELS[order.status] || order.status}
+                        </span>
                       </div>
-                      <div className="text-left">
-                        <p className="font-bold text-brand-dark">{rider.name}</p>
-                        <p className="text-xs text-slate-500">{rider.phone}</p>
+
+                      <div className="flex items-center gap-2">
+                        {waChatUrl && (
+                          <a
+                            href={waChatUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-9 px-3 bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                          >
+                            <MessageSquare size={14} /> WhatsApp
+                          </a>
+                        )}
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                        >
+                          <Eye size={14} /> Detail
+                        </button>
                       </div>
                     </div>
-                    <ArrowRight size={20} className="text-slate-300 group-hover:text-brand-primary transition-colors" />
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+
+                    {/* Order Notes Banner if present */}
+                    {order.order_notes && (
+                      <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-900">
+                        <FileText size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="font-bold">Customer Notes:</strong> {order.order_notes}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Order Items Preview */}
+                    <div className="space-y-1.5 mb-4">
+                      {order.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-sm text-slate-600">
+                          <span>
+                            <strong className="text-brand-dark">{item.quantity}x</strong> {item.name}
+                          </span>
+                          <span className="font-semibold text-slate-700">
+                            ₦{(item.price * item.quantity).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Bottom Status Buttons */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Total Bill</span>
+                        <p className="text-lg sm:text-xl font-black text-brand-primary">₦{order.total_price.toLocaleString()}</p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {order.status !== 'completed' && order.status !== 'cancelled' && (
+                          <button
+                            onClick={() => handleUpdateStatus(order.id!, 'cancelled')}
+                            className="px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        )}
+
+                        {nextStatus && (
+                          <button
+                            onClick={() => handleUpdateStatus(order.id!, nextStatus)}
+                            className="btn-primary py-2 px-5 text-xs rounded-xl flex items-center gap-1.5"
+                          >
+                            Mark {STATUS_LABELS[nextStatus]} <ArrowRight size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {filteredOrders.length === 0 && (
+                <div className="bg-white rounded-3xl p-16 text-center border border-dashed border-slate-200">
+                  <ShoppingBag size={48} className="text-slate-300 mx-auto mb-4" />
+                  <h3 className="font-bold text-brand-dark text-lg mb-1">No orders found</h3>
+                  <p className="text-slate-400 text-sm">
+                    {filter === 'active' ? 'All orders are completed! New orders will pop up here live.' : 'No orders in this category.'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar Details Panel */}
+            <div className="lg:col-span-1">
+              {selectedOrder ? (
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 sticky top-20">
+                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                    <h3 className="font-black text-xl text-brand-dark">Order #{selectedOrder.id?.slice(-6).toUpperCase()}</h3>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${STATUS_COLORS[selectedOrder.status]}`}>
+                      {STATUS_LABELS[selectedOrder.status]}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <span className="text-xs font-bold text-slate-400 uppercase">Customer</span>
+                      <p className="font-bold text-brand-dark">{selectedOrder.customer_name}</p>
+                      <p className="text-sm text-slate-500">{selectedOrder.phone}</p>
+                    </div>
+
+                    {selectedOrder.order_notes && (
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                        <span className="font-bold text-slate-700 block mb-1">Order Notes:</span>
+                        <p className="text-slate-600">{selectedOrder.order_notes}</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <span className="text-xs font-bold text-slate-400 uppercase block mb-2">Item Breakdown</span>
+                      <div className="space-y-2 border-t border-slate-100 pt-2">
+                        {selectedOrder.items.map((item, idx) => (
+                          <div key={idx} className="flex justify-between text-xs">
+                            <span className="text-slate-700">{item.quantity}x {item.name}</span>
+                            <span className="font-bold">₦{(item.price * item.quantity).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                      <span className="font-bold text-slate-600">Total</span>
+                      <span className="text-2xl font-black text-brand-primary">₦{selectedOrder.total_price.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions in Sidebar */}
+                  <div className="space-y-2">
+                    {selectedOrder.status === 'pending' && (
+                      <button
+                        onClick={() => handleUpdateStatus(selectedOrder.id!, 'preparing')}
+                        className="w-full btn-primary py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                      >
+                        <Utensils size={16} /> Start Kitchen Preparation
+                      </button>
+                    )}
+                    {selectedOrder.status === 'preparing' && (
+                      <button
+                        onClick={() => handleUpdateStatus(selectedOrder.id!, 'ready')}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                      >
+                        <Package size={16} /> Mark Ready for Pickup
+                      </button>
+                    )}
+                    {selectedOrder.status === 'ready' && (
+                      <button
+                        onClick={() => handleUpdateStatus(selectedOrder.id!, 'completed')}
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 size={16} /> Mark Completed / Picked Up
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-3xl p-8 border border-slate-100 text-center text-slate-400">
+                  <Eye size={36} className="mx-auto mb-2 text-slate-300" />
+                  <p className="text-sm font-medium">Select an order from the list to view full kitchen details.</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </AnimatePresence>
+      </div>
     </main>
   );
 }

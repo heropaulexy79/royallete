@@ -5,7 +5,7 @@ import { FoodItem, OrderItem } from '@/types/schema';
 
 interface CartContextType {
   cart: OrderItem[];
-  addToCart: (item: FoodItem) => void;
+   addToCart: (item: FoodItem, quantity?: number) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
   totalPrice: number;
@@ -16,15 +16,15 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<OrderItem[]>([]);
 
-  const addToCart = (item: FoodItem) => {
+  const addToCart = (item: FoodItem, quantity: number = 1) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.food_item_id === item.id);
       if (existing) {
         return prev.map((i) =>
-          i.food_item_id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.food_item_id === item.id ? { ...i, quantity: i.quantity + quantity } : i
         );
       }
-      return [...prev, { food_item_id: item.id, name: item.name, price: item.price, quantity: 1 }];
+      return [...prev, { food_item_id: item.id, name: item.name, price: item.price, quantity }];
     });
   };
 
