@@ -1,0 +1,137 @@
+[
+  {
+    "id": "BgSmnFgT5RgQAa8WlzNx",
+    "name": "Pasta + Peppered Chicken",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1546548970-71785318a17b?q=80&w=800",
+    "restaurant_id": "r1",
+    "category": "Pasta",
+    "price": 3500
+  },
+  {
+    "id": "EvcEgKrmAsWiRGJlolac",
+    "restaurant_id": "r1",
+    "image_url": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=800",
+    "name": "Rice + Medium Barbecued Chicken",
+    "category": "Rice",
+    "price": 4000,
+    "is_available": true
+  },
+  {
+    "id": "FnKVptuOutEuhbQmrKYq",
+    "is_available": true,
+    "category": "Rice",
+    "image_url": "https://images.unsplash.com/photo-1532550907401-a500c9a57435?q=80&w=800",
+    "price": 5500,
+    "name": "Rice + Large Barbecued Chicken",
+    "restaurant_id": "r1"
+  },
+  {
+    "id": "O7Gf84ElUCNtKY3qChVR",
+    "category": "Others",
+    "restaurant_id": "r1",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1566478989125-edfc9622d7ba?q=80&w=800",
+    "price": 1500,
+    "name": "Single Pringle"
+  },
+  {
+    "id": "UhtEbm7lvS0Ma1MIsPOK",
+    "name": "Rice + Peppered Chicken",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1512058560566-d8d437a17364?q=80&w=800",
+    "category": "Rice",
+    "price": 3500,
+    "restaurant_id": "r1"
+  },
+  {
+    "id": "adSlcfqcgM3t0qokgB0e",
+    "price": 4500,
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=800",
+    "category": "Rice",
+    "restaurant_id": "r1",
+    "name": "Rice + Turkey"
+  },
+  {
+    "id": "f8HXvIVDJ8Ize607f7nj",
+    "is_available": true,
+    "price": 500,
+    "restaurant_id": "r1",
+    "image_url": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=800",
+    "name": "Soft Drink",
+    "category": "Drinks"
+  },
+  {
+    "id": "fmPnRNkryPjJwDHJDtIy",
+    "is_available": true,
+    "price": 4000,
+    "image_url": "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800",
+    "category": "Pasta",
+    "restaurant_id": "r1",
+    "name": "Pasta + Medium Barbecued Chicken"
+  },
+  {
+    "id": "k9BH9wPxkhxzVJqU1Bv4",
+    "is_available": true,
+    "category": "Drinks",
+    "price": 2500,
+    "name": "Smoothie",
+    "restaurant_id": "r1",
+    "image_url": "https://images.unsplash.com/photo-1502741224143-90386d7cd8c9?q=80&w=800"
+  },
+  {
+    "id": "lTnCguCHZRO5oZN217LU",
+    "category": "Pasta",
+    "name": "Pasta + Turkey",
+    "is_available": true,
+    "price": 4500,
+    "image_url": "https://images.unsplash.com/photo-1558985226-990c000ad04f?q=80&w=800",
+    "restaurant_id": "r1"
+  },
+  {
+    "id": "oilDbJGNIU4gRh3MZobi",
+    "price": 3500,
+    "restaurant_id": "r1",
+    "name": "Parfait",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=800",
+    "category": "Drinks"
+  },
+  {
+    "id": "sRP56LfHixHR8CIsmhE6",
+    "is_available": true,
+    "name": "Double Sausage",
+    "category": "Others",
+    "restaurant_id": "r1",
+    "image_url": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?q=80&w=800",
+    "price": 1000
+  },
+  {
+    "id": "uenkOzy9GUrUsXFdFXcp",
+    "name": "Chips + Chicken (Medium Barbecued)",
+    "restaurant_id": "r1",
+    "category": "Chips",
+    "is_available": true,
+    "price": 4000,
+    "image_url": "https://images.unsplash.com/photo-1518013034477-2990fa317e23?q=80&w=800"
+  },
+  {
+    "id": "xVckAz6jV31zZGqCs2CX",
+    "image_url": "https://images.unsplash.com/photo-1473093226795-af9932fe5856?q=80&w=800",
+    "restaurant_id": "r1",
+    "name": "Pasta + Large Barbecued Chicken",
+    "is_available": true,
+    "price": 5500,
+    "category": "Pasta"
+  },
+  {
+    "id": "zW9cflkLU2n72aNlWm0r",
+    "price": 5500,
+    "is_available": true,
+    "restaurant_id": "r1",
+    "category": "Chips",
+    "name": "Chips + Chicken (Large Barbecued)",
+    "image_url": "https://images.unsplash.com/photo-1621200414838-84423c723707?q=80&w=800"
+  }
+]

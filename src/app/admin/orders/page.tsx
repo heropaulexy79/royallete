@@ -6,21 +6,15 @@ import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { Order, OrderStatus } from '@/types/schema';
 import { 
-  Check, 
-  Clock, 
   Package, 
   ArrowRight, 
   Eye, 
-  User, 
-  Phone, 
   MessageSquare,
   FileText, 
   CheckCircle2, 
-  XCircle,
   Utensils,
   ShoppingBag
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_FLOW: Record<OrderStatus, OrderStatus | null> = {
   pending: 'preparing',
@@ -42,7 +36,7 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: 'bg-amber-100 text-amber-800 border-amber-200',
   preparing: 'bg-orange-100 text-orange-800 border-orange-200',
   ready: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  completed: 'bg-slate-100 text-slate-700 border-slate-200',
+  completed: 'bg-[#fdf8f3] text-[#7a6655] border-[#ede5da]',
   cancelled: 'bg-red-100 text-red-700 border-red-200',
 };
 
@@ -78,24 +72,24 @@ export default function AdminOrders() {
   });
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-24 sm:pb-0">
+    <main className="min-h-screen bg-[#faf6f0] pb-24 sm:pb-0">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
         <div className="flex flex-col gap-4 mb-6 sm:mb-8">
           <div>
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2">
-              <MessageSquare size={13} /> WhatsApp Live Orders
+            <div className="inline-flex items-center gap-2 bg-red-50 text-brand-primary px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2">
+              <MessageSquare size={13} /> Déskilz WhatsApp Orders
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-brand-dark">Kitchen & Order Management</h1>
-            <p className="text-slate-500 text-sm sm:text-base">Track and prepare customer orders submitted via WhatsApp.</p>
+            <p className="text-[#7a6655] text-sm sm:text-base">Track and prepare customer orders submitted via WhatsApp.</p>
           </div>
 
-          <div className="flex bg-white rounded-xl sm:rounded-2xl p-1 border border-slate-200 shadow-sm self-start w-full sm:w-auto overflow-x-auto no-scrollbar">
+          <div className="flex bg-white rounded-xl sm:rounded-2xl p-1 border border-[#ede5da] shadow-sm self-start w-full sm:w-auto overflow-x-auto no-scrollbar">
             <button
               onClick={() => setFilter('active')}
               className={`flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                filter === 'active' ? 'bg-brand-dark text-white' : 'text-slate-600 hover:text-brand-dark'
+                filter === 'active' ? 'bg-brand-dark text-white' : 'text-[#7a6655] hover:text-brand-dark'
               }`}
             >
               Active ({orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length})
@@ -103,7 +97,7 @@ export default function AdminOrders() {
             <button
               onClick={() => setFilter('all')}
               className={`flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                filter === 'all' ? 'bg-brand-dark text-white' : 'text-slate-600 hover:text-brand-dark'
+                filter === 'all' ? 'bg-brand-dark text-white' : 'text-[#7a6655] hover:text-brand-dark'
               }`}
             >
               All ({orders.length})
@@ -111,7 +105,7 @@ export default function AdminOrders() {
             <button
               onClick={() => setFilter('completed')}
               className={`flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                filter === 'completed' ? 'bg-brand-dark text-white' : 'text-slate-600 hover:text-brand-dark'
+                filter === 'completed' ? 'bg-brand-dark text-white' : 'text-[#7a6655] hover:text-brand-dark'
               }`}
             >
               Done ({orders.filter(o => o.status === 'completed').length})
@@ -135,13 +129,13 @@ export default function AdminOrders() {
                 return (
                   <div 
                     key={order.id} 
-                    className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
+                    className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm border border-[#ede5da] hover:shadow-md transition-shadow"
                   >
-                    <div className="flex flex-col gap-2 mb-3 pb-3 border-b border-slate-100">
+                    <div className="flex flex-col gap-2 mb-3 pb-3 border-b border-[#ede5da]">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h3 className="font-bold text-base text-brand-dark leading-snug">{order.customer_name}</h3>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-0.5">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-[#a89080] mt-0.5">
                             <span className="font-mono">#{order.id?.slice(-6).toUpperCase()}</span>
                             <span>•</span>
                             <span>{order.phone}</span>
@@ -165,7 +159,7 @@ export default function AdminOrders() {
                         )}
                         <button
                           onClick={() => setSelectedOrder(order)}
-                          className="h-9 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                          className="h-9 px-3 bg-[#ede5da] hover:bg-[#d4c9b8] text-[#7a6655] rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                         >
                           <Eye size={14} /> Detail
                         </button>
@@ -185,11 +179,11 @@ export default function AdminOrders() {
                     {/* Order Items Preview */}
                     <div className="space-y-1.5 mb-4">
                       {order.items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-sm text-slate-600">
+                        <div key={idx} className="flex justify-between items-center text-sm text-[#7a6655]">
                           <span>
                             <strong className="text-brand-dark">{item.quantity}x</strong> {item.name}
                           </span>
-                          <span className="font-semibold text-slate-700">
+                          <span className="font-semibold text-brand-dark">
                             ₦{(item.price * item.quantity).toLocaleString()}
                           </span>
                         </div>
@@ -197,9 +191,9 @@ export default function AdminOrders() {
                     </div>
 
                     {/* Bottom Status Buttons */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#ede5da]">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">Total Bill</span>
+                        <span className="text-[10px] text-[#a89080] font-bold uppercase">Total Bill</span>
                         <p className="text-lg sm:text-xl font-black text-brand-primary">₦{order.total_price.toLocaleString()}</p>
                       </div>
 
@@ -228,10 +222,10 @@ export default function AdminOrders() {
               })}
 
               {filteredOrders.length === 0 && (
-                <div className="bg-white rounded-3xl p-16 text-center border border-dashed border-slate-200">
-                  <ShoppingBag size={48} className="text-slate-300 mx-auto mb-4" />
+                <div className="bg-white rounded-3xl p-16 text-center border border-dashed border-[#ede5da]">
+                  <ShoppingBag size={48} className="text-[#c4b8a8] mx-auto mb-4" />
                   <h3 className="font-bold text-brand-dark text-lg mb-1">No orders found</h3>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-[#a89080] text-sm">
                     {filter === 'active' ? 'All orders are completed! New orders will pop up here live.' : 'No orders in this category.'}
                   </p>
                 </div>
@@ -241,8 +235,8 @@ export default function AdminOrders() {
             {/* Sidebar Details Panel */}
             <div className="lg:col-span-1">
               {selectedOrder ? (
-                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 sticky top-20">
-                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-[#ede5da] sticky top-20">
+                  <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#ede5da]">
                     <h3 className="font-black text-xl text-brand-dark">Order #{selectedOrder.id?.slice(-6).toUpperCase()}</h3>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${STATUS_COLORS[selectedOrder.status]}`}>
                       {STATUS_LABELS[selectedOrder.status]}
@@ -251,32 +245,32 @@ export default function AdminOrders() {
 
                   <div className="space-y-4 mb-6">
                     <div>
-                      <span className="text-xs font-bold text-slate-400 uppercase">Customer</span>
+                      <span className="text-xs font-bold text-[#a89080] uppercase">Customer</span>
                       <p className="font-bold text-brand-dark">{selectedOrder.customer_name}</p>
-                      <p className="text-sm text-slate-500">{selectedOrder.phone}</p>
+                      <p className="text-sm text-[#7a6655]">{selectedOrder.phone}</p>
                     </div>
 
                     {selectedOrder.order_notes && (
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
-                        <span className="font-bold text-slate-700 block mb-1">Order Notes:</span>
-                        <p className="text-slate-600">{selectedOrder.order_notes}</p>
+                      <div className="p-3 bg-[#fdf8f3] rounded-xl border border-[#ede5da] text-xs">
+                        <span className="font-bold text-brand-dark block mb-1">Order Notes:</span>
+                        <p className="text-[#7a6655]">{selectedOrder.order_notes}</p>
                       </div>
                     )}
 
                     <div>
-                      <span className="text-xs font-bold text-slate-400 uppercase block mb-2">Item Breakdown</span>
-                      <div className="space-y-2 border-t border-slate-100 pt-2">
+                      <span className="text-xs font-bold text-[#a89080] uppercase block mb-2">Item Breakdown</span>
+                      <div className="space-y-2 border-t border-[#ede5da] pt-2">
                         {selectedOrder.items.map((item, idx) => (
                           <div key={idx} className="flex justify-between text-xs">
-                            <span className="text-slate-700">{item.quantity}x {item.name}</span>
+                            <span className="text-brand-dark">{item.quantity}x {item.name}</span>
                             <span className="font-bold">₦{(item.price * item.quantity).toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
-                      <span className="font-bold text-slate-600">Total</span>
+                    <div className="pt-3 border-t border-[#ede5da] flex justify-between items-center">
+                      <span className="font-bold text-[#7a6655]">Total</span>
                       <span className="text-2xl font-black text-brand-primary">₦{selectedOrder.total_price.toLocaleString()}</span>
                     </div>
                   </div>
@@ -302,7 +296,7 @@ export default function AdminOrders() {
                     {selectedOrder.status === 'ready' && (
                       <button
                         onClick={() => handleUpdateStatus(selectedOrder.id!, 'completed')}
-                        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                        className="w-full bg-brand-dark hover:bg-[#241E1C] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
                       >
                         <CheckCircle2 size={16} /> Mark Completed / Picked Up
                       </button>
@@ -310,8 +304,8 @@ export default function AdminOrders() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-3xl p-8 border border-slate-100 text-center text-slate-400">
-                  <Eye size={36} className="mx-auto mb-2 text-slate-300" />
+                <div className="bg-white rounded-3xl p-8 border border-[#ede5da] text-center text-[#a89080]">
+                  <Eye size={36} className="mx-auto mb-2 text-[#c4b8a8]" />
                   <p className="text-sm font-medium">Select an order from the list to view full kitchen details.</p>
                 </div>
               )}

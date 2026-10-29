@@ -1,5 +1,26 @@
 export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
 
+export type ProductCategory =
+  | 'Shawarma'
+  | 'Pizza'
+  | 'Burger'
+  | 'Chicken & Chips'
+  | 'Food'
+  | 'Drinks'
+  | 'Ice Cream'
+  | 'Snacks';
+
+export const APPROVED_CATEGORIES: ProductCategory[] = [
+  'Shawarma',
+  'Pizza',
+  'Burger',
+  'Chicken & Chips',
+  'Food',
+  'Drinks',
+  'Ice Cream',
+  'Snacks',
+];
+
 export interface User {
   id: string;
   name: string;
@@ -16,6 +37,7 @@ export interface FoodItem {
   image_url: string;
   is_available: boolean;
   restaurant_id?: string;
+  is_featured?: boolean;
 }
 
 export interface OrderItem {
@@ -23,6 +45,8 @@ export interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  image_url?: string;
+  category?: string;
 }
 
 export interface Order {
@@ -34,5 +58,5 @@ export interface Order {
   status: OrderStatus;
   total_price: number;
   payment_method: 'whatsapp';
-  created_at: any; // Firestore Timestamp
+  created_at?: unknown; // Firestore Timestamp
 }

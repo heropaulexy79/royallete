@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, UtensilsCrossed, MessageSquare, Menu, X } from 'lucide-react';
+import { ShoppingCart, UtensilsCrossed, MessageSquare, Menu, X, Flame, ShieldAlert } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 
@@ -13,57 +13,105 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group" onClick={() => setMenuOpen(false)}>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30 group-hover:rotate-12 transition-transform">
-              <UtensilsCrossed size={16} className="sm:hidden" />
-              <UtensilsCrossed size={20} className="hidden sm:block" />
+      <header className="sticky top-0 z-50 bg-[#faf6f0]/95 backdrop-blur-md border-b border-[#ede5da] shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
+          {/* Brand Logo & Name */}
+          <Link
+            href="/"
+            className="flex items-center gap-3 group focus:outline-none"
+            onClick={() => setMenuOpen(false)}
+          >
+            <div className="relative w-11 h-11 sm:w-13 sm:h-13 rounded-full overflow-hidden flex items-center justify-center p-0.5 shadow-md shadow-red-900/10 group-hover:scale-105 transition-transform bg-white border border-[#ede5da]">
+              <img
+                src="/image/deskilz-logo.png"
+                alt="Déskilz Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="font-black text-xl sm:text-2xl tracking-tight text-brand-dark">Royallete</span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-2xl sm:text-3xl tracking-tight text-[#191514] leading-none">
+                  Dé<span className="text-brand-primary">skilz</span>
+                </span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] inline-block shadow-xs animate-pulse" />
+              </div>
+              <span className="text-[10px] sm:text-xs font-bold text-amber-900/60 uppercase tracking-widest leading-none mt-1">
+                Restaurant & Fast Food
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden sm:flex items-center gap-5">
-            <Link href="/menu" className="text-slate-600 hover:text-brand-primary font-semibold text-sm transition-colors">
-              Menu
+          <nav className="hidden md:flex items-center gap-8">
+            <Link
+              href="/"
+              className="text-[#191514]/80 hover:text-brand-primary font-bold text-sm transition-colors"
+            >
+              Home
             </Link>
-            <Link href="/admin" className="text-slate-600 hover:text-brand-primary font-semibold text-sm transition-colors">
-              Admin
+            <Link
+              href="/menu"
+              className="text-[#191514]/80 hover:text-brand-primary font-bold text-sm transition-colors flex items-center gap-1.5"
+            >
+              <UtensilsCrossed size={16} className="text-brand-primary" /> Full Menu (70)
             </Link>
+            <Link
+              href="/menu?category=Food"
+              className="text-[#191514]/80 hover:text-brand-primary font-bold text-sm transition-colors flex items-center gap-1"
+            >
+              <Flame size={15} className="text-[#f59e0b]" /> Rice Combo
+            </Link>
+            <Link
+              href="/admin"
+              className="text-stone-500 hover:text-[#191514] font-medium text-xs transition-colors flex items-center gap-1"
+            >
+              <ShieldAlert size={14} className="text-stone-400" /> Admin
+            </Link>
+          </nav>
+
+          {/* Right Actions */}
+          <div className="hidden sm:flex items-center gap-3">
             <a
               href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs font-bold text-[#25D366] bg-[#25D366]/10 hover:bg-[#25D366] hover:text-white px-3 py-1.5 rounded-xl transition-all"
+              className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#25D366] hover:bg-[#20bd5a] px-4 py-2.5 rounded-xl transition-all shadow-sm shadow-emerald-500/20 active:scale-95"
             >
-              <MessageSquare size={15} /> WhatsApp
+              <MessageSquare size={15} /> WhatsApp Order
             </a>
-            <Link href="/cart" className="relative p-2 text-slate-700 hover:text-brand-primary transition-colors">
-              <ShoppingCart size={22} />
+
+            <Link
+              href="/cart"
+              className="relative p-2.5 text-[#191514] hover:text-brand-primary transition-colors rounded-xl bg-white hover:bg-amber-50/50 border border-[#ede5da]"
+              aria-label="View shopping cart"
+            >
+              <ShoppingCart size={21} />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-primary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white">
+                <span className="absolute -top-1.5 -right-1.5 bg-brand-primary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-[#faf6f0] shadow-sm">
                   {cartCount}
                 </span>
               )}
             </Link>
           </div>
 
-          {/* Mobile: Cart + Hamburger */}
+          {/* Mobile Right */}
           <div className="flex sm:hidden items-center gap-2">
-            <Link href="/cart" className="relative p-2 text-slate-700 hover:text-brand-primary transition-colors">
-              <ShoppingCart size={22} />
+            <Link
+              href="/cart"
+              className="relative p-2 text-[#191514] hover:text-brand-primary transition-colors bg-white rounded-xl border border-[#ede5da]"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingCart size={20} />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-primary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white">
+                <span className="absolute -top-1.5 -right-1.5 bg-brand-primary text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white">
                   {cartCount}
                 </span>
               )}
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="p-2 text-slate-700 hover:text-brand-primary transition-colors"
-              aria-label="Toggle menu"
+              className="p-2 text-[#191514] hover:text-brand-primary transition-colors rounded-xl bg-white border border-[#ede5da] focus:outline-none"
+              aria-label="Toggle navigation menu"
             >
               {menuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -72,60 +120,85 @@ export default function Navbar() {
 
         {/* Mobile Drawer */}
         {menuOpen && (
-          <div className="sm:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-2 shadow-lg">
+          <div className="sm:hidden bg-[#faf6f0] border-t border-[#ede5da] px-4 py-4 space-y-2 shadow-xl animate-in slide-in-from-top-2 duration-200">
+            <Link
+              href="/"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#191514] hover:bg-white font-bold text-sm transition-colors"
+            >
+              Home
+            </Link>
             <Link
               href="/menu"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#191514] hover:bg-white font-bold text-sm transition-colors"
             >
-              <UtensilsCrossed size={18} className="text-brand-primary" /> Browse Menu
+              <UtensilsCrossed size={18} className="text-brand-primary" /> Browse Full Menu (70 Dishes)
+            </Link>
+            <Link
+              href="/cart"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-between px-4 py-3 rounded-xl text-[#191514] hover:bg-white font-bold text-sm transition-colors"
+            >
+              <span className="flex items-center gap-3">
+                <ShoppingCart size={18} className="text-brand-primary" /> My Cart
+              </span>
+              {cartCount > 0 && (
+                <span className="bg-brand-primary text-white text-xs px-2.5 py-0.5 rounded-full font-black">
+                  {cartCount}
+                </span>
+              )}
             </Link>
             <Link
               href="/admin"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-colors"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-500 hover:bg-white font-semibold text-xs transition-colors"
             >
-              <ShoppingCart size={18} className="text-brand-primary" /> Admin Dashboard
+              <ShieldAlert size={16} /> Admin Portal
             </Link>
             <a
               href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#25D366]/10 text-[#25D366] font-bold text-sm"
+              className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-[#25D366] text-white font-bold text-sm shadow-md shadow-emerald-500/20"
             >
-              <MessageSquare size={18} /> Chat with Us on WhatsApp
+              <MessageSquare size={18} /> Chat & Order on WhatsApp
             </a>
           </div>
         )}
-      </nav>
+      </header>
 
-      {/* Mobile Bottom Tab Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 sm:hidden bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-2xl grid grid-cols-3">
-        <Link href="/menu" className="flex flex-col items-center justify-center py-2.5 gap-0.5 text-slate-500 hover:text-brand-primary transition-colors active:scale-95">
-          <UtensilsCrossed size={20} />
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 sm:hidden bg-[#faf6f0]/95 backdrop-blur-md border-t border-[#ede5da] shadow-2xl grid grid-cols-3 py-1">
+        <Link
+          href="/"
+          className="flex flex-col items-center justify-center py-2 gap-1 text-stone-600 hover:text-brand-primary active:scale-95 transition-all"
+        >
+          <Flame size={20} className="text-[#f59e0b]" />
+          <span className="text-[10px] font-bold">Featured</span>
+        </Link>
+        <Link
+          href="/menu"
+          className="flex flex-col items-center justify-center py-2 gap-1 text-stone-600 hover:text-brand-primary active:scale-95 transition-all"
+        >
+          <UtensilsCrossed size={20} className="text-brand-primary" />
           <span className="text-[10px] font-bold">Menu</span>
         </Link>
-        <Link href="/cart" className="flex flex-col items-center justify-center py-2.5 gap-0.5 text-slate-500 hover:text-brand-primary transition-colors relative active:scale-95">
+        <Link
+          href="/cart"
+          className="flex flex-col items-center justify-center py-2 gap-1 text-stone-600 hover:text-brand-primary relative active:scale-95 transition-all"
+        >
           <div className="relative">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-brand-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-white">
+              <span className="absolute -top-2 -right-2 bg-brand-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-[#faf6f0]">
                 {cartCount}
               </span>
             )}
           </div>
           <span className="text-[10px] font-bold">Cart{cartCount > 0 ? ` (${cartCount})` : ''}</span>
         </Link>
-        <a
-          href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-col items-center justify-center py-2.5 gap-0.5 text-[#25D366] active:scale-95"
-        >
-          <MessageSquare size={20} />
-          <span className="text-[10px] font-bold">Chat</span>
-        </a>
       </div>
     </>
   );

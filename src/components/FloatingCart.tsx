@@ -1,25 +1,34 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const emptySubscribe = () => () => {};
 
 export default function FloatingCart() {
   const { cart, totalPrice } = useCart();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const prevCount = useRef(cartCount);
   const [bump, setBump] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
-  // Only render on client to avoid SSR mismatch
-  useEffect(() => { setMounted(true); }, []);
+  // useSyncExternalStore to reliably detect client mounting without cascading render warnings
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     if (cartCount > prevCount.current) {
-      setBump(true);
-      setTimeout(() => setBump(false), 600);
+      const t1 = setTimeout(() => setBump(true), 0);
+      const t2 = setTimeout(() => setBump(false), 600);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }
     prevCount.current = cartCount;
   }, [cartCount]);
@@ -44,7 +53,7 @@ export default function FloatingCart() {
             >
               {/* Icon + Badge */}
               <div className="relative">
-                <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:rotate-6 transition-transform">
+                <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:rotate-6 transition-transform">
                   <ShoppingCart size={20} />
                 </div>
                 <span className="absolute -top-2 -right-2 bg-[#25D366] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-brand-dark">

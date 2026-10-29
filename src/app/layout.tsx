@@ -1,29 +1,52 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import FloatingCart from "@/components/FloatingCart";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Royallete | Fresh Food Ordered on WhatsApp",
-  description: "Browse our chef-curated menu and place your order directly via WhatsApp for quick pickup or dine-in. No online cards needed.",
+  metadataBase: new URL('https://deskilz.ng'),
+  title: "Déskilz Restaurant | Fresh Bites, Shawarma, Pizza & Fast WhatsApp Ordering",
+  description:
+    "Experience the delicious taste of Déskilz. Freshly prepared shawarma, artisanal pizza, flame-grilled burgers, authentic food, ice cream, and refreshing drinks ordered directly on WhatsApp.",
+  keywords: [
+    "Déskilz",
+    "Déskilz Restaurant",
+    "Shawarma",
+    "Pizza",
+    "Burgers",
+    "Nigerian Food",
+    "Jollof Rice",
+    "Ice Cream",
+    "WhatsApp Food Ordering",
+  ],
+  openGraph: {
+    title: "Déskilz Restaurant | Satisfying Meals, Snacks & Drinks",
+    description:
+      "Order hot and freshly prepared meals from Déskilz directly through WhatsApp. Browse our full 70-product approved catalogue.",
+    url: "https://deskilz.ng",
+    siteName: "Déskilz Restaurant",
+    images: [
+      {
+        url: "/image/deskilz-logo.png",
+        width: 400,
+        height: 400,
+        alt: "Déskilz Logo",
+      },
+    ],
+    locale: "en_NG",
+    type: "website",
+  },
+  icons: {
+    icon: "/image/deskilz-logo.png",
+    apple: "/image/deskilz-logo.png",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#0f172a",
+  themeColor: "#e11d2a",
 };
 
 export default function RootLayout({
@@ -34,7 +57,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-brand-primary selection:text-white pb-16 sm:pb-0`}
+        className="font-sans antialiased selection:bg-brand-primary selection:text-white pb-16 sm:pb-0 min-h-screen flex flex-col"
         suppressHydrationWarning
       >
         <CartProvider>
@@ -45,4 +68,3 @@ export default function RootLayout({
     </html>
   );
 }
-

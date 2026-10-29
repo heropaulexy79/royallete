@@ -15,7 +15,7 @@ const CheckoutContent = dynamic(() => import('@/components/CheckoutContent'), {
 
 export default function CheckoutPage() {
   return (
-    <main className="min-h-screen bg-slate-50 pb-28 sm:pb-0">
+    <main className="min-h-screen bg-[#faf6f0] pb-28 sm:pb-0">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-12">
         <CheckoutContent />

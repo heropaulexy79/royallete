@@ -7,11 +7,10 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { useParams } from 'next/navigation';
 import { Order, OrderStatus } from '@/types/schema';
 import { Check, Clock, Package, Utensils, MessageSquare, CheckCircle2, FileText, ShoppingBag } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import Link from 'next/link';
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string, icon: any, color: string, description: string }> = {
+const STATUS_CONFIG: Record<OrderStatus, { label: string, icon: React.ElementType, color: string, description: string }> = {
   pending: { 
     label: 'Order Placed on WhatsApp', 
     icon: Clock, 
@@ -34,7 +33,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string, icon: any, color: stri
     label: 'Order Completed', 
     icon: CheckCircle2, 
     color: 'text-brand-primary', 
-    description: 'Thank you for ordering with Royallete! We hope you enjoyed your meal.' 
+    description: 'Thank you for ordering with Déskilz! We hope you enjoyed your meal.' 
   },
   cancelled: {
     label: 'Order Cancelled',
@@ -53,20 +52,22 @@ export default function TrackingPage() {
 
   useEffect(() => {
     if (!id || id === 'demo-id') {
-      setOrder({
-        customer_name: 'Customer',
-        phone: '07030574580',
-        order_notes: 'Pickup ready in 20 mins',
-        items: [
-          { food_item_id: '1', name: 'Royal Jollof Rice Special', price: 4000, quantity: 2 }
-        ],
-        status: 'preparing',
-        total_price: 8000,
-        payment_method: 'whatsapp',
-        created_at: new Date(),
-      });
-      setLoading(false);
-      return;
+      const timer = setTimeout(() => {
+        setOrder({
+          customer_name: 'Customer',
+          phone: '07030574580',
+          order_notes: 'Pickup ready in 20 mins',
+          items: [
+            { food_item_id: '1', name: 'Déskilz Jollof Rice Combo', price: 3000, quantity: 2 }
+          ],
+          status: 'preparing',
+          total_price: 6000,
+          payment_method: 'whatsapp',
+          created_at: new Date(),
+        });
+        setLoading(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
     const unsub = onSnapshot(doc(db, 'orders', id as string), (docSnap) => {
@@ -96,7 +97,7 @@ export default function TrackingPage() {
         <Navbar />
         <div className="max-w-md mx-auto py-20 text-center px-4">
           <h2 className="text-2xl font-bold text-brand-dark mb-4">Order Not Found</h2>
-          <p className="text-slate-500 mb-6">We couldn't locate this order in our system.</p>
+          <p className="text-slate-500 mb-6">We couldn&apos;t locate this order in our system.</p>
           <Link href="/menu" className="btn-primary">Back to Menu</Link>
         </div>
       </main>

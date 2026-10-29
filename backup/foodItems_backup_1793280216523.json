@@ -1,0 +1,137 @@
+[
+  {
+    "id": "BgSmnFgT5RgQAa8WlzNx",
+    "name": "Pasta + Peppered Chicken",
+    "image_url": "https://images.unsplash.com/photo-1546548970-71785318a17b?q=80&w=800",
+    "restaurant_id": "r1",
+    "is_available": true,
+    "price": 3500,
+    "category": "Pasta"
+  },
+  {
+    "id": "EvcEgKrmAsWiRGJlolac",
+    "image_url": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?q=80&w=800",
+    "restaurant_id": "r1",
+    "price": 4000,
+    "name": "Rice + Medium Barbecued Chicken",
+    "is_available": true,
+    "category": "Rice"
+  },
+  {
+    "id": "FnKVptuOutEuhbQmrKYq",
+    "price": 5500,
+    "is_available": true,
+    "restaurant_id": "r1",
+    "category": "Rice",
+    "image_url": "https://images.unsplash.com/photo-1532550907401-a500c9a57435?q=80&w=800",
+    "name": "Rice + Large Barbecued Chicken"
+  },
+  {
+    "id": "O7Gf84ElUCNtKY3qChVR",
+    "name": "Single Pringle",
+    "image_url": "https://images.unsplash.com/photo-1566478989125-edfc9622d7ba?q=80&w=800",
+    "price": 1500,
+    "restaurant_id": "r1",
+    "category": "Others",
+    "is_available": true
+  },
+  {
+    "id": "UhtEbm7lvS0Ma1MIsPOK",
+    "restaurant_id": "r1",
+    "name": "Rice + Peppered Chicken",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1512058560566-d8d437a17364?q=80&w=800",
+    "price": 3500,
+    "category": "Rice"
+  },
+  {
+    "id": "adSlcfqcgM3t0qokgB0e",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?q=80&w=800",
+    "category": "Rice",
+    "price": 4500,
+    "name": "Rice + Turkey",
+    "restaurant_id": "r1"
+  },
+  {
+    "id": "f8HXvIVDJ8Ize607f7nj",
+    "image_url": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=800",
+    "price": 500,
+    "name": "Soft Drink",
+    "is_available": true,
+    "category": "Drinks",
+    "restaurant_id": "r1"
+  },
+  {
+    "id": "fmPnRNkryPjJwDHJDtIy",
+    "name": "Pasta + Medium Barbecued Chicken",
+    "category": "Pasta",
+    "price": 4000,
+    "restaurant_id": "r1",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=800"
+  },
+  {
+    "id": "k9BH9wPxkhxzVJqU1Bv4",
+    "restaurant_id": "r1",
+    "image_url": "https://images.unsplash.com/photo-1502741224143-90386d7cd8c9?q=80&w=800",
+    "category": "Drinks",
+    "is_available": true,
+    "name": "Smoothie",
+    "price": 2500
+  },
+  {
+    "id": "lTnCguCHZRO5oZN217LU",
+    "name": "Pasta + Turkey",
+    "price": 4500,
+    "restaurant_id": "r1",
+    "category": "Pasta",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1558985226-990c000ad04f?q=80&w=800"
+  },
+  {
+    "id": "oilDbJGNIU4gRh3MZobi",
+    "category": "Drinks",
+    "name": "Parfait",
+    "restaurant_id": "r1",
+    "is_available": true,
+    "image_url": "https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=800",
+    "price": 3500
+  },
+  {
+    "id": "sRP56LfHixHR8CIsmhE6",
+    "category": "Others",
+    "image_url": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?q=80&w=800",
+    "is_available": true,
+    "price": 1000,
+    "name": "Double Sausage",
+    "restaurant_id": "r1"
+  },
+  {
+    "id": "uenkOzy9GUrUsXFdFXcp",
+    "price": 4000,
+    "restaurant_id": "r1",
+    "name": "Chips + Chicken (Medium Barbecued)",
+    "is_available": true,
+    "category": "Chips",
+    "image_url": "https://images.unsplash.com/photo-1518013034477-2990fa317e23?q=80&w=800"
+  },
+  {
+    "id": "xVckAz6jV31zZGqCs2CX",
+    "name": "Pasta + Large Barbecued Chicken",
+    "is_available": true,
+    "category": "Pasta",
+    "restaurant_id": "r1",
+    "image_url": "https://images.unsplash.com/photo-1473093226795-af9932fe5856?q=80&w=800",
+    "price": 5500
+  },
+  {
+    "id": "zW9cflkLU2n72aNlWm0r",
+    "image_url": "https://images.unsplash.com/photo-1621200414838-84423c723707?q=80&w=800",
+    "is_available": true,
+    "category": "Chips",
+    "price": 5500,
+    "name": "Chips + Chicken (Large Barbecued)",
+    "restaurant_id": "r1"
+  }
+]

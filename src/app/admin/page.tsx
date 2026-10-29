@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { Order } from '@/types/schema';
 import { 
   DollarSign, 
@@ -12,9 +12,9 @@ import {
   Utensils, 
   ChevronRight, 
   ArrowRight, 
-  Plus,
-  MessageSquare,
-  Clock
+  Clock,
+  Sparkles,
+  Layers
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
 
       setRecentOrders(orders.slice(0, 5));
 
-      // Calculate Top Items
+      // Calculate Top Ordered Items
       const itemCounts: Record<string, {count: number, revenue: number}> = {};
       orders.forEach(o => {
         (o.items || []).forEach(item => {
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
       const sortedItems = Object.entries(itemCounts)
         .map(([name, data]) => ({ name, ...data }))
         .sort((a, b) => b.count - a.count)
-        .slice(0, 4);
+        .slice(0, 5);
       
       setTopItems(sortedItems);
     }, (error) => {
@@ -70,110 +70,124 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-24 sm:pb-0">
+    <main className="min-h-screen bg-[#faf6f0] pb-24 sm:pb-12 flex flex-col">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
-        <div className="flex flex-col gap-4 mb-6 sm:mb-10">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-10 w-full flex-1">
+        {/* Header Strip */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
           <div>
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2">
-              <MessageSquare size={13} /> WhatsApp Orders System
+            <div className="inline-flex items-center gap-2 bg-red-50 text-brand-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+              <Sparkles size={13} /> Déskilz Management Portal
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black text-brand-dark mb-1">Business Overview</h1>
-            <p className="text-slate-500 text-sm sm:text-base">Real-time stats on your WhatsApp restaurant orders.</p>
+            <h1 className="text-2xl sm:text-4xl font-black text-brand-dark">Business Overview</h1>
+            <p className="text-[#7a6655] text-sm sm:text-base mt-0.5">Live tracking for WhatsApp customer orders and catalogue management.</p>
           </div>
           <div className="flex flex-wrap gap-2 sm:gap-3">
-             <Link href="/admin/orders" className="bg-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-brand-dark font-bold border border-slate-200 flex items-center gap-1.5 shadow-sm hover:bg-slate-50 text-sm">
-                <ShoppingBag size={16} /> Orders
+             <Link href="/admin/orders" className="btn-outline px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
+                <ShoppingBag size={16} /> Kitchen Orders
              </Link>
-             <Link href="/admin/menu" className="btn-primary px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-amber-500/20 text-sm">
-                <Plus size={16} /> Add Food
+             <Link href="/admin/menu" className="btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
+                <Layers size={16} /> Manage 70 Dishes
              </Link>
           </div>
         </div>
 
         {/* Primary Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
           {[
-            { label: 'Revenue', value: `₦${stats.totalRevenue.toLocaleString()}`, sub: 'All orders', icon: DollarSign, color: 'bg-emerald-500' },
-            { label: 'Orders', value: stats.totalOrders, sub: 'Via WhatsApp', icon: ShoppingBag, color: 'bg-brand-primary' },
-            { label: 'Pending', value: stats.pendingOrders, sub: 'In kitchen', icon: Clock, color: 'bg-orange-500' },
-            { label: 'Avg. Value', value: `₦${Math.round(stats.averageOrder).toLocaleString()}`, sub: 'Per order', icon: TrendingUp, color: 'bg-purple-500' },
+            { label: 'Total Revenue', value: `₦${stats.totalRevenue.toLocaleString()}`, sub: 'From WhatsApp orders', icon: DollarSign, color: 'bg-emerald-500' },
+            { label: 'Completed Orders', value: stats.totalOrders, sub: 'Customer orders', icon: ShoppingBag, color: 'bg-brand-primary' },
+            { label: 'Active in Kitchen', value: stats.pendingOrders, sub: 'Needs preparation', icon: Clock, color: 'bg-[#facc15] text-brand-dark' },
+            { label: 'Average Ticket', value: `₦${Math.round(stats.averageOrder).toLocaleString()}`, sub: 'Per WhatsApp order', icon: TrendingUp, color: 'bg-indigo-600' },
           ].map((item, idx) => (
             <motion.div 
               key={item.label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100"
+              transition={{ delay: idx * 0.08 }}
+              className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-[#ede5da]"
             >
-              <div className={`${item.color} w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-white mb-3 sm:mb-4`}>
-                <item.icon size={18} className="sm:hidden" />
-                <item.icon size={24} className="hidden sm:block" />
+              <div className={`${item.color} w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-white mb-3 shadow-sm`}>
+                <item.icon size={20} />
               </div>
-              <p className="text-[10px] sm:text-sm font-bold text-slate-400 uppercase tracking-wider">{item.label}</p>
-              <h3 className="text-xl sm:text-2xl font-black text-brand-dark my-0.5 sm:my-1">{item.value}</h3>
-              <p className="text-[10px] sm:text-xs font-bold text-slate-500">{item.sub}</p>
+              <p className="text-[10px] sm:text-xs font-bold text-[#a89080] uppercase tracking-wider">{item.label}</p>
+              <h3 className="text-xl sm:text-2xl font-black text-brand-dark my-1">{item.value}</h3>
+              <p className="text-[11px] font-medium text-[#7a6655]">{item.sub}</p>
             </motion.div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-          {/* Top Selling Items */}
-          <div className="lg:col-span-1 bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm border border-slate-100">
-            <h3 className="text-base sm:text-xl font-black text-brand-dark mb-4 sm:mb-6 flex items-center gap-2">
-              <Utensils className="text-brand-primary" size={18} /> Top Ordered Dishes
-            </h3>
-            <div className="space-y-4 sm:space-y-6">
-              {topItems.length > 0 ? topItems.map((item, idx) => (
-                <div key={item.name} className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center font-black text-brand-dark text-sm flex-shrink-0">
-                      {idx + 1}
+        {/* Breakdown Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+          {/* Top Selling Dishes */}
+          <div className="lg:col-span-1 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#ede5da] flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg sm:text-xl font-black text-brand-dark mb-5 flex items-center gap-2">
+                <Utensils className="text-brand-primary" size={20} /> Top Ordered Dishes
+              </h3>
+              <div className="space-y-4">
+                {topItems.length > 0 ? topItems.map((item, idx) => (
+                  <div key={item.name} className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-[#fdf8f3] transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-red-50 text-brand-primary font-black text-xs flex items-center justify-center flex-shrink-0">
+                        #{idx + 1}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-extrabold text-brand-dark text-sm truncate">{item.name}</p>
+                        <p className="text-[11px] text-[#a89080] font-bold">{item.count} ordered</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-brand-dark text-sm line-clamp-1">{item.name}</p>
-                      <p className="text-xs text-slate-400 font-bold">{item.count} ordered</p>
-                    </div>
+                    <p className="font-black text-brand-primary text-sm whitespace-nowrap">₦{item.revenue.toLocaleString()}</p>
                   </div>
-                  <p className="font-black text-brand-primary text-sm whitespace-nowrap">₦{item.revenue.toLocaleString()}</p>
-                </div>
-              )) : (
-                <p className="text-slate-400 italic text-sm">No sales recorded yet.</p>
-              )}
+                )) : (
+                  <div className="py-10 text-center text-[#a89080] text-xs">
+                    No order history recorded yet.
+                  </div>
+                )}
+              </div>
             </div>
-            <Link href="/admin/menu" className="mt-5 sm:mt-8 w-full py-3 sm:py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-slate-500 font-bold hover:border-brand-primary hover:text-brand-primary transition-all text-sm">
-              Manage Products <ChevronRight size={16} />
+
+            <Link href="/admin/menu" className="mt-6 w-full py-3 border-2 border-dashed border-[#ede5da] rounded-2xl flex items-center justify-center gap-2 text-[#7a6655] font-bold hover:border-brand-primary hover:text-brand-primary transition-all text-xs">
+              Manage Products & Prices <ChevronRight size={15} />
             </Link>
           </div>
 
-          {/* Recent Orders List */}
-          <div className="lg:col-span-2 bg-brand-dark rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl">
-            <div className="flex justify-between items-center mb-5 sm:mb-8">
-              <h3 className="text-base sm:text-xl font-black text-white">Recent Orders</h3>
-              <Link href="/admin/orders" className="text-brand-primary font-bold text-xs sm:text-sm flex items-center gap-1 hover:underline">
-                View All <ArrowRight size={14} />
+          {/* Recent Orders Stream */}
+          <div className="lg:col-span-2 bg-brand-dark rounded-3xl p-6 sm:p-8 shadow-xl text-white">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg sm:text-xl font-black text-white">Recent WhatsApp Orders</h3>
+                <p className="text-amber-200/60 text-xs mt-0.5">Real-time submissions from customer checkout</p>
+              </div>
+              <Link href="/admin/orders" className="text-[#facc15] font-bold text-xs flex items-center gap-1 hover:underline">
+                View All Orders <ArrowRight size={14} />
               </Link>
             </div>
-            <div className="space-y-3 sm:space-y-4">
+
+            <div className="space-y-3">
               {recentOrders.length > 0 ? recentOrders.map((order) => (
-                <div key={order.id} className="bg-slate-800/50 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center justify-between gap-2">
+                <div key={order.id} className="bg-white/10 hover:bg-white/15 p-4 rounded-2xl flex items-center justify-between gap-3 transition-colors border border-white/10">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 sm:w-12 sm:h-12 bg-white/10 rounded-lg sm:rounded-xl flex items-center justify-center text-white flex-shrink-0">
-                      <ShoppingBag size={16} />
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-brand-primary flex-shrink-0">
+                      <ShoppingBag size={18} />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-white text-sm truncate">{order.customer_name}</p>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{order.status}</p>
+                      <p className="font-extrabold text-white text-sm truncate">{order.customer_name}</p>
+                      <p className="text-[11px] text-amber-200/70 font-medium">
+                        {order.items?.length || 0} items • <span className="uppercase text-emerald-400 font-bold">{order.status}</span>
+                      </p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-black text-brand-primary text-sm">₦{order.total_price.toLocaleString()}</p>
-                    <p className="text-[10px] text-slate-500 font-mono">#{order.id?.slice(-5).toUpperCase()}</p>
+                    <p className="font-black text-[#facc15] text-sm">₦{order.total_price.toLocaleString()}</p>
+                    <p className="text-[10px] text-amber-200/50 font-mono">#{order.id?.slice(-5).toUpperCase()}</p>
                   </div>
                 </div>
               )) : (
-                <p className="text-slate-500 italic text-sm">No orders received yet.</p>
+                <div className="py-12 text-center text-amber-200/50 text-xs">
+                  No incoming orders right now.
+                </div>
               )}
             </div>
           </div>

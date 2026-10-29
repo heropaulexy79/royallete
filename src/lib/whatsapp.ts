@@ -30,7 +30,7 @@ export function formatWhatsAppMessage({
   const notesString = orderNotes ? `\n📝 *Order Notes:* ${orderNotes}` : '';
 
   return (
-    `👋 *Hello Royallete! I want to place an order:*\n\n` +
+    `👋 *Hello Déskilz Restaurant! I want to place an order:*\n\n` +
     `📋 *Order Items:*\n${itemList}\n\n` +
     `💰 *Total Amount:* ₦${totalPrice.toLocaleString()}\n` +
     `👤 *Customer Name:* ${customerName}\n` +
