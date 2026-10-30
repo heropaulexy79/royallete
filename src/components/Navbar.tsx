@@ -2,16 +2,63 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, UtensilsCrossed, MessageSquare, Menu, X, Flame, ShieldAlert } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import {
+  ShoppingCart,
+  UtensilsCrossed,
+  MessageSquare,
+  Menu,
+  X,
+  Flame,
+  ShieldAlert,
+  Lock,
+} from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import { getKitchenStatus, KitchenStatus } from '@/lib/kitchenStatus';
+import { isAdminAuthenticated } from '@/lib/adminAuth';
+import AdminLoginModal from '@/components/AdminLoginModal';
+
+function FacebookIcon({ size = 14, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+
+function InstagramIcon({ size = 14, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
+function TikTokIcon({ size = 14, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.298-.002.595.042.88.13V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.85-4.47V8.58a8.27 8.27 0 0 0 4.92 1.58V6.69z" />
+    </svg>
+  );
+}
 
 export default function Navbar() {
+  const router = useRouter();
   const { cart } = useCart();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [kitchenStatus, setKitchenStatus] = useState<KitchenStatus>(getKitchenStatus());
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
 
   useEffect(() => {
     // Check kitchen status on load and every 60 seconds
@@ -22,11 +69,21 @@ export default function Navbar() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleAdminClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAdminAuthenticated()) {
+      router.push('/admin');
+    } else {
+      setAdminModalOpen(true);
+    }
+  };
+
   return (
     <>
-      {/* Real-time Kitchen Status Top Strip: 9:00 AM – 9:00 PM Africa/Lagos automatic detection */}
-      <div className="bg-[#191514] text-white py-2 px-3 sm:px-4 border-b border-[#2d2624] text-xs font-medium flex items-center justify-between gap-2 overflow-hidden">
-        <div className="flex items-center gap-2 max-w-full truncate mx-auto sm:mx-0">
+      {/* Real-time Kitchen Status + Social Icons Top Strip (9am – 9pm Africa/Lagos) */}
+      <div className="bg-[#191514] text-white py-2 px-3 sm:px-6 border-b border-[#2d2624] text-xs font-medium flex items-center justify-between gap-3 overflow-hidden">
+        {/* Left: Kitchen Status Indicator */}
+        <div className="flex items-center gap-2 max-w-full truncate">
           <span
             className={`inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
               kitchenStatus.isOpen
@@ -43,16 +100,54 @@ export default function Navbar() {
           </span>
         </div>
 
-        <div className="hidden md:flex items-center gap-3 text-xs flex-shrink-0">
-          <span className="text-stone-400 font-medium">9:00 AM – 9:00 PM Daily</span>
-          <span className="text-stone-600">•</span>
+        {/* Right: Social Media Icons + Hours & WhatsApp */}
+        <div className="flex items-center gap-3 sm:gap-4 text-xs flex-shrink-0">
+          {/* Social Media Channels */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 text-stone-400">
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Déskilz on Facebook"
+              className="hover:text-[#1877F2] transition-colors p-1"
+            >
+              <FacebookIcon size={14} />
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Déskilz on Instagram"
+              className="hover:text-[#E4405F] transition-colors p-1"
+            >
+              <InstagramIcon size={14} />
+            </a>
+            <a
+              href="https://tiktok.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow Déskilz on TikTok"
+              className="hover:text-white transition-colors p-1"
+            >
+              <TikTokIcon size={13} />
+            </a>
+          </div>
+
+          <span className="text-stone-600 hidden md:inline">•</span>
+
+          <span className="text-stone-400 font-medium hidden md:inline">
+            9:00 AM – 9:00 PM Daily
+          </span>
+
+          <span className="text-stone-600 hidden md:inline">•</span>
+
           <a
             href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#fbbf24] hover:underline font-bold flex items-center gap-1"
+            className="text-[#fbbf24] hover:underline font-bold hidden sm:inline-flex items-center gap-1"
           >
-            WhatsApp Order Line: +{RESTAURANT_WHATSAPP_NUMBER}
+            WhatsApp Line: +{RESTAURANT_WHATSAPP_NUMBER}
           </a>
         </div>
       </div>
@@ -105,12 +200,13 @@ export default function Navbar() {
             >
               <Flame size={15} className="text-[#f59e0b]" /> Rice Combo
             </Link>
-            <Link
-              href="/admin"
-              className="text-stone-500 hover:text-[#191514] font-medium text-xs transition-colors flex items-center gap-1"
+            <button
+              type="button"
+              onClick={handleAdminClick}
+              className="text-stone-500 hover:text-[#191514] font-medium text-xs transition-colors flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-stone-200/50"
             >
               <ShieldAlert size={14} className="text-stone-400" /> Admin
-            </Link>
+            </button>
           </nav>
 
           {/* Right Actions */}
@@ -193,13 +289,22 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            <Link
-              href="/admin"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-500 hover:bg-white font-semibold text-xs transition-colors"
+
+            {/* Admin Trigger Button in Mobile Drawer */}
+            <button
+              type="button"
+              onClick={(e) => {
+                setMenuOpen(false);
+                handleAdminClick(e);
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-stone-600 hover:bg-white font-semibold text-xs transition-colors text-left"
             >
-              <ShieldAlert size={16} /> Admin Portal
-            </Link>
+              <span className="flex items-center gap-3">
+                <ShieldAlert size={16} /> Admin Portal
+              </span>
+              <Lock size={13} className="text-stone-400" />
+            </button>
+
             <a
               href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
               target="_blank"
@@ -209,6 +314,37 @@ export default function Navbar() {
             >
               <MessageSquare size={18} /> Chat & Order on WhatsApp
             </a>
+
+            {/* Social Icons in Mobile Drawer */}
+            <div className="flex items-center justify-center gap-5 pt-3 border-t border-[#ede5da] text-stone-600">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="p-2 hover:text-[#1877F2] transition-colors"
+              >
+                <FacebookIcon size={18} />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="p-2 hover:text-[#E4405F] transition-colors"
+              >
+                <InstagramIcon size={18} />
+              </a>
+              <a
+                href="https://tiktok.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
+                className="p-2 hover:text-black transition-colors"
+              >
+                <TikTokIcon size={17} />
+              </a>
+            </div>
           </div>
         )}
       </header>
@@ -244,6 +380,16 @@ export default function Navbar() {
           <span className="text-[10px] font-bold">Cart{cartCount > 0 ? ` (${cartCount})` : ''}</span>
         </Link>
       </div>
+
+      {/* Admin Login Modal (Triggered on clicking Admin anywhere in Navbar) */}
+      <AdminLoginModal
+        isOpen={adminModalOpen}
+        onClose={() => setAdminModalOpen(false)}
+        onSuccess={() => {
+          setAdminModalOpen(false);
+          router.push('/admin');
+        }}
+      />
     </>
   );
 }

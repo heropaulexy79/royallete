@@ -132,7 +132,7 @@ export default function SocialProofFOMO() {
             <div className="flex-1 min-w-0 pr-1">
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-0.5 uppercase tracking-wider">
-                  <CheckCircle size={10} className="stroke-[3]" /> Verified Order
+                  <CheckCircle size={10} className="stroke-[3]" /> Verified Pickup
                 </span>
                 <span className="text-stone-500 text-[10px]">•</span>
                 <span className="text-[10px] text-stone-400 font-medium">{current.timeAgo}</span>
@@ -141,7 +141,7 @@ export default function SocialProofFOMO() {
                 {current.item}
               </p>
               <p className="text-[11px] text-amber-300/90 leading-none mt-0.5 font-medium truncate">
-                Delivering to <span className="font-bold text-white underline decoration-amber-400/50">{current.location}</span>
+                Hot takeaway pickup • <span className="font-bold text-emerald-300">Ready in ~15 mins</span>
               </p>
             </div>
 
