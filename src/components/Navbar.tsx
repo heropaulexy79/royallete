@@ -1,18 +1,62 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, UtensilsCrossed, MessageSquare, Menu, X, Flame, ShieldAlert } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
+import { getKitchenStatus, KitchenStatus } from '@/lib/kitchenStatus';
 
 export default function Navbar() {
   const { cart } = useCart();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [kitchenStatus, setKitchenStatus] = useState<KitchenStatus>(getKitchenStatus());
+
+  useEffect(() => {
+    // Check kitchen status on load and every 60 seconds
+    setKitchenStatus(getKitchenStatus());
+    const interval = setInterval(() => {
+      setKitchenStatus(getKitchenStatus());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
+      {/* Real-time Kitchen Status Top Strip: 9:00 AM – 9:00 PM Africa/Lagos automatic detection */}
+      <div className="bg-[#191514] text-white py-2 px-3 sm:px-4 border-b border-[#2d2624] text-xs font-medium flex items-center justify-between gap-2 overflow-hidden">
+        <div className="flex items-center gap-2 max-w-full truncate mx-auto sm:mx-0">
+          <span
+            className={`inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
+              kitchenStatus.isOpen
+                ? 'bg-[#25D366] shadow-[0_0_10px_#25D366] animate-pulse'
+                : 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'
+            }`}
+          />
+          <span className="font-black text-white text-xs tracking-tight">
+            {kitchenStatus.statusText}
+          </span>
+          <span className="text-stone-500 hidden sm:inline">•</span>
+          <span className="text-amber-100/90 text-[11px] sm:text-xs truncate">
+            {kitchenStatus.subText}
+          </span>
+        </div>
+
+        <div className="hidden md:flex items-center gap-3 text-xs flex-shrink-0">
+          <span className="text-stone-400 font-medium">9:00 AM – 9:00 PM Daily</span>
+          <span className="text-stone-600">•</span>
+          <a
+            href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#fbbf24] hover:underline font-bold flex items-center gap-1"
+          >
+            WhatsApp Order Line: +{RESTAURANT_WHATSAPP_NUMBER}
+          </a>
+        </div>
+      </div>
+
       <header className="sticky top-0 z-50 bg-[#faf6f0]/95 backdrop-blur-md border-b border-[#ede5da] shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
           {/* Brand Logo & Name */}

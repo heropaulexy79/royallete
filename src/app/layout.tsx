@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import FloatingCart from "@/components/FloatingCart";
+import SocialProofFOMO from "@/components/SocialProofFOMO";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://deskilz.ng'),
@@ -63,6 +64,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <FloatingCart />
+          <SocialProofFOMO />
         </CartProvider>
       </body>
     </html>

@@ -165,21 +165,6 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#faf6f0] flex flex-col">
-      {/* Top Announcement Strip: Espresso Dark + Warm Amber */}
-      <div className="bg-[#191514] text-white py-2 px-4 border-b border-[#2d2624] text-center text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
-        <span className="inline-block w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse" />
-        <span className="text-amber-100 font-medium">Hot & Fresh WhatsApp Pickup Orders Available Daily</span>
-        <span className="hidden sm:inline text-stone-600">•</span>
-        <a
-          href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#fbbf24] hover:underline font-bold hidden sm:inline"
-        >
-          Order Line: +{RESTAURANT_WHATSAPP_NUMBER}
-        </a>
-      </div>
-
       <Navbar />
 
       {/* Hero Slider with exactly 3 creative slides */}

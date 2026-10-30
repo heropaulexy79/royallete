@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import { useCart } from '@/context/CartContext';
 import { FoodItem } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
-import { getRecommendations } from '@/lib/recommendations';
+import FrequentlyBoughtTogether from '@/components/FrequentlyBoughtTogether';
 import {
   Trash2,
   ShoppingBag,
@@ -117,8 +117,6 @@ export default function CartPage() {
     }
     fetchMenu();
   }, []);
-
-  const recommendations = getRecommendations({ cart, allItems, limit: 3 });
 
   const handleSendOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -338,43 +336,14 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Thoughtful Complementary Upselling in Cart with Amber Accents */}
-            {recommendations.length > 0 && (
-              <div className="bg-white rounded-2xl sm:rounded-3xl p-5 border border-[#ede5da] shadow-sm space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-amber-800 flex items-center gap-1.5 uppercase tracking-wider">
-                    <Sparkles size={14} className="text-[#f59e0b]" /> Optional Add-ons & Drinks
-                  </span>
-                  <span className="text-[11px] text-stone-400">Click to add</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {recommendations.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="border border-[#ede5da] rounded-xl p-2.5 flex items-center gap-2 hover:border-amber-300 transition-colors bg-[#faf6f0]/60"
-                    >
-                      <img
-                        src={rec.image_url}
-                        alt={rec.name}
-                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-xs text-brand-dark truncate">{rec.name}</p>
-                        <p className="text-[11px] font-black text-brand-primary">₦{rec.price.toLocaleString()}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => addToCart(rec, 1)}
-                        className="p-1.5 bg-brand-primary hover:bg-[#c4131e] text-white rounded-lg active:scale-90 transition-transform"
-                        title={`Add ${rec.name}`}
-                      >
-                        <Plus size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Amazon / Shopify-Style Frequently Bought Together Bundle */}
+            <FrequentlyBoughtTogether
+              cart={cart}
+              allItems={allItems}
+              onAddItems={(items) => {
+                items.forEach((item) => addToCart(item, 1));
+              }}
+            />
           </div>
 
           {/* Right Column: Sticky WhatsApp Checkout Form in Espresso Dark */}
