@@ -5,7 +5,8 @@ import Navbar from '@/components/Navbar';
 import { FoodItem, APPROVED_CATEGORIES } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { useCart } from '@/context/CartContext';
-import { getRecommendations } from '@/lib/recommendations';
+import { getRecommendations, getItemRecommendations } from '@/lib/recommendations';
+import AddToCartPopup from '@/components/AddToCartPopup';
 import {
   Plus,
   Minus,
@@ -150,6 +151,10 @@ function MenuInner() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Popup state
+  const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
+  const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, 'foodItems'));
@@ -332,7 +337,16 @@ function MenuInner() {
               className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
             >
               {filteredItems.map((item) => (
-                <FoodCard key={item.id} item={item} onAdd={(itm, q) => addToCart(itm, q)} />
+                <FoodCard
+                  key={item.id}
+                  item={item}
+                  onAdd={(itm, q) => {
+                    addToCart(itm, q);
+                    const recs = getItemRecommendations({ item: itm, cart, allItems: items, limit: 3 });
+                    setPopupRecs(recs);
+                    setPopupTriggerItem(itm);
+                  }}
+                />
               ))}
             </motion.div>
 
@@ -357,6 +371,15 @@ function MenuInner() {
           </>
         )}
       </section>
+
+      {/* Smart Add-to-Cart Recommendation Popup */}
+      {popupTriggerItem && (
+        <AddToCartPopup
+          triggerItem={popupTriggerItem}
+          recommendations={popupRecs}
+          onClose={() => setPopupTriggerItem(null)}
+        />
+      )}
     </main>
   );
 }

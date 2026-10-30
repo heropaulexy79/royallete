@@ -8,8 +8,10 @@ import { useCart } from '@/context/CartContext';
 import { FoodItem } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
+import AddToCartPopup from '@/components/AddToCartPopup';
+import { getItemRecommendations } from '@/lib/recommendations';
 import {
   UtensilsCrossed,
   ArrowRight,
@@ -38,13 +40,18 @@ const CATEGORY_TILES = [
   { name: 'Snacks', count: '5 items', image: 'https://images.unsplash.com/photo-1621200414838-84423c723707?q=80&w=800', tag: 'Fresh Pastries' },
 ];
 
-function FeaturedFoodCard({ item }: { item: FoodItem }) {
-  const { addToCart } = useCart();
+function FeaturedFoodCard({
+  item,
+  onAdd,
+}: {
+  item: FoodItem;
+  onAdd: (item: FoodItem, qty: number) => void;
+}) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
-    addToCart(item, qty);
+    onAdd(item, qty);
     setAdded(true);
     setQty(1);
     setTimeout(() => setAdded(false), 2000);
@@ -128,24 +135,30 @@ function FeaturedFoodCard({ item }: { item: FoodItem }) {
 }
 
 export default function HomePage() {
+  const { cart, addToCart } = useCart();
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>([]);
+  const [allItems, setAllItems] = useState<FoodItem[]>([]);
+  const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
+  const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
   useEffect(() => {
     async function loadFeatured() {
+      let itemsList: FoodItem[] = [];
       try {
-        const q = query(collection(db, 'foodItems'), where('is_available', '==', true), limit(8));
+        const q = query(collection(db, 'foodItems'), where('is_available', '==', true));
         const snap = await getDocs(q);
         if (!snap.empty) {
-          const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as FoodItem));
-          const highlighted = docs.filter((d) => d.is_featured).slice(0, 4);
-          setFeaturedItems(highlighted.length > 0 ? highlighted : docs.slice(0, 4));
-          return;
+          itemsList = snap.docs.map((d) => ({ id: d.id, ...d.data() } as FoodItem));
         }
       } catch (err) {
         console.warn('Using catalogue fallbacks for featured cards:', err);
       }
-      const fallbacks = APPROVED_CATALOGUE.filter((i) => i.is_featured).slice(0, 4);
-      setFeaturedItems(fallbacks.map((item, idx) => ({ id: `feat-${idx}`, ...item })));
+      if (itemsList.length === 0) {
+        itemsList = APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+      }
+      setAllItems(itemsList);
+      const highlighted = itemsList.filter((d) => d.is_featured).slice(0, 4);
+      setFeaturedItems(highlighted.length > 0 ? highlighted : itemsList.slice(0, 4));
     }
     loadFeatured();
   }, []);
@@ -307,7 +320,21 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {featuredItems.map((item) => (
-            <FeaturedFoodCard key={item.id} item={item} />
+            <FeaturedFoodCard
+              key={item.id}
+              item={item}
+              onAdd={(itm, q) => {
+                addToCart(itm, q);
+                const recs = getItemRecommendations({
+                  item: itm,
+                  cart,
+                  allItems: allItems.length > 0 ? allItems : (APPROVED_CATALOGUE as unknown as FoodItem[]),
+                  limit: 3,
+                });
+                setPopupRecs(recs);
+                setPopupTriggerItem(itm);
+              }}
+            />
           ))}
         </div>
 
@@ -522,6 +549,15 @@ export default function HomePage() {
           <p>Handcrafted with passion • 70 Approved Dishes in NGN</p>
         </div>
       </footer>
+
+      {/* Smart Add-to-Cart Recommendation Popup */}
+      {popupTriggerItem && (
+        <AddToCartPopup
+          triggerItem={popupTriggerItem}
+          recommendations={popupRecs}
+          onClose={() => setPopupTriggerItem(null)}
+        />
+      )}
     </main>
   );
 }
