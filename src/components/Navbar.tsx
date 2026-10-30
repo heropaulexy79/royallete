@@ -12,12 +12,17 @@ import {
   Flame,
   ShieldAlert,
   Lock,
+  MapPin,
+  ExternalLink,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import { getKitchenStatus, KitchenStatus } from '@/lib/kitchenStatus';
 import { isAdminAuthenticated } from '@/lib/adminAuth';
 import AdminLoginModal from '@/components/AdminLoginModal';
+
+export const RESTAURANT_ADDRESS = 'Inside Mobil filling station, Odo-Eran, Obantoko';
+export const GOOGLE_MAPS_URL = 'https://maps.google.com/?q=Mobil+filling+station,+Odo-Eran,+Obantoko';
 
 function FacebookIcon({ size = 14, className = '' }: { size?: number; className?: string }) {
   return (
@@ -99,6 +104,21 @@ export default function Navbar() {
             {kitchenStatus.subText}
           </span>
         </div>
+
+        {/* Center: Clickable Address link to Google Maps */}
+        <a
+          href={GOOGLE_MAPS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Open in Google Maps"
+          className="hidden md:flex items-center gap-1.5 text-stone-300 hover:text-amber-300 transition-colors text-xs group py-0.5 px-2 rounded-lg hover:bg-stone-800/60"
+        >
+          <MapPin size={13} className="text-[#fbbf24] flex-shrink-0 group-hover:scale-110 transition-transform" />
+          <span className="font-semibold text-stone-200 group-hover:text-amber-300 group-hover:underline truncate max-w-xs lg:max-w-md">
+            {RESTAURANT_ADDRESS}
+          </span>
+          <ExternalLink size={11} className="text-stone-400 group-hover:text-amber-300 opacity-70" />
+        </a>
 
         {/* Right: Social Media Icons + Hours & WhatsApp */}
         <div className="flex items-center gap-3 sm:gap-4 text-xs flex-shrink-0">
@@ -313,6 +333,24 @@ export default function Navbar() {
               className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-[#25D366] text-white font-bold text-sm shadow-md shadow-emerald-500/20"
             >
               <MessageSquare size={18} /> Chat & Order on WhatsApp
+            </a>
+
+            {/* Clickable Location Card in Mobile Drawer */}
+            <a
+              href={GOOGLE_MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white text-stone-700 hover:text-brand-primary border border-[#ede5da] font-bold text-xs shadow-xs transition-colors group"
+            >
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0 group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-colors">
+                <MapPin size={17} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-stone-400 font-black">Pickup Address (Google Maps)</p>
+                <p className="truncate text-stone-800 text-xs font-bold group-hover:text-brand-primary">{RESTAURANT_ADDRESS}</p>
+              </div>
+              <ExternalLink size={13} className="text-stone-400" />
             </a>
 
             {/* Social Icons in Mobile Drawer */}

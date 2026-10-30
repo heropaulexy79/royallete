@@ -131,22 +131,22 @@ export default function AddToCartPopup({ triggerItem, recommendations, onClose }
         onClick={(e) => {
           if (e.target === backdropRef.current) onClose();
         }}
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm"
         aria-modal="true"
         role="dialog"
         aria-label="Frequently bought together"
       >
         <motion.div
           key="popup-panel"
-          initial={{ opacity: 0, y: 60, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 60, scale: 0.96 }}
-          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-          className="w-full sm:max-w-md bg-[#faf6f0] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-[#ede5da]"
+          initial={{ opacity: 0, scale: 0.94, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94, y: 16 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="w-full max-w-md bg-[#faf6f0] rounded-3xl shadow-2xl overflow-hidden border border-[#ede5da] max-h-[88vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Card with Social Proof and Frequently Bought Together Label */}
-          <div className="relative bg-gradient-to-br from-[#191514] via-[#241a18] to-[#2d1f1b] px-5 py-5 text-white">
+          <div className="relative bg-gradient-to-br from-[#191514] via-[#241a18] to-[#2d1f1b] px-5 py-4 sm:py-5 text-white flex-shrink-0">
             <button
               onClick={onClose}
               aria-label="Close popup"
@@ -169,7 +169,7 @@ export default function AddToCartPopup({ triggerItem, recommendations, onClose }
             </div>
 
             {/* High-Converting Frequently Bought Together Banner */}
-            <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between">
+            <div className="mt-3.5 pt-3 border-t border-white/10 flex items-center justify-between">
               <div>
                 <p className="text-amber-300 text-xs sm:text-sm font-black tracking-wide flex items-center gap-1.5">
                   <Sparkles size={14} className="text-[#fbbf24] flex-shrink-0" />
@@ -198,7 +198,7 @@ export default function AddToCartPopup({ triggerItem, recommendations, onClose }
           </div>
 
           {/* Recommendations List */}
-          <div className="px-4 pt-4 pb-4 space-y-2.5 max-h-[50vh] overflow-y-auto overscroll-contain">
+          <div className="px-4 py-3 space-y-2.5 max-h-[42vh] overflow-y-auto overscroll-contain flex-1 min-h-0">
             {recommendations.length > 0 ? (
               recommendations.map((rec) => (
                 <RecommendationCard key={rec.id} item={rec} onAdd={handleAddRec} />
@@ -209,7 +209,7 @@ export default function AddToCartPopup({ triggerItem, recommendations, onClose }
           </div>
 
           {/* Actions */}
-          <div className="px-4 pb-5 pt-2 flex flex-col gap-2 bg-gradient-to-t from-[#faf6f0] via-[#faf6f0] to-transparent">
+          <div className="px-4 pb-4 sm:pb-5 pt-3 flex flex-col gap-2 bg-[#faf6f0] border-t border-[#ede5da] flex-shrink-0">
             <Link
               href="/cart"
               onClick={onClose}

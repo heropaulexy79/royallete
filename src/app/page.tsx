@@ -26,6 +26,8 @@ import {
   ChefHat,
   Flame,
   Phone,
+  MapPin,
+  ExternalLink,
 } from 'lucide-react';
 
 // Category discovery card data
@@ -501,7 +503,7 @@ export default function HomePage() {
           </div>
 
           <div>
-            <h4 className="text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Orders & Contact</h4>
+            <h4 className="text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Orders & Location</h4>
             <ul className="space-y-2 text-xs">
               <li className="flex items-center gap-2 text-white">
                 <Phone size={14} className="text-[#25D366]" /> +{RESTAURANT_WHATSAPP_NUMBER}
@@ -510,7 +512,23 @@ export default function HomePage() {
                 <MessageSquare size={14} className="text-[#25D366]" /> Direct WhatsApp Kitchen Handoff
               </li>
               <li>
-                <span className="text-stone-500">Service:</span> Fast Pickup & Takeaway
+                <span className="text-stone-500">Service:</span> Fast Hot Pickup & Takeaway
+              </li>
+              <li className="pt-1.5 border-t border-stone-800/80">
+                <a
+                  href="https://maps.google.com/?q=Mobil+filling+station,+Odo-Eran,+Obantoko"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 text-stone-300 hover:text-amber-300 transition-colors group"
+                >
+                  <MapPin size={15} className="text-[#fbbf24] flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider block">Pickup Address (Google Maps):</span>
+                    <span className="leading-snug block font-medium group-hover:underline text-white">
+                      Inside Mobil filling station, Odo-Eran, Obantoko
+                    </span>
+                  </div>
+                </a>
               </li>
             </ul>
           </div>
@@ -531,7 +549,16 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto pt-8 border-t border-stone-800 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-stone-500">
           <p>© {new Date().getFullYear()} Déskilz Restaurant. All rights reserved.</p>
-          <p>Handcrafted with passion • 70 Approved Dishes in NGN</p>
+          <a
+            href="https://maps.google.com/?q=Mobil+filling+station,+Odo-Eran,+Obantoko"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-stone-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors group"
+          >
+            <MapPin size={13} className="text-[#fbbf24]" />
+            <span className="group-hover:underline">Inside Mobil filling station, Odo-Eran, Obantoko</span>
+            <ExternalLink size={11} className="opacity-70" />
+          </a>
         </div>
       </footer>
 
