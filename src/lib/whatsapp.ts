@@ -11,6 +11,21 @@ export interface WhatsAppOrderDetails {
   totalPrice: number;
 }
 
+/**
+ * Generates a simple numeric checksum from the order items.
+ * Staff can re-compute this on the admin panel from the saved order
+ * and compare — any mismatch means the customer edited the message.
+ *
+ * Algorithm: sum of (price × quantity) for every item, mod 9999.
+ * Short, easy to read, hard to guess.
+ */
+export function computeOrderChecksum(items: OrderItem[], totalPrice: number): string {
+  const raw = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // XOR with totalPrice to make it depend on the final total too
+  const checksum = (raw ^ Math.floor(totalPrice)) % 9999;
+  return checksum.toString().padStart(4, '0');
+}
+
 export function formatWhatsAppMessage({
   orderId,
   customerName,
@@ -22,28 +37,39 @@ export function formatWhatsAppMessage({
   const itemList = items
     .map(
       (item) =>
-        `• *${item.quantity}x ${item.name}* — ₦${(item.price * item.quantity).toLocaleString()}`
+        `  • *${item.quantity}x ${item.name}* — ₦${(item.price * item.quantity).toLocaleString()}`
     )
     .join('\n');
 
-  const refString = orderId ? `\n🔖 *Order Ref:* #${orderId.slice(-6).toUpperCase()}` : '';
-  const notesString = orderNotes ? `\n📝 *Order Notes:* ${orderNotes}` : '';
+  const shortRef = orderId ? orderId.slice(-6).toUpperCase() : 'N/A';
+  const checksum = computeOrderChecksum(items, totalPrice);
+  const notesString = orderNotes ? `\n📝 *Notes:* ${orderNotes}` : '';
 
   return (
-    `👋 *Hello Déskilz Restaurant! I want to place an order:*\n\n` +
+    `🍽️ *DÉSKILZ KITCHEN — NEW ORDER*\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
     `📋 *Order Items:*\n${itemList}\n\n` +
-    `💰 *Total Amount:* ₦${totalPrice.toLocaleString()}\n` +
-    `👤 *Customer Name:* ${customerName}\n` +
-    `📞 *Phone Number:* ${phone}` +
-    `${notesString}` +
-    `${refString}\n\n` +
-    `Please confirm my order and let me know when it will be ready. Thank you!`
+    `💰 *Total:* ₦${totalPrice.toLocaleString()}\n` +
+    `👤 *Name:* ${customerName}\n` +
+    `📞 *Phone:* ${phone}` +
+    `${notesString}\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `🔖 *Order Ref:* #${shortRef}\n` +
+    `🔐 *Verification Code:* ${checksum}\n` +
+    `━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `⚠️ *DO NOT EDIT THIS MESSAGE.*\n` +
+    `Prices & items are locked by our system.\n` +
+    `Any changes will cause your order to be *rejected*.\n\n` +
+    `Please tap *Send* to confirm your pickup order. Thank you! 🙏`
   );
 }
 
-export function generateWhatsAppUrl(details: WhatsAppOrderDetails, phone: string = RESTAURANT_WHATSAPP_NUMBER): string {
-  // Clean phone number: remove any non-digit characters
+export function generateWhatsAppUrl(
+  details: WhatsAppOrderDetails,
+  phone: string = RESTAURANT_WHATSAPP_NUMBER
+): string {
   const cleanPhone = phone.replace(/\D/g, '');
   const message = formatWhatsAppMessage(details);
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
+

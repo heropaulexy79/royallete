@@ -13,8 +13,11 @@ import {
   FileText, 
   CheckCircle2, 
   Utensils,
-  ShoppingBag
+  ShoppingBag,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
+import { computeOrderChecksum } from '@/lib/whatsapp';
 
 const STATUS_FLOW: Record<OrderStatus, OrderStatus | null> = {
   pending: 'preparing',
@@ -273,6 +276,34 @@ export default function AdminOrders() {
                       <span className="font-bold text-[#7a6655]">Total</span>
                       <span className="text-2xl font-black text-brand-primary">₦{selectedOrder.total_price.toLocaleString()}</span>
                     </div>
+
+                    {/* ── Tamper Verification Block ── */}
+                    {(() => {
+                      const code = computeOrderChecksum(selectedOrder.items, selectedOrder.total_price);
+                      return (
+                        <div className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-4 space-y-2">
+                          <div className="flex items-center gap-2 text-emerald-800">
+                            <ShieldCheck size={16} className="flex-shrink-0" />
+                            <span className="text-xs font-black uppercase tracking-wider">Order Verification</span>
+                          </div>
+                          <p className="text-[11px] text-emerald-700">
+                            When the customer sends the WhatsApp message, compare the
+                            <strong> Verification Code</strong> in their message to the one below.
+                            If they don&apos;t match, the message was edited.
+                          </p>
+                          <div className="flex items-center justify-between bg-white rounded-xl px-4 py-3 border border-emerald-200">
+                            <span className="text-xs font-bold text-emerald-700">Expected Code</span>
+                            <span className="font-black text-2xl text-emerald-700 tracking-widest font-mono">{code}</span>
+                          </div>
+                          <div className="flex items-start gap-1.5 bg-amber-50 rounded-xl px-3 py-2 border border-amber-200">
+                            <ShieldAlert size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                            <p className="text-[10px] text-amber-800 font-medium">
+                              <strong>If the code doesn&apos;t match:</strong> Do not prepare the order. Reply to the customer on WhatsApp and ask them to re-place their order without editing the message.
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Actions in Sidebar */}
