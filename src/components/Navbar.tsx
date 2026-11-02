@@ -14,6 +14,8 @@ import {
   Lock,
   MapPin,
   ExternalLink,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
@@ -85,90 +87,146 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Real-time Kitchen Status + Social Icons Top Strip (9am – 9pm Africa/Lagos) */}
-      <div className="bg-[#191514] text-white py-2 px-3 sm:px-6 border-b border-[#2d2624] text-xs font-medium flex items-center justify-between gap-3 overflow-hidden">
-        {/* Left: Kitchen Status Indicator */}
-        <div className="flex items-center gap-2 max-w-full truncate">
-          <span
-            className={`inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
-              kitchenStatus.isOpen
-                ? 'bg-[#25D366] shadow-[0_0_10px_#25D366] animate-pulse'
-                : 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'
-            }`}
-          />
-          <span className="font-black text-white text-xs tracking-tight">
-            {kitchenStatus.statusText}
-          </span>
-          <span className="text-stone-500 hidden sm:inline">•</span>
-          <span className="text-amber-100/90 text-[11px] sm:text-xs truncate">
-            {kitchenStatus.subText}
-          </span>
-        </div>
+      {/* ── Continuous Live Marquee Top Strip (Moving Right to Left) ── */}
+      <div
+        className="bg-[#191514] text-white py-2 border-b border-[#2d2624] text-xs font-medium overflow-hidden relative select-none"
+        aria-label="Restaurant Live Announcements and Information Ticker"
+      >
+        {/* Subtle Edge Fade Gradients for smooth entrance/exit */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-[#191514] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-[#191514] to-transparent z-10 pointer-events-none" />
 
-        {/* Center: Clickable Address link to Google Maps */}
-        <a
-          href={GOOGLE_MAPS_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Open in Google Maps"
-          className="hidden md:flex items-center gap-1.5 text-stone-300 hover:text-amber-300 transition-colors text-xs group py-0.5 px-2 rounded-lg hover:bg-stone-800/60"
-        >
-          <MapPin size={13} className="text-[#fbbf24] flex-shrink-0 group-hover:scale-110 transition-transform" />
-          <span className="font-semibold text-stone-200 group-hover:text-amber-300 group-hover:underline truncate max-w-xs lg:max-w-md">
-            {RESTAURANT_ADDRESS}
-          </span>
-          <ExternalLink size={11} className="text-stone-400 group-hover:text-amber-300 opacity-70" />
-        </a>
-
-        {/* Right: Social Media Icons + Hours & WhatsApp */}
-        <div className="flex items-center gap-3 sm:gap-4 text-xs flex-shrink-0">
-          {/* Social Media Channels */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 text-stone-400">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Follow Déskilz on Facebook"
-              className="hover:text-[#1877F2] transition-colors p-1"
+        {/* Marquee Track: duplicated seamlessly for infinite scroll */}
+        <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
+          {[0, 1].map((copyIndex) => (
+            <div
+              key={copyIndex}
+              aria-hidden={copyIndex === 1}
+              className="flex items-center gap-6 sm:gap-8 flex-shrink-0"
             >
-              <FacebookIcon size={14} />
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Follow Déskilz on Instagram"
-              className="hover:text-[#E4405F] transition-colors p-1"
-            >
-              <InstagramIcon size={14} />
-            </a>
-            <a
-              href="https://tiktok.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Follow Déskilz on TikTok"
-              className="hover:text-white transition-colors p-1"
-            >
-              <TikTokIcon size={13} />
-            </a>
-          </div>
+              {/* 1. Live Kitchen Status */}
+              <div className="inline-flex items-center gap-2">
+                <span
+                  className={`inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
+                    kitchenStatus.isOpen
+                      ? 'bg-[#25D366] shadow-[0_0_10px_#25D366] animate-pulse'
+                      : 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'
+                  }`}
+                />
+                <span className="font-black text-white text-xs tracking-tight">
+                  {kitchenStatus.statusText}
+                </span>
+                <span className="text-amber-200/80 text-[11px] sm:text-xs">
+                  ({kitchenStatus.subText})
+                </span>
+              </div>
 
-          <span className="text-stone-600 hidden md:inline">•</span>
+              <span className="text-amber-500/50 font-bold select-none">•</span>
 
-          <span className="text-stone-400 font-medium hidden md:inline">
-            9:00 AM – 9:00 PM Daily
-          </span>
+              {/* 2. Restaurant Physical Address */}
+              <a
+                href={GOOGLE_MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open location in Google Maps"
+                className="inline-flex items-center gap-1.5 text-stone-300 hover:text-amber-300 transition-colors group cursor-pointer"
+              >
+                <MapPin size={13} className="text-[#fbbf24] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-stone-200 group-hover:text-amber-300 group-hover:underline">
+                  Pickup: {RESTAURANT_ADDRESS}
+                </span>
+                <ExternalLink size={10} className="text-stone-400 group-hover:text-amber-300 opacity-70" />
+              </a>
 
-          <span className="text-stone-600 hidden md:inline">•</span>
+              <span className="text-amber-500/50 font-bold select-none">•</span>
 
-          <a
-            href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#fbbf24] hover:underline font-bold hidden sm:inline-flex items-center gap-1"
-          >
-            WhatsApp Line: +{RESTAURANT_WHATSAPP_NUMBER}
-          </a>
+              {/* 3. Opening Hours */}
+              <div className="inline-flex items-center gap-1.5 text-stone-300">
+                <Clock size={13} className="text-[#fbbf24] flex-shrink-0" />
+                <span className="text-stone-300">
+                  Daily Hours: <strong className="text-white font-bold">9:00 AM – 9:00 PM</strong>
+                </span>
+              </div>
+
+              <span className="text-amber-500/50 font-bold select-none">•</span>
+
+              {/* 4. WhatsApp Direct Order */}
+              <a
+                href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[#fbbf24] hover:text-white transition-colors group font-bold"
+              >
+                <MessageSquare size={13} className="text-[#25D366] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="group-hover:underline">
+                  WhatsApp Orders: +{RESTAURANT_WHATSAPP_NUMBER}
+                </span>
+              </a>
+
+              <span className="text-amber-500/50 font-bold select-none">•</span>
+
+              {/* 5. Special Meal Promo */}
+              <Link
+                href="/menu?category=Food"
+                className="inline-flex items-center gap-1.5 text-stone-300 hover:text-amber-300 transition-colors group"
+              >
+                <Flame size={13} className="text-[#f59e0b] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                <span>
+                  Chef Value Special:{' '}
+                  <strong className="text-[#fbbf24] font-black group-hover:underline">
+                    Rice Combo ₦3,000
+                  </strong>{' '}
+                  (Jollof + Fried Rice + Chicken)
+                </span>
+              </Link>
+
+              <span className="text-amber-500/50 font-bold select-none">•</span>
+
+              {/* 6. Fresh Kitchen Quality Promise */}
+              <div className="inline-flex items-center gap-1.5 text-stone-300">
+                <Sparkles size={13} className="text-[#fbbf24] flex-shrink-0" />
+                <span className="text-stone-300">
+                  Freshly Cooked to Order <span className="text-stone-500">•</span> Zero Cold Reheating
+                </span>
+              </div>
+
+              <span className="text-amber-500/50 font-bold select-none">•</span>
+
+              {/* 7. Social Links */}
+              <div className="inline-flex items-center gap-2 text-stone-400">
+                <span className="text-stone-400 text-[11px] font-semibold">Follow Us:</span>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="https://facebook.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Follow Déskilz on Facebook"
+                    className="hover:text-[#1877F2] transition-colors p-0.5"
+                  >
+                    <FacebookIcon size={13} />
+                  </a>
+                  <a
+                    href="https://instagram.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Follow Déskilz on Instagram"
+                    className="hover:text-[#E4405F] transition-colors p-0.5"
+                  >
+                    <InstagramIcon size={13} />
+                  </a>
+                  <a
+                    href="https://tiktok.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Follow Déskilz on TikTok"
+                    className="hover:text-white transition-colors p-0.5"
+                  >
+                    <TikTokIcon size={12} />
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

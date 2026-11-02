@@ -98,3 +98,31 @@ html, body {
     @apply text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full;
   }
 }
+
+/* ── Seamless Marquee / Ticker Animation (Right to Left) ── */
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation-duration: 90s;
+  }
+}
