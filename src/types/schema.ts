@@ -38,6 +38,10 @@ export interface FoodItem {
   is_available: boolean;
   restaurant_id?: string;
   is_featured?: boolean;
+  is_configurable?: boolean;
+  configurator_type?: 'shawarma' | 'pizza';
+  pizza_size?: 'mini' | 'small' | 'medium';
+  shawarma_type?: 'no_hotdog' | 'single_hotdog' | 'double_hotdog';
 }
 
 export interface OrderItem {

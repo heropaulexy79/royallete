@@ -3,9 +3,14 @@
 import React, { createContext, useContext, useState } from 'react';
 import { FoodItem, OrderItem } from '@/types/schema';
 
+export interface ItemCustomization {
+  summary: string;
+  unitPrice: number;
+}
+
 interface CartContextType {
   cart: OrderItem[];
-   addToCart: (item: FoodItem, quantity?: number) => void;
+  addToCart: (item: FoodItem, quantity?: number, customization?: ItemCustomization) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
   totalPrice: number;
@@ -16,15 +21,35 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<OrderItem[]>([]);
 
-  const addToCart = (item: FoodItem, quantity: number = 1) => {
+  const addToCart = (
+    item: FoodItem,
+    quantity: number = 1,
+    customization?: ItemCustomization
+  ) => {
+    const lineItemPrice = customization ? customization.unitPrice : item.price;
+    const lineItemName = customization ? `${item.name} (${customization.summary})` : item.name;
+    const lineItemId = customization
+      ? `${item.id}-${customization.summary.replace(/[^a-zA-Z0-9]/g, '_')}`
+      : item.id;
+
     setCart((prev) => {
-      const existing = prev.find((i) => i.food_item_id === item.id);
+      const existing = prev.find((i) => i.food_item_id === lineItemId);
       if (existing) {
         return prev.map((i) =>
-          i.food_item_id === item.id ? { ...i, quantity: i.quantity + quantity } : i
+          i.food_item_id === lineItemId ? { ...i, quantity: i.quantity + quantity } : i
         );
       }
-      return [...prev, { food_item_id: item.id, name: item.name, price: item.price, quantity }];
+      return [
+        ...prev,
+        {
+          food_item_id: lineItemId,
+          name: lineItemName,
+          price: lineItemPrice,
+          quantity,
+          image_url: item.image_url,
+          category: item.category,
+        },
+      ];
     });
   };
 

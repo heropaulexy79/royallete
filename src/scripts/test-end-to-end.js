@@ -13,8 +13,8 @@ const firebaseConfig = {
 };
 
 const EXPECTED_CATEGORIES = {
-  'Shawarma': 12,
-  'Pizza': 9,
+  'Shawarma': 3,
+  'Pizza': 3,
   'Burger': 2,
   'Chicken & Chips': 4,
   'Food': 8,
@@ -52,7 +52,7 @@ async function testE2E() {
   const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const activeApproved = docs.filter(d => !d.is_legacy && d.is_available);
-  console.log(`\n✅ 2. Firestore Active Approved Records: ${activeApproved.length} / 70 expected`);
+  console.log(`\n✅ 2. Firestore Active Approved Records: ${activeApproved.length} / 55 expected`);
 
   const categoryCounts = {};
   for (const item of activeApproved) {
@@ -68,7 +68,7 @@ async function testE2E() {
     console.log(`   - ${cat.padEnd(16)}: ${act} (expected ${exp}) -> ${ok ? 'PASSED' : 'FAILED'}`);
   }
 
-  if (activeApproved.length === 70 && !categoryMismatch) {
+  if (activeApproved.length === 55 && !categoryMismatch) {
     console.log('\n🎉 ALL ACCEPTANCE CRITERIA PASSED SUCCESSFULLY!\n');
     process.exit(0);
   } else {

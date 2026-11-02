@@ -212,7 +212,7 @@ export default function Navbar() {
               href="/menu"
               className="text-[#191514]/80 hover:text-brand-primary font-bold text-sm transition-colors flex items-center gap-1.5"
             >
-              <UtensilsCrossed size={16} className="text-brand-primary" /> Full Menu (70)
+              <UtensilsCrossed size={16} className="text-brand-primary" /> Menu
             </Link>
             <Link
               href="/menu?category=Food"
@@ -293,7 +293,7 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#191514] hover:bg-white font-bold text-sm transition-colors"
             >
-              <UtensilsCrossed size={18} className="text-brand-primary" /> Browse Full Menu (70 Dishes)
+              <UtensilsCrossed size={18} className="text-brand-primary" /> Browse Menu
             </Link>
             <Link
               href="/cart"

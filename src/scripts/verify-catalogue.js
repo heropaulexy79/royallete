@@ -5,8 +5,8 @@ const path = require('path');
 const code = fs.readFileSync(path.resolve('src/data/approvedCatalogue.ts'), 'utf8');
 
 const expectedCounts = {
-  'Shawarma': 12,
-  'Pizza': 9,
+  'Shawarma': 3,
+  'Pizza': 3,
   'Burger': 2,
   'Chicken & Chips': 4,
   'Food': 8,
@@ -34,8 +34,8 @@ for (const [cat, expected] of Object.entries(expectedCounts)) {
   if (!ok) hasMismatch = true;
   console.log(`- ${cat}: ${actual} / expected ${expected} -> ${ok ? '✅ OK' : '❌ MISMATCH'}`);
 }
-console.log(`Total Products: ${total} / expected 70 -> ${total === 70 && !hasMismatch ? '✅ ALL PERFECT' : '❌ ERROR'}`);
+console.log(`Total Products: ${total} / expected 55 -> ${total === 55 && !hasMismatch ? '✅ ALL PERFECT' : '❌ ERROR'}`);
 
-if (total !== 70 || hasMismatch) {
+if (total !== 55 || hasMismatch) {
   process.exit(1);
 }
