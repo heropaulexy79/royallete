@@ -39,6 +39,7 @@ export interface FoodItem {
   is_available: boolean;
   restaurant_id?: string;
   is_featured?: boolean;
+  order_index?: number;
   is_configurable?: boolean;
   configurator_type?: 'shawarma' | 'pizza';
   pizza_size?: 'mini' | 'small' | 'medium';

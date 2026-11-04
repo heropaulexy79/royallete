@@ -26,7 +26,9 @@ import {
   AlertTriangle,
   Upload,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -288,6 +290,36 @@ export default function MenuManagement() {
     }
   };
 
+  const moveItemOrder = async (currentItem: FoodItem, direction: 'up' | 'down') => {
+    // Get all items in the current item's category sorted
+    const categoryItems = items
+      .filter((i) => i.category === currentItem.category)
+      .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
+
+    const currentIndex = categoryItems.findIndex((i) => i.id === currentItem.id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= categoryItems.length) return;
+
+    const targetItem = categoryItems[targetIndex];
+
+    // Swap order indices
+    const currentOrder = currentItem.order_index ?? currentIndex;
+    const targetOrder = targetItem.order_index ?? targetIndex;
+
+    const newCurrentOrder = targetOrder === currentOrder 
+      ? (direction === 'up' ? targetOrder - 1 : targetOrder + 1)
+      : targetOrder;
+
+    try {
+      await updateDoc(doc(db, 'foodItems', currentItem.id), { order_index: newCurrentOrder });
+      await updateDoc(doc(db, 'foodItems', targetItem.id), { order_index: currentOrder });
+    } catch (err) {
+      console.error('Failed to update order indices:', err);
+    }
+  };
+
   // Combine preset categories with any existing dynamic categories from items & database
   const allExistingCategories = Array.from(
     new Set([
@@ -297,13 +329,21 @@ export default function MenuManagement() {
     ])
   );
 
-  // Filter items
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Filter and sort items by category and order_index
+  const filteredItems = items
+    .filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      // First group by category if 'All' is selected
+      if (selectedCategory === 'All' && a.category !== b.category) {
+        return a.category.localeCompare(b.category);
+      }
+      return (a.order_index ?? 9999) - (b.order_index ?? 9999);
+    });
 
   const categories = ['All', ...allExistingCategories];
 
@@ -680,7 +720,21 @@ export default function MenuManagement() {
                         <span className="text-[10px] font-bold text-brand-primary uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded">
                           {item.category || 'General'}
                         </span>
-                        <div className="flex gap-1">
+                        <div className="flex items-center gap-1">
+                          <button 
+                            onClick={() => moveItemOrder(item, 'up')}
+                            title="Move Up in Menu"
+                            className="p-1 text-[#a89080] hover:text-brand-dark hover:bg-[#ede5da] rounded-lg transition-colors cursor-pointer"
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button 
+                            onClick={() => moveItemOrder(item, 'down')}
+                            title="Move Down in Menu"
+                            className="p-1 text-[#a89080] hover:text-brand-dark hover:bg-[#ede5da] rounded-lg transition-colors cursor-pointer"
+                          >
+                            <ArrowDown size={14} />
+                          </button>
                           <button 
                             onClick={() => openEditModal(item)}
                             title="Edit Dish"

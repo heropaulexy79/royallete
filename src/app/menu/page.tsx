@@ -229,14 +229,16 @@ function MenuInner() {
 
     return activeCats
       .map((cat) => {
-        const catItems = items.filter((item) => {
-          const matchCat = item.category === cat;
-          const matchSearch =
-            !searchTerm ||
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
-          return matchCat && matchSearch;
-        });
+        const catItems = items
+          .filter((item) => {
+            const matchCat = item.category === cat;
+            const matchSearch =
+              !searchTerm ||
+              item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+            return matchCat && matchSearch;
+          })
+          .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
 
         return {
           category: cat,
