@@ -53,9 +53,7 @@ export function formatWhatsAppMessage({
     `👤 *Name:* ${customerName}\n` +
     `📞 *Phone:* ${phone}` +
     `${notesString}\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-    `🔖 *Order Ref:* #${shortRef}\n` +
-    `🔐 *Verification Code:* ${checksum}\n`
+    `━━━━━━━━━━━━━━━━━━━━━━━\n`
   );
 }
 
