@@ -46,7 +46,7 @@ export function formatWhatsAppMessage({
   const notesString = orderNotes ? `\n📝 *Notes:* ${orderNotes}` : '';
 
   return (
-    `🍽️ *DÉSKILZ KITCHEN — NEW ORDER*\n` +
+    `🍽️ *NEW PICKUP ORDER*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
     `📋 *Order Items:*\n${itemList}\n\n` +
     `💰 *Total:* ₦${totalPrice.toLocaleString()}\n` +
