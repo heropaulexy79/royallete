@@ -253,7 +253,7 @@ export default function Navbar() {
                 <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] inline-block shadow-xs animate-pulse" />
               </div>
               <span className="text-[10px] sm:text-xs font-bold text-amber-900/60 uppercase tracking-widest leading-none mt-1">
-                Restaurant & Fast Food
+                Restaurant
               </span>
             </div>
           </Link>
