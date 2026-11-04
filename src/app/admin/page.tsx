@@ -14,12 +14,17 @@ import {
   ArrowRight, 
   Clock,
   Sparkles,
-  Layers
+  Layers,
+  Sliders,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 
 export default function AdminDashboard() {
+  const { settings, updateSetting } = useFeatureSettings();
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -90,6 +95,94 @@ export default function AdminDashboard() {
              <Link href="/admin/menu" className="btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
                 <Layers size={16} /> Manage 70 Dishes
              </Link>
+          </div>
+        </div>
+
+        {/* Feature Switches & Settings Card */}
+        <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-[#ede5da] mb-8 sm:mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#ede5da]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-center justify-center">
+                <Sliders size={20} />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-brand-dark">Feature Switches & Customer Flow Controls</h2>
+                <p className="text-xs text-[#7a6655]">
+                  Turn specific customer-facing prompts on or off anytime with 1 click.
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-bold text-stone-500 bg-[#faf6f0] px-3 py-1 rounded-full border border-[#ede5da] self-start sm:self-auto">
+              Real-time synchronization
+            </span>
+          </div>
+
+          <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Feature 1: Add-to-Cart Recommendation Modal */}
+            <div className="p-4 rounded-2xl bg-[#faf6f0] border border-[#ede5da] flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black text-brand-dark">Add-to-Cart Upsell Popup</h3>
+                  {settings.enable_upsell_popup ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                      <CheckCircle2 size={11} /> Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-stone-600 bg-stone-200 px-2 py-0.5 rounded-full">
+                      <XCircle size={11} /> Suspended
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-stone-600 leading-snug">
+                  Displays the &quot;Frequently Bought Together&quot; popup whenever a customer clicks Add to Cart.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => updateSetting('enable_upsell_popup', !settings.enable_upsell_popup)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black transition-all shadow-xs cursor-pointer ${
+                  settings.enable_upsell_popup
+                    ? 'bg-stone-200 hover:bg-stone-300 text-stone-700'
+                    : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20'
+                }`}
+              >
+                {settings.enable_upsell_popup ? 'Suspend Feature' : 'Reactivate Feature'}
+              </button>
+            </div>
+
+            {/* Feature 2: Cart Page Frequently Bought Together */}
+            <div className="p-4 rounded-2xl bg-[#faf6f0] border border-[#ede5da] flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black text-brand-dark">Cart Add-on Carousel</h3>
+                  {settings.enable_cart_frequently_bought ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                      <CheckCircle2 size={11} /> Active
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-stone-600 bg-stone-200 px-2 py-0.5 rounded-full">
+                      <XCircle size={11} /> Suspended
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-stone-600 leading-snug">
+                  Shows the scrolling 2-item complementary pairing bundle on the basket/cart review page.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => updateSetting('enable_cart_frequently_bought', !settings.enable_cart_frequently_bought)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black transition-all shadow-xs cursor-pointer ${
+                  settings.enable_cart_frequently_bought
+                    ? 'bg-stone-200 hover:bg-stone-300 text-stone-700'
+                    : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20'
+                }`}
+              >
+                {settings.enable_cart_frequently_bought ? 'Suspend Feature' : 'Reactivate Feature'}
+              </button>
+            </div>
           </div>
         </div>
 

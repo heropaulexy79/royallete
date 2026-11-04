@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { FoodItem } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import FrequentlyBoughtTogether from '@/components/FrequentlyBoughtTogether';
+import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 import {
   Trash2,
   ShoppingBag,
@@ -44,7 +45,7 @@ function OrderConfirmed({
       <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#25D366]/15 text-[#25D366] rounded-full flex items-center justify-center mx-auto mb-5 shadow-xl shadow-[#25D366]/10">
         <CheckCircle2 size={48} />
       </div>
-      <h2 className="text-2xl sm:text-3xl font-black text-brand-dark mb-2">Order Prepared for WhatsApp! 🎉</h2>
+      <h2 className="text-2xl sm:text-3xl font-black text-brand-dark mb-2">Order Sent to WhatsApp! 🎉</h2>
       <p className="text-stone-500 mb-6 text-sm sm:text-base leading-relaxed">
         WhatsApp was opened with your full order. Please tap <strong>Send</strong> in WhatsApp so our chefs can begin preparing your meal immediately!
       </p>
@@ -90,6 +91,7 @@ function OrderConfirmed({
 
 export default function CartPage() {
   const { cart, removeFromCart, addToCart, clearCart, totalPrice } = useCart();
+  const { settings } = useFeatureSettings();
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState<{ id: string; whatsappUrl: string } | null>(null);
@@ -323,13 +325,15 @@ export default function CartPage() {
             </div>
 
             {/* Amazon / Shopify-Style Frequently Bought Together Bundle */}
-            <FrequentlyBoughtTogether
-              cart={cart}
-              allItems={allItems}
-              onAddItems={(items) => {
-                items.forEach((item) => addToCart(item, 1));
-              }}
-            />
+            {settings.enable_cart_frequently_bought && (
+              <FrequentlyBoughtTogether
+                cart={cart}
+                allItems={allItems}
+                onAddItems={(items) => {
+                  items.forEach((item) => addToCart(item, 1));
+                }}
+              />
+            )}
           </div>
 
           {/* Right Column: Sticky WhatsApp Checkout Form in Espresso Dark */}
@@ -397,11 +401,6 @@ export default function CartPage() {
                   </>
                 )}
               </button>
-
-              <div className="mt-3.5 flex items-center justify-center gap-1.5 text-[11px] text-stone-400 text-center">
-                <ShieldCheck size={13} className="text-[#25D366]" />
-                <span>Hands off your order receipt to Déskilz Kitchen instantly</span>
-              </div>
             </form>
           </div>
         </div>

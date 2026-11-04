@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext';
 import { getRecommendations, getItemRecommendations } from '@/lib/recommendations';
 import AddToCartPopup from '@/components/AddToCartPopup';
 import CategoryCarousel from '@/components/CategoryCarousel';
+import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 import {
   Plus,
   Minus,
@@ -145,6 +146,7 @@ function FoodCard({ item, onAdd }: { item: FoodItem; onAdd: (item: FoodItem, qty
 
 function MenuInner() {
   const { cart, addToCart } = useCart();
+  const { settings } = useFeatureSettings();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'All';
 
@@ -392,9 +394,11 @@ function MenuInner() {
                     item={item}
                     onAdd={(itm, q) => {
                       addToCart(itm, q);
-                      const recs = getItemRecommendations({ item: itm, cart, allItems: items, limit: 3 });
-                      setPopupRecs(recs);
-                      setPopupTriggerItem(itm);
+                      if (settings.enable_upsell_popup) {
+                        const recs = getItemRecommendations({ item: itm, cart, allItems: items, limit: 3 });
+                        setPopupRecs(recs);
+                        setPopupTriggerItem(itm);
+                      }
                     }}
                   />
                 )}

@@ -13,6 +13,7 @@ import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import AddToCartPopup from '@/components/AddToCartPopup';
 import CategoryCarousel from '@/components/CategoryCarousel';
 import { getItemRecommendations } from '@/lib/recommendations';
+import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 import {
   UtensilsCrossed,
   ArrowRight,
@@ -139,6 +140,7 @@ function FeaturedFoodCard({
 
 export default function HomePage() {
   const { cart, addToCart } = useCart();
+  const { settings } = useFeatureSettings();
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>([]);
   const [allItems, setAllItems] = useState<FoodItem[]>([]);
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
@@ -315,14 +317,16 @@ export default function HomePage() {
               item={item}
               onAdd={(itm, q) => {
                 addToCart(itm, q);
-                const recs = getItemRecommendations({
-                  item: itm,
-                  cart,
-                  allItems: allItems.length > 0 ? allItems : (APPROVED_CATALOGUE as unknown as FoodItem[]),
-                  limit: 3,
-                });
-                setPopupRecs(recs);
-                setPopupTriggerItem(itm);
+                if (settings.enable_upsell_popup) {
+                  const recs = getItemRecommendations({
+                    item: itm,
+                    cart,
+                    allItems: allItems.length > 0 ? allItems : (APPROVED_CATALOGUE as unknown as FoodItem[]),
+                    limit: 3,
+                  });
+                  setPopupRecs(recs);
+                  setPopupTriggerItem(itm);
+                }
               }}
             />
           )}
