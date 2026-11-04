@@ -320,12 +320,6 @@ export default function CartPage() {
                   ₦{totalPrice.toLocaleString()}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-[11px] font-bold text-stone-500 uppercase">Payment Mode</p>
-                <p className="text-xs sm:text-sm font-bold text-emerald-700 flex items-center justify-end gap-1 mt-0.5">
-                  <ShieldCheck size={14} /> Cash or Transfer on Pickup
-                </p>
-              </div>
             </div>
 
             {/* Amazon / Shopify-Style Frequently Bought Together Bundle */}

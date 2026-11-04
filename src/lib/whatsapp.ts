@@ -55,12 +55,7 @@ export function formatWhatsAppMessage({
     `${notesString}\n\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━\n` +
     `🔖 *Order Ref:* #${shortRef}\n` +
-    `🔐 *Verification Code:* ${checksum}\n` +
-    `━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `⚠️ *DO NOT EDIT THIS MESSAGE.*\n` +
-    `Prices & items are locked by our system.\n` +
-    `Any changes will cause your order to be *rejected*.\n\n` +
-    `Please tap *Send* to confirm your pickup order. Thank you! 🙏`
+    `🔐 *Verification Code:* ${checksum}\n`
   );
 }
 
