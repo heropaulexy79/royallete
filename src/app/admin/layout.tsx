@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { isAdminAuthenticated, logoutAdmin } from '@/lib/adminAuth';
+import { isAdminAuthenticated, logoutAdmin, subscribeToAuthState } from '@/lib/adminAuth';
 import AdminLoginModal from '@/components/AdminLoginModal';
 import { Lock, LogOut } from 'lucide-react';
 import Link from 'next/link';
@@ -14,11 +14,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   useEffect(() => {
-    const auth = isAdminAuthenticated();
-    setIsAuthenticated(auth);
-    if (!auth) {
-      setShowLoginModal(true);
-    }
+    // Listen to real Firebase Auth state changes
+    const unsub = subscribeToAuthState((user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        setShowLoginModal(false);
+      } else {
+        setIsAuthenticated(false);
+        setShowLoginModal(true);
+      }
+    });
+
+    return () => unsub();
   }, [pathname]);
 
   const handleLoginSuccess = () => {

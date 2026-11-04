@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, User, Eye, EyeOff, X, ShieldAlert, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { verifyAdminCredentials, setAdminAuthenticated } from '@/lib/adminAuth';
+import { loginAdminWithFirebase } from '@/lib/adminAuth';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -21,22 +21,19 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      const isValid = verifyAdminCredentials(username, password);
-      if (isValid) {
-        setAdminAuthenticated(remember);
-        setLoading(false);
-        onSuccess();
-      } else {
-        setError('Invalid username or password. Please try again.');
-        setLoading(false);
-      }
-    }, 400);
+    const result = await loginAdminWithFirebase(username, password);
+    if (result.success) {
+      setLoading(false);
+      onSuccess();
+    } else {
+      setError(result.error || 'Invalid credentials. Please try again.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -140,7 +137,6 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
                 />
                 <span>Remember on this device</span>
               </label>
-              <span className="text-[11px] text-stone-500">Default: admin / deskilz2024</span>
             </div>
 
             {/* Submit Button */}

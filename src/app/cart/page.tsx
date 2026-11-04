@@ -128,12 +128,26 @@ export default function CartPage() {
     setLoading(true);
     let orderId = 'ord-' + Date.now().toString(36);
 
+    // Compute verified price by matching items against allItems or items in catalogue
+    const verifiedTotalPrice = cart.reduce((sum, item) => {
+      const match = allItems.find((d) => d.id === item.food_item_id) ||
+                    APPROVED_CATALOGUE.find((d) => d.name === item.name);
+      const truePrice = match?.price ?? item.price;
+      return sum + truePrice * item.quantity;
+    }, 0);
+
     try {
       const orderData = {
-        customer_name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        items: cart,
-        total_price: totalPrice,
+        customer_name: formData.name.trim().slice(0, 80),
+        phone: formData.phone.trim().slice(0, 25),
+        items: cart.map((i) => ({
+          food_item_id: i.food_item_id,
+          name: i.name.slice(0, 100),
+          price: Number(i.price) || 0,
+          quantity: Math.max(1, Math.min(99, Number(i.quantity) || 1)),
+          image_url: i.image_url || '',
+        })),
+        total_price: verifiedTotalPrice,
         status: 'pending' as const,
         payment_method: 'whatsapp' as const,
         created_at: serverTimestamp(),
@@ -149,7 +163,7 @@ export default function CartPage() {
       customerName: formData.name,
       phone: formData.phone,
       items: cart,
-      totalPrice,
+      totalPrice: verifiedTotalPrice,
     });
 
     clearCart();

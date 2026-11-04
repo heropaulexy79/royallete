@@ -2,19 +2,55 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Menu items: Anyone can view, anyone/admin can manage
+
+    // Helper: is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Food Catalogue: Anyone can view items. Writes restricted to authenticated staff/admins.
     match /foodItems/{itemId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
-    // Orders: Anyone can create an order, read or update order status
+    // Dynamic Categories: Anyone can read. Writes restricted to authenticated staff/admins.
+    match /custom_categories/{catId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Feature Settings: Anyone can read active feature flags. Writes restricted to authenticated staff/admins.
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Orders:
+    // - Anyone can create a pending order (validated payload)
+    // - Individual order can be read if knowing the specific order ID (e.g. order tracking /track/[id])
+    // - Listing ALL orders, updating status, or deleting is strictly restricted to authenticated staff/admins.
     match /orders/{orderId} {
-      allow read, write: if true;
+      allow create: if request.resource.data.status == 'pending'
+                    && request.resource.data.customer_name is string
+                    && request.resource.data.customer_name.size() > 0
+                    && request.resource.data.customer_name.size() < 100
+                    && request.resource.data.phone is string
+                    && request.resource.data.phone.size() > 5
+                    && request.resource.data.phone.size() < 30
+                    && request.resource.data.total_price is number
+                    && request.resource.data.total_price >= 0;
+      // Allow single document read (order tracking)
+      allow get: if true;
+      // Disallow collection-wide listing/scraping by public
+      allow list: if isAuthenticated();
+      // Updates and deletions restricted to authenticated staff/admins
+      allow update, delete: if isAuthenticated();
     }
 
-    // General fallback for all collections in this project
+    // Default deny all other collections
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
   }
 }

@@ -34,6 +34,11 @@ export function formatWhatsAppMessage({
   items,
   totalPrice,
 }: WhatsAppOrderDetails): string {
+  // Sanitize user inputs to prevent formatting / prompt injection in WhatsApp message
+  const safeName = (customerName || '').replace(/[\r\n\*\_\~\`]/g, ' ').trim();
+  const safePhone = (phone || '').replace(/[\r\n\*\_\~\`]/g, ' ').trim();
+  const safeNotes = orderNotes ? orderNotes.replace(/[\r\n\*\_\~\`]/g, ' ').trim() : '';
+
   const itemList = items
     .map(
       (item) =>
@@ -42,16 +47,15 @@ export function formatWhatsAppMessage({
     .join('\n');
 
   const shortRef = orderId ? orderId.slice(-6).toUpperCase() : 'N/A';
-  const checksum = computeOrderChecksum(items, totalPrice);
-  const notesString = orderNotes ? `\n📝 *Notes:* ${orderNotes}` : '';
+  const notesString = safeNotes ? `\n📝 *Notes:* ${safeNotes}` : '';
 
   return (
     `🍽️ *NEW PICKUP ORDER*\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
     `📋 *Order Items:*\n${itemList}\n\n` +
     `💰 *Total:* ₦${totalPrice.toLocaleString()}\n` +
-    `👤 *Name:* ${customerName}\n` +
-    `📞 *Phone:* ${phone}` +
+    `👤 *Name:* ${safeName}\n` +
+    `📞 *Phone:* ${safePhone}` +
     `${notesString}\n\n` +
     `━━━━━━━━━━━━━━━━━━━━━━━\n`
   );
