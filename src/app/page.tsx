@@ -11,6 +11,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import AddToCartPopup from '@/components/AddToCartPopup';
+import CategoryCarousel from '@/components/CategoryCarousel';
 import { getItemRecommendations } from '@/lib/recommendations';
 import {
   UtensilsCrossed,
@@ -305,8 +306,10 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {featuredItems.map((item) => (
+        <CategoryCarousel
+          category="Featured Selections"
+          items={featuredItems}
+          renderItem={(item) => (
             <FeaturedFoodCard
               key={item.id}
               item={item}
@@ -322,8 +325,8 @@ export default function HomePage() {
                 setPopupTriggerItem(itm);
               }}
             />
-          ))}
-        </div>
+          )}
+        />
 
         <div className="mt-12 text-center">
           <Link

@@ -60,20 +60,20 @@ function OrderConfirmed({
           <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Déskilz Kitchen</span>
           <span className="font-bold text-stone-700 text-sm">+{RESTAURANT_WHATSAPP_NUMBER}</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Payment</span>
-          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded">
-            Pay Cash or Transfer on Pickup
-          </span>
-        </div>
       </div>
 
       <div className="flex flex-col gap-3">
+        <Link
+          href="/"
+          className="h-12 bg-brand-primary hover:bg-[#c4131e] text-white font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/25 transition-all hover:scale-[1.01] text-sm"
+        >
+          <span>← Back to Homepage</span>
+        </Link>
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="h-12 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 transition-all hover:scale-[1.01] text-sm"
+          className="h-12 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all hover:scale-[1.01] text-sm"
         >
           <MessageSquare size={18} /> Re-open WhatsApp
         </a>
@@ -83,12 +83,6 @@ function OrderConfirmed({
         >
           <Utensils size={18} /> Track Order Status
         </Link>
-        <Link
-          href="/menu"
-          className="text-sm text-stone-400 hover:text-brand-primary font-semibold py-2 transition-colors"
-        >
-          ← Back to Menu
-        </Link>
       </div>
     </motion.div>
   );
@@ -96,7 +90,7 @@ function OrderConfirmed({
 
 export default function CartPage() {
   const { cart, removeFromCart, addToCart, clearCart, totalPrice } = useCart();
-  const [formData, setFormData] = useState({ name: '', phone: '', orderNotes: '' });
+  const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const [orderComplete, setOrderComplete] = useState<{ id: string; whatsappUrl: string } | null>(null);
   const [allItems, setAllItems] = useState<FoodItem[]>([]);
@@ -136,7 +130,6 @@ export default function CartPage() {
       const orderData = {
         customer_name: formData.name.trim(),
         phone: formData.phone.trim(),
-        order_notes: formData.orderNotes.trim(),
         items: cart,
         total_price: totalPrice,
         status: 'pending' as const,
@@ -153,7 +146,6 @@ export default function CartPage() {
       orderId,
       customerName: formData.name,
       phone: formData.phone,
-      orderNotes: formData.orderNotes,
       items: cart,
       totalPrice,
     });
@@ -205,7 +197,7 @@ export default function CartPage() {
           href="/menu"
           className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-stone-500 hover:text-brand-primary mb-6 transition-colors"
         >
-          <ArrowLeft size={16} /> Add more dishes from Menu
+          <ArrowLeft size={16} /> Back to Menu
         </Link>
 
         {/* 3 Step Flow breadcrumb */}
@@ -388,19 +380,6 @@ export default function CartPage() {
                     className="w-full bg-[#241e1c] border border-stone-700/80 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-amber-100 flex items-center gap-1.5">
-                    <FileText size={13} className="text-[#fbbf24]" /> Order Notes
-                    <span className="text-stone-400 font-normal">(optional)</span>
-                  </label>
-                  <textarea
-                    placeholder="Pickup time (e.g. Ready by 2:30 PM), extra pepper, takeaway, etc..."
-                    className="w-full bg-[#241e1c] border border-stone-700/80 rounded-xl px-4 py-2 text-sm text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-primary transition-all h-20 resize-none"
-                    value={formData.orderNotes}
-                    onChange={(e) => setFormData({ ...formData, orderNotes: e.target.value })}
                   />
                 </div>
               </div>

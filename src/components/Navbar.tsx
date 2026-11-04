@@ -278,13 +278,7 @@ export default function Navbar() {
             >
               <Flame size={15} className="text-[#f59e0b]" /> Rice Combo
             </Link>
-            <button
-              type="button"
-              onClick={handleAdminClick}
-              className="text-stone-500 hover:text-[#191514] font-medium text-xs transition-colors flex items-center gap-1.5 py-1 px-2 rounded-lg hover:bg-stone-200/50"
-            >
-              <ShieldAlert size={14} className="text-stone-400" /> Admin
-            </button>
+      
           </nav>
 
           {/* Right Actions */}

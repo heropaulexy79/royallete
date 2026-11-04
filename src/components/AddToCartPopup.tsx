@@ -222,7 +222,7 @@ export default function AddToCartPopup({ triggerItem, recommendations, onClose }
             <button
               type="button"
               onClick={onClose}
-              className="w-full h-9 rounded-xl text-[#7a6655] hover:text-[#191514] font-bold text-xs hover:bg-[#ede5da] transition-colors"
+              className="w-full h-11 rounded-xl bg-white hover:bg-stone-100 text-[#191514] font-black text-sm border-2 border-[#191514] shadow-xs transition-all active:scale-95"
             >
               Continue Browsing Dishes
             </button>
