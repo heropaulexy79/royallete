@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, User, Eye, EyeOff, X, ShieldAlert, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { loginAdminWithFirebase } from '@/lib/adminAuth';
+import { loginAdminWithCredentials } from '@/lib/adminAuth';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
     setError('');
     setLoading(true);
 
-    const result = await loginAdminWithFirebase(username, password);
+    const result = await loginAdminWithCredentials(username, password);
     if (result.success) {
       setLoading(false);
       onSuccess();

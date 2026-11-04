@@ -14,14 +14,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   useEffect(() => {
-    // Listen to real Firebase Auth state changes
-    const unsub = subscribeToAuthState((user) => {
-      if (user) {
-        setIsAuthenticated(true);
+    const isAuth = isAdminAuthenticated();
+    setIsAuthenticated(isAuth);
+    if (!isAuth) {
+      setShowLoginModal(true);
+    }
+
+    const unsub = subscribeToAuthState((authStatus) => {
+      setIsAuthenticated(authStatus);
+      if (authStatus) {
         setShowLoginModal(false);
-      } else {
-        setIsAuthenticated(false);
-        setShowLoginModal(true);
       }
     });
 
