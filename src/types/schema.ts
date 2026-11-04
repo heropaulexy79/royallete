@@ -8,9 +8,10 @@ export type ProductCategory =
   | 'Food'
   | 'Drinks'
   | 'Ice Cream'
-  | 'Snacks';
+  | 'Snacks'
+  | (string & {});
 
-export const APPROVED_CATEGORIES: ProductCategory[] = [
+export const APPROVED_CATEGORIES: string[] = [
   'Shawarma',
   'Pizza',
   'Burger',

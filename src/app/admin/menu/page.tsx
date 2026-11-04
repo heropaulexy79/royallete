@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
 import { 
   collection, 
   query, 
@@ -12,6 +12,7 @@ import {
   deleteDoc, 
   doc 
 } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { FoodItem, ProductCategory } from '@/types/schema';
 import { 
   Plus, 
@@ -21,7 +22,10 @@ import {
   X, 
   Sparkles, 
   Search, 
-  AlertTriangle 
+  AlertTriangle,
+  Upload,
+  Loader2,
+  CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -56,6 +60,15 @@ export default function MenuManagement() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; name: string } | null>(null);
 
+  // Custom Category State
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
+
+  // Image Upload State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -85,6 +98,8 @@ export default function MenuManagement() {
 
   const openAddModal = () => {
     setEditingItem(null);
+    setIsCustomCategory(false);
+    setCustomCategoryInput('');
     setFormData({
       name: '',
       price: '',
@@ -99,6 +114,10 @@ export default function MenuManagement() {
 
   const openEditModal = (item: FoodItem) => {
     setEditingItem(item);
+    const itemCat = item.category || 'Shawarma';
+    const isCustom = !CATEGORY_PRESETS.includes(itemCat as ProductCategory);
+    setIsCustomCategory(isCustom);
+    setCustomCategoryInput(isCustom ? itemCat : '');
     setFormData({
       name: item.name,
       price: item.price.toString(),
@@ -113,8 +132,17 @@ export default function MenuManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const finalCategory = isCustomCategory 
+      ? customCategoryInput.trim() 
+      : formData.category;
+
     if (!formData.name.trim() || !formData.price) {
       alert('Please fill in product name and price.');
+      return;
+    }
+
+    if (!finalCategory) {
+      alert('Please provide or select a category.');
       return;
     }
 
@@ -130,7 +158,7 @@ export default function MenuManagement() {
         await updateDoc(doc(db, 'foodItems', editingItem.id), {
           name: formData.name.trim(),
           price: priceNum,
-          category: formData.category,
+          category: finalCategory,
           description: formData.description.trim(),
           image_url: formData.image_url.trim(),
           is_available: formData.is_available,
@@ -142,7 +170,7 @@ export default function MenuManagement() {
         await addDoc(collection(db, 'foodItems'), {
           name: formData.name.trim(),
           price: priceNum,
-          category: formData.category,
+          category: finalCategory,
           description: formData.description.trim(),
           image_url: formData.image_url.trim(),
           is_available: formData.is_available,
@@ -156,6 +184,70 @@ export default function MenuManagement() {
     } catch (error) {
       console.error('Error saving food product: ', error);
       alert('Failed to save food product. Check Firebase connection.');
+    }
+  };
+
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file (PNG, JPG, WEBP, etc.).');
+      return;
+    }
+
+    // Validate size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size should not exceed 5MB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setUploadProgress(0);
+
+    try {
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const storagePath = `menu-images/${Date.now()}_${sanitizedName}`;
+      const imageRef = ref(storage, storagePath);
+
+      const uploadTask = uploadBytesResumable(imageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setUploadProgress(progress);
+        },
+        async (error) => {
+          console.warn('Firebase Storage upload failed or not enabled, falling back to base64 preview/storage:', error);
+          // Graceful fallback to data URL if Firebase Storage bucket has restrictive rules or is unconfigured
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const resultUrl = event.target?.result as string;
+            setFormData(prev => ({ ...prev, image_url: resultUrl }));
+            setUploadingImage(false);
+            setUploadProgress(null);
+          };
+          reader.readAsDataURL(file);
+        },
+        async () => {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          setFormData(prev => ({ ...prev, image_url: downloadUrl }));
+          setUploadingImage(false);
+          setUploadProgress(null);
+        }
+      );
+    } catch (err) {
+      console.warn('Direct upload exception, reading as data URL:', err);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const resultUrl = event.target?.result as string;
+        setFormData(prev => ({ ...prev, image_url: resultUrl }));
+        setUploadingImage(false);
+        setUploadProgress(null);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -174,6 +266,14 @@ export default function MenuManagement() {
     }
   };
 
+  // Combine preset categories with any existing dynamic categories from items
+  const allExistingCategories = Array.from(
+    new Set([
+      ...CATEGORY_PRESETS,
+      ...items.map(item => item.category).filter(Boolean)
+    ])
+  );
+
   // Filter items
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -182,7 +282,7 @@ export default function MenuManagement() {
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ['All', ...CATEGORY_PRESETS];
+  const categories = ['All', ...allExistingCategories];
 
   return (
     <main className="min-h-screen bg-[#faf6f0] pb-28 sm:pb-12 flex flex-col">
@@ -291,17 +391,51 @@ export default function MenuManagement() {
                     </div>
 
                     {/* Category */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-brand-dark">Category *</label>
-                      <select 
-                        className="input"
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value as ProductCategory })}
-                      >
-                        {CATEGORY_PRESETS.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
+                    <div className="space-y-1.5 sm:col-span-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold text-brand-dark">Category *</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCustomCategory(!isCustomCategory);
+                            if (!isCustomCategory && !customCategoryInput) {
+                              setCustomCategoryInput('');
+                            }
+                          }}
+                          className="text-[11px] font-bold text-brand-primary hover:underline"
+                        >
+                          {isCustomCategory ? '← Choose Existing' : '+ New Category'}
+                        </button>
+                      </div>
+
+                      {isCustomCategory ? (
+                        <input
+                          required
+                          type="text"
+                          placeholder="Type new category (e.g. Pastries, Mocktails)..."
+                          className="input"
+                          value={customCategoryInput}
+                          onChange={(e) => setCustomCategoryInput(e.target.value)}
+                        />
+                      ) : (
+                        <select 
+                          className="input"
+                          value={formData.category}
+                          onChange={(e) => {
+                            if (e.target.value === '__custom__') {
+                              setIsCustomCategory(true);
+                              setCustomCategoryInput('');
+                            } else {
+                              setFormData({ ...formData, category: e.target.value as ProductCategory });
+                            }
+                          }}
+                        >
+                          {allExistingCategories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                          <option value="__custom__">+ Add New Category...</option>
+                        </select>
+                      )}
                     </div>
 
                     {/* Description */}
@@ -315,31 +449,71 @@ export default function MenuManagement() {
                       />
                     </div>
 
-                    {/* Image URL with live preview */}
-                    <div className="space-y-2 sm:col-span-2">
-                      <label className="text-xs font-bold text-brand-dark flex justify-between items-center">
-                        <span>Image URL</span>
-                        <span className="text-[11px] text-[#a89080] font-normal">Choose preset below or paste URL</span>
-                      </label>
+                    {/* Image Upload & URL with live preview */}
+                    <div className="space-y-2.5 sm:col-span-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold text-brand-dark">Product Image *</label>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingImage}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-primary bg-red-50 hover:bg-red-100/80 px-2.5 py-1 rounded-lg border border-red-200 transition-colors cursor-pointer"
+                        >
+                          {uploadingImage ? (
+                            <>
+                              <Loader2 size={13} className="animate-spin" />
+                              <span>Uploading ({uploadProgress ?? 0}%)...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload size={13} />
+                              <span>Upload from Device</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Hidden file input */}
+                      <input 
+                        ref={fileInputRef}
+                        type="file" 
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageFileUpload}
+                      />
+
                       <div className="flex gap-3 items-center">
-                        <div className="w-14 h-14 rounded-xl bg-[#ede5da] overflow-hidden border border-[#d4c9b8] flex-shrink-0">
+                        <div className="w-16 h-16 rounded-xl bg-[#ede5da] overflow-hidden border border-[#d4c9b8] flex-shrink-0 relative group">
                           <img 
                             src={formData.image_url || SAMPLE_PRESET_IMAGES[0].url} 
                             alt="Preview" 
                             className="w-full h-full object-cover" 
                           />
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity text-[10px] font-bold"
+                          >
+                            Change
+                          </button>
                         </div>
-                        <input 
-                          type="url" 
-                          placeholder="https://images.unsplash.com/..."
-                          className="input flex-1"
-                          value={formData.image_url}
-                          onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                        />
+                        <div className="flex-1 space-y-1">
+                          <input 
+                            type="text" 
+                            placeholder="Image URL or upload a file above..."
+                            className="input text-xs"
+                            value={formData.image_url}
+                            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                          />
+                          <p className="text-[11px] text-[#a89080]">
+                            Upload an image from your computer/phone, or paste any image link.
+                          </p>
+                        </div>
                       </div>
 
                       {/* Quick presets */}
-                      <div className="flex flex-wrap gap-1.5 pt-1">
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[11px] text-[#a89080] font-semibold mr-1">Presets:</span>
                         {SAMPLE_PRESET_IMAGES.map((img) => (
                           <button
                             key={img.label}

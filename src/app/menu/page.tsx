@@ -265,7 +265,13 @@ function MenuInner() {
     return getRecommendations({ cart, allItems: items, limit: 3 });
   }, [cart, items]);
 
-  const categories = APPROVED_CATEGORIES;
+  const categories = useMemo(() => {
+    const dynamicCats = items
+      .map((i) => i.category)
+      .filter((c): c is string => Boolean(c) && !APPROVED_CATEGORIES.includes(c));
+    const uniqueDynamic = Array.from(new Set(dynamicCats));
+    return [...APPROVED_CATEGORIES, ...uniqueDynamic];
+  }, [items]);
 
   return (
     <main className="min-h-screen bg-[#faf6f0] flex flex-col">
