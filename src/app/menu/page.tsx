@@ -7,8 +7,6 @@ import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { useCart } from '@/context/CartContext';
 import { getRecommendations, getItemRecommendations } from '@/lib/recommendations';
 import AddToCartPopup from '@/components/AddToCartPopup';
-import ProductConfiguratorModal from '@/components/ProductConfiguratorModal';
-import { ItemCustomization } from '@/context/CartContext';
 import {
   Plus,
   Minus,
@@ -17,22 +15,13 @@ import {
   ShoppingCart,
   Check,
   Sparkles,
-  SlidersHorizontal,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 
-function FoodCard({
-  item,
-  onAdd,
-  onCustomize,
-}: {
-  item: FoodItem;
-  onAdd: (item: FoodItem, qty: number) => void;
-  onCustomize: (item: FoodItem) => void;
-}) {
+function FoodCard({ item, onAdd }: { item: FoodItem; onAdd: (item: FoodItem, qty: number) => void }) {
   const [qty, setQty] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
@@ -43,8 +32,6 @@ function FoodCard({
     setTimeout(() => setIsAdded(false), 1800);
   };
 
-  const isConfigurable = item.is_configurable || item.category === 'Shawarma' || item.category === 'Pizza';
-
   return (
     <motion.div
       layout
@@ -52,12 +39,7 @@ function FoodCard({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      className="card group flex flex-col justify-between h-full bg-white relative hover:border-amber-300/80 cursor-pointer"
-      onClick={() => {
-        if (isConfigurable && item.is_available) {
-          onCustomize(item);
-        }
-      }}
+      className="card group flex flex-col justify-between h-full bg-white relative hover:border-amber-300/80"
     >
       <div>
         {/* Product Image & Badges */}
@@ -68,9 +50,9 @@ function FoodCard({
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
           />
-          {/* Price Tag: "From ₦..." for Shawarma, flat price for Pizza & standard dishes */}
+          {/* Price Tag */}
           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full font-black text-brand-dark text-xs sm:text-sm shadow-md border border-[#ede5da]">
-            {item.category === 'Shawarma' ? `From ₦${item.price.toLocaleString()}` : `₦${item.price.toLocaleString()}`}
+            ₦{item.price.toLocaleString()}
           </div>
 
           {/* Category Tag in warm dark & amber */}
@@ -99,68 +81,57 @@ function FoodCard({
       </div>
 
       {/* Action Row */}
-      <div className="mt-4 pt-3 border-t border-[#ede5da] space-y-2.5" onClick={(e) => e.stopPropagation()}>
+      <div className="mt-4 pt-3 border-t border-[#ede5da] space-y-2.5">
         {item.is_available ? (
-          isConfigurable ? (
+          <>
+            <div className="flex items-center justify-between bg-[#fbf8f3] p-1.5 rounded-xl border border-[#ede5da]">
+              <span className="text-[10px] font-bold text-stone-400 uppercase pl-1.5 hidden sm:inline">Qty</span>
+              <div className="flex items-center gap-2 mx-auto sm:mx-0">
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={12} />
+                </button>
+                <span className="w-5 text-center font-black text-brand-dark text-xs sm:text-sm">{qty}</span>
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => q + 1)}
+                  className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={12} />
+                </button>
+              </div>
+              <span className="text-xs font-black text-brand-primary pr-1">
+                ₦{(item.price * qty).toLocaleString()}
+              </span>
+            </div>
+
             <button
               type="button"
-              onClick={() => onCustomize(item)}
-              className="w-full h-11 rounded-xl font-extrabold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm bg-[#191514] hover:bg-black text-[#fbbf24] border border-amber-400/30 active:scale-95"
+              onClick={handleAdd}
+              className={`w-full h-11 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm ${
+                isAdded
+                  ? 'bg-[#25D366] text-white shadow-emerald-500/20'
+                  : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20 active:scale-95'
+              }`}
             >
-              <Sparkles size={15} className="text-[#f59e0b]" />
-              <span>Customize & Order</span>
+              <AnimatePresence mode="wait">
+                {isAdded ? (
+                  <motion.div key="added" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                    <Check size={16} /> Added!
+                  </motion.div>
+                ) : (
+                  <motion.div key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                    <ShoppingCart size={15} /> Add to Cart
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
-          ) : (
-            <>
-              <div className="flex items-center justify-between bg-[#fbf8f3] p-1.5 rounded-xl border border-[#ede5da]">
-                <span className="text-[10px] font-bold text-stone-400 uppercase pl-1.5 hidden sm:inline">Qty</span>
-                <div className="flex items-center gap-2 mx-auto sm:mx-0">
-                  <button
-                    type="button"
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus size={12} />
-                  </button>
-                  <span className="w-5 text-center font-black text-brand-dark text-xs sm:text-sm">{qty}</span>
-                  <button
-                    type="button"
-                    onClick={() => setQty((q) => q + 1)}
-                    className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus size={12} />
-                  </button>
-                </div>
-                <span className="text-xs font-black text-brand-primary pr-1">
-                  ₦{(item.price * qty).toLocaleString()}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleAdd}
-                className={`w-full h-11 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm ${
-                  isAdded
-                    ? 'bg-[#25D366] text-white shadow-emerald-500/20'
-                    : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20 active:scale-95'
-                }`}
-              >
-                <AnimatePresence mode="wait">
-                  {isAdded ? (
-                    <motion.div key="added" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
-                      <Check size={16} /> Added!
-                    </motion.div>
-                  ) : (
-                    <motion.div key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
-                      <ShoppingCart size={15} /> Add to Cart
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
-            </>
-          )
+          </>
         ) : (
           <div className="w-full h-11 rounded-xl bg-stone-100 text-stone-400 font-bold text-xs flex items-center justify-center">
             Currently Unavailable
@@ -174,15 +145,12 @@ function FoodCard({
 function MenuInner() {
   const { cart, addToCart } = useCart();
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('category') || 'Shawarma';
+  const initialCategory = searchParams.get('category') || 'All';
 
   const [items, setItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Configurator state
-  const [configuratorItem, setConfiguratorItem] = useState<FoodItem | null>(null);
 
   // Popup state
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
@@ -214,50 +182,12 @@ function MenuInner() {
   }, []);
 
   const filteredItems = useMemo(() => {
-    const list = items.filter((item) => {
-      const matchCat = item.category === selectedCategory;
+    return items.filter((item) => {
+      const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
       const matchSearch =
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
-      // If user is searching, allow cross-category results; otherwise strict category view
-      return searchTerm ? matchSearch : matchCat;
-    });
-
-    return list.sort((a, b) => {
-      // 1. Pizza ordering: Mini (1), Small (2), Medium (3)
-      if (a.category === 'Pizza' && b.category === 'Pizza') {
-        const getPizzaRank = (item: FoodItem) => {
-          const name = item.name.toLowerCase();
-          if (item.pizza_size === 'mini' || name.includes('mini')) return 1;
-          if (item.pizza_size === 'small' || name.includes('small')) return 2;
-          if (item.pizza_size === 'medium' || name.includes('medium')) return 3;
-          return 4;
-        };
-        return getPizzaRank(a) - getPizzaRank(b);
-      }
-
-      // 2. Shawarma ordering: No Hotdog (1), Single Hotdog (2), Double Hotdog (3)
-      if (a.category === 'Shawarma' && b.category === 'Shawarma') {
-        const getShawarmaRank = (item: FoodItem) => {
-          const name = item.name.toLowerCase();
-          if (item.shawarma_type === 'no_hotdog' || name.includes('no hotdog') || name.includes('plain')) return 1;
-          if (item.shawarma_type === 'single_hotdog' || name.includes('single')) return 2;
-          if (item.shawarma_type === 'double_hotdog' || name.includes('double')) return 3;
-          return 4;
-        };
-        return getShawarmaRank(a) - getShawarmaRank(b);
-      }
-
-      // 3. Fallback to approved catalogue sequence
-      const indexA = APPROVED_CATALOGUE.findIndex(
-        (c) => c.name.toLowerCase().trim() === a.name.toLowerCase().trim()
-      );
-      const indexB = APPROVED_CATALOGUE.findIndex(
-        (c) => c.name.toLowerCase().trim() === b.name.toLowerCase().trim()
-      );
-      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-
-      return 0;
+      return matchCat && matchSearch;
     });
   }, [items, selectedCategory, searchTerm]);
 
@@ -265,13 +195,7 @@ function MenuInner() {
     return getRecommendations({ cart, allItems: items, limit: 3 });
   }, [cart, items]);
 
-  const categories = useMemo(() => {
-    const dynamicCats = items
-      .map((i) => i.category)
-      .filter((c): c is string => Boolean(c) && !APPROVED_CATEGORIES.includes(c));
-    const uniqueDynamic = Array.from(new Set(dynamicCats));
-    return [...APPROVED_CATEGORIES, ...uniqueDynamic];
-  }, [items]);
+  const categories = ['All', ...APPROVED_CATEGORIES];
 
   return (
     <main className="min-h-screen bg-[#faf6f0] flex flex-col">
@@ -283,7 +207,7 @@ function MenuInner() {
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#f59e0b]/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-950/80 to-amber-950/60 text-[#fbbf24] border border-amber-400/30 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
-            <Sparkles size={13} className="text-[#f59e0b]" /> Handcrafted Kitchen & Bakery
+            <Sparkles size={13} className="text-[#f59e0b]" /> The 70-Dish Approved Catalogue
           </div>
           <h1 className="text-3xl sm:text-5xl font-black mb-2 tracking-tight text-white">
             Déskilz <span className="text-[#fbbf24]">Restaurant Menu</span>
@@ -318,7 +242,10 @@ function MenuInner() {
       <div className="sticky top-16 sm:top-20 z-30 bg-[#faf6f0]/95 backdrop-blur-md border-b border-[#ede5da] py-3 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
           {categories.map((cat) => {
-            const count = items.filter((i) => i.category === cat).length;
+            const count =
+              cat === 'All'
+                ? items.length
+                : items.filter((i) => i.category === cat).length;
 
             const isSelected = selectedCategory === cat;
 
@@ -413,7 +340,6 @@ function MenuInner() {
                 <FoodCard
                   key={item.id}
                   item={item}
-                  onCustomize={(itm) => setConfiguratorItem(itm)}
                   onAdd={(itm, q) => {
                     addToCart(itm, q);
                     const recs = getItemRecommendations({ item: itm, cart, allItems: items, limit: 3 });
@@ -434,7 +360,7 @@ function MenuInner() {
                 <button
                   onClick={() => {
                     setSearchTerm('');
-                    setSelectedCategory('Shawarma');
+                    setSelectedCategory('All');
                   }}
                   className="btn-primary py-2.5 px-6 text-sm"
                 >
@@ -445,19 +371,6 @@ function MenuInner() {
           </>
         )}
       </section>
-
-      {/* Product Configurator Modal for Shawarma & Pizza */}
-      <ProductConfiguratorModal
-        item={configuratorItem}
-        isOpen={!!configuratorItem}
-        onClose={() => setConfiguratorItem(null)}
-        onConfirm={(item, qty, customization) => {
-          addToCart(item, qty, customization);
-          const recs = getItemRecommendations({ item, cart, allItems: items, limit: 3 });
-          setPopupRecs(recs);
-          setPopupTriggerItem(item);
-        }}
-      />
 
       {/* Smart Add-to-Cart Recommendation Popup */}
       {popupTriggerItem && (

@@ -11,8 +11,6 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import AddToCartPopup from '@/components/AddToCartPopup';
-import ProductConfiguratorModal from '@/components/ProductConfiguratorModal';
-import { ItemCustomization } from '@/context/CartContext';
 import { getItemRecommendations } from '@/lib/recommendations';
 import {
   UtensilsCrossed,
@@ -34,8 +32,8 @@ import {
 
 // Category discovery card data
 const CATEGORY_TILES = [
-  { name: 'Shawarma', count: '3 Options', image: 'https://images.unsplash.com/photo-1642962002196-80415d487f3b?q=80&w=800', tag: 'Chicken & Suya' },
-  { name: 'Pizza', count: '3 Sizes', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800', tag: 'Personal & Sharing' },
+  { name: 'Shawarma', count: '12 items', image: 'https://images.unsplash.com/photo-1642962002196-80415d487f3b?q=80&w=800', tag: 'Chicken & Suya' },
+  { name: 'Pizza', count: '9 items', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800', tag: 'Personal & Sharing' },
   { name: 'Burger', count: '2 items', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800', tag: 'Beef Patties' },
   { name: 'Chicken & Chips', count: '4 items', image: 'https://images.unsplash.com/photo-1518013034477-2990fa317e23?q=80&w=800', tag: 'Golden Fries' },
   { name: 'Food', count: '8 items', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800', tag: 'Rice & Soups' },
@@ -47,11 +45,9 @@ const CATEGORY_TILES = [
 function FeaturedFoodCard({
   item,
   onAdd,
-  onCustomize,
 }: {
   item: FoodItem;
   onAdd: (item: FoodItem, qty: number) => void;
-  onCustomize: (item: FoodItem) => void;
 }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -63,15 +59,8 @@ function FeaturedFoodCard({
     setTimeout(() => setAdded(false), 2000);
   };
 
-  const isConfigurable = item.is_configurable || item.category === 'Shawarma' || item.category === 'Pizza';
-
   return (
-    <div
-      className="card-premium flex flex-col justify-between group cursor-pointer"
-      onClick={() => {
-        if (isConfigurable) onCustomize(item);
-      }}
-    >
+    <div className="card-premium flex flex-col justify-between group">
       <div>
         <div className="relative h-44 sm:h-52 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 mb-4 overflow-hidden rounded-t-2xl sm:rounded-t-3xl bg-[#f5efe6]">
           <img
@@ -81,7 +70,7 @@ function FeaturedFoodCard({
             loading="lazy"
           />
           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full font-black text-brand-dark text-xs sm:text-sm shadow-sm border border-[#ede5da]">
-            {item.category === 'Shawarma' ? `From ₦${item.price.toLocaleString()}` : `₦${item.price.toLocaleString()}`}
+            ₦{item.price.toLocaleString()}
           </div>
           <div className="absolute bottom-3 left-3 bg-[#191514]/85 backdrop-blur-sm text-amber-300 border border-amber-400/20 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider">
             {item.category}
@@ -99,62 +88,49 @@ function FeaturedFoodCard({
         )}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[#ede5da] space-y-3" onClick={(e) => e.stopPropagation()}>
-        {isConfigurable ? (
-          <button
-            type="button"
-            onClick={() => onCustomize(item)}
-            className="w-full h-11 rounded-xl font-extrabold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm bg-[#191514] hover:bg-black text-[#fbbf24] border border-amber-400/30 active:scale-95"
-          >
-            <Sparkles size={15} className="text-[#f59e0b]" />
-            <span>Customize & Order</span>
-          </button>
-        ) : (
-          <>
-            <div className="flex items-center justify-between bg-[#fbf8f3] p-1.5 rounded-xl border border-[#ede5da]">
-              <span className="text-[10px] font-bold text-stone-400 uppercase pl-1.5">Qty</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus size={12} />
-                </button>
-                <span className="w-5 text-center font-black text-brand-dark text-xs sm:text-sm">{qty}</span>
-                <button
-                  onClick={() => setQty((q) => q + 1)}
-                  className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
-                  aria-label="Increase quantity"
-                >
-                  <Plus size={12} />
-                </button>
-              </div>
-              <span className="text-xs font-black text-brand-primary pr-1">
-                ₦{(item.price * qty).toLocaleString()}
-              </span>
-            </div>
-
+      <div className="mt-4 pt-3 border-t border-[#ede5da] space-y-3">
+        <div className="flex items-center justify-between bg-[#fbf8f3] p-1.5 rounded-xl border border-[#ede5da]">
+          <span className="text-[10px] font-bold text-stone-400 uppercase pl-1.5">Qty</span>
+          <div className="flex items-center gap-2">
             <button
-              onClick={handleAdd}
-              className={`w-full h-11 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm ${
-                added
-                  ? 'bg-[#25D366] text-white shadow-emerald-500/25'
-                  : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20 active:scale-95'
-              }`}
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+              aria-label="Decrease quantity"
             >
-              {added ? (
-                <>
-                  <Check size={16} /> Added to Cart!
-                </>
-              ) : (
-                <>
-                  <ShoppingBag size={16} /> Add to Cart
-                </>
-              )}
+              <Minus size={12} />
             </button>
-          </>
-        )}
+            <span className="w-5 text-center font-black text-brand-dark text-xs sm:text-sm">{qty}</span>
+            <button
+              onClick={() => setQty((q) => q + 1)}
+              className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+              aria-label="Increase quantity"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+          <span className="text-xs font-black text-brand-primary pr-1">
+            ₦{(item.price * qty).toLocaleString()}
+          </span>
+        </div>
+
+        <button
+          onClick={handleAdd}
+          className={`w-full h-11 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm ${
+            added
+              ? 'bg-[#25D366] text-white shadow-emerald-500/25'
+              : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20 active:scale-95'
+          }`}
+        >
+          {added ? (
+            <>
+              <Check size={16} /> Added to Cart!
+            </>
+          ) : (
+            <>
+              <ShoppingBag size={16} /> Add to Cart
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -164,7 +140,6 @@ export default function HomePage() {
   const { cart, addToCart } = useCart();
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>([]);
   const [allItems, setAllItems] = useState<FoodItem[]>([]);
-  const [configuratorItem, setConfiguratorItem] = useState<FoodItem | null>(null);
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
@@ -212,10 +187,10 @@ export default function HomePage() {
             </p>
           </div>
           <Link
-            href="/menu?category=Shawarma"
+            href="/menu"
             className="text-brand-primary font-bold text-sm flex items-center gap-1.5 hover:underline"
           >
-            Explore Menu <ArrowRight size={16} />
+            View All 70 Dishes <ArrowRight size={16} />
           </Link>
         </div>
 
@@ -335,7 +310,6 @@ export default function HomePage() {
             <FeaturedFoodCard
               key={item.id}
               item={item}
-              onCustomize={(itm) => setConfiguratorItem(itm)}
               onAdd={(itm, q) => {
                 addToCart(itm, q);
                 const recs = getItemRecommendations({
@@ -353,10 +327,10 @@ export default function HomePage() {
 
         <div className="mt-12 text-center">
           <Link
-            href="/menu?category=Shawarma"
+            href="/menu"
             className="btn-primary inline-flex py-3.5 px-10 text-base font-black"
           >
-            Browse Full Menu <ArrowRight size={18} className="ml-2" />
+            Explore All 70 Dishes <ArrowRight size={18} className="ml-2" />
           </Link>
         </div>
       </section>
@@ -381,7 +355,7 @@ export default function HomePage() {
               {
                 step: '01',
                 title: 'Select Your Dishes',
-                desc: 'Browse our crafted categories across Shawarma, Pizza, Burgers, Rice meals, Drinks, and Treats.',
+                desc: 'Browse our complete 70-product catalogue across Shawarma, Pizza, Burgers, Rice meals, and Ice cream.',
                 icon: UtensilsCrossed,
               },
               {
@@ -587,24 +561,6 @@ export default function HomePage() {
           </a>
         </div>
       </footer>
-
-      {/* Product Configurator Modal */}
-      <ProductConfiguratorModal
-        item={configuratorItem}
-        isOpen={!!configuratorItem}
-        onClose={() => setConfiguratorItem(null)}
-        onConfirm={(item, qty, customization) => {
-          addToCart(item, qty, customization);
-          const recs = getItemRecommendations({
-            item,
-            cart,
-            allItems: allItems.length > 0 ? allItems : (APPROVED_CATALOGUE as unknown as FoodItem[]),
-            limit: 3,
-          });
-          setPopupRecs(recs);
-          setPopupTriggerItem(item);
-        }}
-      />
 
       {/* Smart Add-to-Cart Recommendation Popup */}
       {popupTriggerItem && (
