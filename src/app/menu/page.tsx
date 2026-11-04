@@ -149,6 +149,7 @@ function MenuInner() {
   const initialCategory = searchParams.get('category') || 'All';
 
   const [items, setItems] = useState<FoodItem[]>([]);
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
@@ -159,7 +160,7 @@ function MenuInner() {
 
   useEffect(() => {
     const q = query(collection(db, 'foodItems'));
-    const unsub = onSnapshot(
+    const unsubItems = onSnapshot(
       q,
       (snapshot) => {
         if (!snapshot.empty) {
@@ -179,7 +180,22 @@ function MenuInner() {
       }
     );
 
-    return () => unsub();
+    const catQuery = query(collection(db, 'custom_categories'));
+    const unsubCats = onSnapshot(
+      catQuery,
+      (snapshot) => {
+        const cats = snapshot.docs.map((doc) => doc.data().name as string).filter(Boolean);
+        setDbCategories(cats);
+      },
+      (err) => {
+        console.warn('Category listener error in menu:', err);
+      }
+    );
+
+    return () => {
+      unsubItems();
+      unsubCats();
+    };
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -197,12 +213,10 @@ function MenuInner() {
   }, [cart, items]);
 
   const categories = useMemo(() => {
-    const dynamicCats = items
-      .map((i) => i.category)
-      .filter((c): c is string => Boolean(c) && !APPROVED_CATEGORIES.includes(c));
-    const uniqueDynamic = Array.from(new Set(dynamicCats));
-    return ['All', ...APPROVED_CATEGORIES, ...uniqueDynamic];
-  }, [items]);
+    const itemCats = items.map((i) => i.category).filter(Boolean);
+    const combined = Array.from(new Set([...APPROVED_CATEGORIES, ...dbCategories, ...itemCats]));
+    return ['All', ...combined];
+  }, [items, dbCategories]);
 
   // Group items by category for carousels
   const categoryGroups = useMemo(() => {

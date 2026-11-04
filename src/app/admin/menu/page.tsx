@@ -10,7 +10,8 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc, 
-  doc 
+  doc,
+  setDoc
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { FoodItem, ProductCategory } from '@/types/schema';
@@ -46,6 +47,7 @@ const SAMPLE_PRESET_IMAGES = [
   { label: 'Burger', url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800' },
   { label: 'Chicken & Chips', url: 'https://images.unsplash.com/photo-1518013034477-2990fa317e23?q=80&w=800' },
   { label: 'Food / Rice', url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800' },
+  { label: 'Combo', url: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800' },
   { label: 'Drink / Can', url: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=800' },
   { label: 'Ice Cream', url: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=800' },
   { label: 'Snack / Pastry', url: 'https://images.unsplash.com/photo-1621200414838-84423c723707?q=80&w=800' },
@@ -63,6 +65,7 @@ export default function MenuManagement() {
   // Custom Category State
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
 
   // Image Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +83,7 @@ export default function MenuManagement() {
     is_featured: false,
   });
 
-  // Listen to menu items from Firestore
+  // Listen to menu items and custom categories from Firestore
   useEffect(() => {
     const q = query(collection(db, 'foodItems'));
     const unsub = onSnapshot(q, (snapshot) => {
@@ -93,7 +96,19 @@ export default function MenuManagement() {
       console.warn("Firestore snapshot listener error in admin menu:", error);
       setLoading(false);
     });
-    return () => unsub();
+
+    const catQuery = query(collection(db, 'custom_categories'));
+    const unsubCats = onSnapshot(catQuery, (snapshot) => {
+      const cats = snapshot.docs.map(doc => (doc.data().name as string)).filter(Boolean);
+      setDbCategories(cats);
+    }, (err) => {
+      console.warn("Category listener error:", err);
+    });
+
+    return () => {
+      unsub();
+      unsubCats();
+    };
   }, []);
 
   const openAddModal = () => {
@@ -153,6 +168,13 @@ export default function MenuManagement() {
     }
 
     try {
+      // Save new category to custom_categories collection so it persists in presets even if empty
+      const catSlug = finalCategory.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      await setDoc(doc(db, 'custom_categories', catSlug), {
+        name: finalCategory,
+        created_at: new Date().toISOString(),
+      }, { merge: true });
+
       if (editingItem) {
         // Update existing item
         await updateDoc(doc(db, 'foodItems', editingItem.id), {
@@ -266,10 +288,11 @@ export default function MenuManagement() {
     }
   };
 
-  // Combine preset categories with any existing dynamic categories from items
+  // Combine preset categories with any existing dynamic categories from items & database
   const allExistingCategories = Array.from(
     new Set([
       ...CATEGORY_PRESETS,
+      ...dbCategories,
       ...items.map(item => item.category).filter(Boolean)
     ])
   );
