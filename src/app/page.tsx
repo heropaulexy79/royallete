@@ -176,27 +176,7 @@ export default function HomePage() {
       <HeroSlider />
 
       {/* ── Section: Explore by Category ── */}
-      <section className="py-12 sm:py-20 px-4 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 sm:mb-12 gap-3">
-          <div>
-            <div className="inline-flex items-center gap-1.5 text-brand-primary text-xs font-black uppercase tracking-widest mb-1.5">
-              <Sparkles size={14} className="text-[#f59e0b]" /> Full Menu Range
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-brand-dark tracking-tight">
-              Explore Our 8 Approved Categories
-            </h2>
-            <p className="text-stone-500 text-sm sm:text-base mt-1">
-              Select any craving to jump right into that menu section.
-            </p>
-          </div>
-          <Link
-            href="/menu"
-            className="text-brand-primary font-bold text-sm flex items-center gap-1.5 hover:underline"
-          >
-            View All 70 Dishes <ArrowRight size={16} />
-          </Link>
-        </div>
-
+      <section className="py-8 sm:py-14 px-4 max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
           {CATEGORY_TILES.map((cat) => (
             <Link
