@@ -7,6 +7,7 @@ import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { useCart } from '@/context/CartContext';
 import { getRecommendations, getItemRecommendations } from '@/lib/recommendations';
 import AddToCartPopup from '@/components/AddToCartPopup';
+import CategoryCarousel from '@/components/CategoryCarousel';
 import {
   Plus,
   Minus,
@@ -203,6 +204,32 @@ function MenuInner() {
     return ['All', ...APPROVED_CATEGORIES, ...uniqueDynamic];
   }, [items]);
 
+  // Group items by category for carousels
+  const categoryGroups = useMemo(() => {
+    // If user selected a specific category (not 'All'), only show that category
+    const activeCats = selectedCategory === 'All'
+      ? categories.filter((c) => c !== 'All')
+      : [selectedCategory];
+
+    return activeCats
+      .map((cat) => {
+        const catItems = items.filter((item) => {
+          const matchCat = item.category === cat;
+          const matchSearch =
+            !searchTerm ||
+            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+          return matchCat && matchSearch;
+        });
+
+        return {
+          category: cat,
+          items: catItems,
+        };
+      })
+      .filter((g) => g.items.length > 0);
+  }, [categories, items, selectedCategory, searchTerm]);
+
   return (
     <main className="min-h-screen bg-[#faf6f0] flex flex-col">
       <Navbar />
@@ -322,7 +349,7 @@ function MenuInner() {
         </div>
       )}
 
-      {/* Food Grid */}
+      {/* Category Carousels */}
       <section className="max-w-7xl mx-auto px-4 py-8 sm:py-12 pb-28 sm:pb-20 w-full flex-1">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24">
@@ -333,30 +360,34 @@ function MenuInner() {
           <>
             <div className="flex justify-between items-center mb-6">
               <p className="text-xs sm:text-sm font-bold text-stone-500">
-                Showing <span className="text-[#191514] font-black">{filteredItems.length}</span> dishes in{' '}
-                <span className="text-brand-primary font-black">{selectedCategory}</span>
+                Showing <span className="text-[#191514] font-black">{filteredItems.length}</span> dishes across{' '}
+                <span className="text-brand-primary font-black">
+                  {selectedCategory === 'All' ? `${categoryGroups.length} categories` : selectedCategory}
+                </span>
               </p>
             </div>
 
-            <motion.div
-              layout
-              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
-            >
-              {filteredItems.map((item) => (
-                <FoodCard
-                  key={item.id}
-                  item={item}
-                  onAdd={(itm, q) => {
-                    addToCart(itm, q);
-                    const recs = getItemRecommendations({ item: itm, cart, allItems: items, limit: 3 });
-                    setPopupRecs(recs);
-                    setPopupTriggerItem(itm);
-                  }}
-                />
-              ))}
-            </motion.div>
+            {categoryGroups.map((group) => (
+              <CategoryCarousel
+                key={group.category}
+                category={group.category}
+                items={group.items}
+                renderItem={(item) => (
+                  <FoodCard
+                    key={item.id}
+                    item={item}
+                    onAdd={(itm, q) => {
+                      addToCart(itm, q);
+                      const recs = getItemRecommendations({ item: itm, cart, allItems: items, limit: 3 });
+                      setPopupRecs(recs);
+                      setPopupTriggerItem(itm);
+                    }}
+                  />
+                )}
+              />
+            ))}
 
-            {filteredItems.length === 0 && (
+            {categoryGroups.length === 0 && (
               <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-[#ede5da] p-8 my-8">
                 <UtensilsCrossed size={48} className="mx-auto text-stone-300 mb-3" />
                 <h3 className="text-lg font-black text-brand-dark mb-1">No dishes match your filter</h3>
