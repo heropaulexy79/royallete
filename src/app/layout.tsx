@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Déskilz Restaurant | Satisfying Meals, Snacks & Drinks",
     description:
-      "Order hot and freshly prepared meals from Déskilz directly through WhatsApp. Browse our full 70-product approved catalogue.",
+      "Order hot and freshly prepared meals from Déskilz directly through WhatsApp. Browse our full menu catalogue.",
     url: "https://deskilz.ng",
     siteName: "Déskilz Restaurant",
     images: [

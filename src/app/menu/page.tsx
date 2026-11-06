@@ -258,7 +258,7 @@ function MenuInner() {
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#f59e0b]/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-950/80 to-amber-950/60 text-[#fbbf24] border border-amber-400/30 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
-            <Sparkles size={13} className="text-[#f59e0b]" /> The 70-Dish Approved Catalogue
+            <Sparkles size={13} className="text-[#f59e0b]" /> Full Approved Catalogue
           </div>
           <h1 className="text-3xl sm:text-5xl font-black mb-2 tracking-tight text-white">
             Déskilz <span className="text-[#fbbf24]">Restaurant Menu</span>

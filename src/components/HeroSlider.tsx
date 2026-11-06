@@ -83,7 +83,7 @@ const SLIDES: Slide[] = [
       'Whether you crave a fiery Chicken Suya Shawarma, a cheesy Meatball Pizza, a creamy Double Beef Burger, or sweet VanChoco Ice Cream, we have your craving covered.',
     primaryCtaText: 'Browse Menu',
     primaryCtaLink: '/menu?category=Shawarma',
-    secondaryCtaText: 'Direct Kitchen Chat',
+    secondaryCtaText: 'Chat with the Restaurant',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
     image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1600',
     cardDetail: {

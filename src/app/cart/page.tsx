@@ -183,7 +183,7 @@ export default function CartPage() {
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-brand-dark mb-2">Your Cart is Empty</h1>
           <p className="text-stone-500 mb-8 max-w-sm mx-auto text-sm sm:text-base">
-            You haven&apos;t added any delicious dishes yet. Explore our 70-dish menu and pick your cravings!
+            You haven&apos;t added any delicious dishes yet. Explore our full menu and pick your cravings!
           </p>
           <Link href="/menu" className="btn-primary inline-flex gap-2 px-9 h-12 text-sm sm:text-base font-black">
             Browse Déskilz Menu <ArrowRight size={18} />

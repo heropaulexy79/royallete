@@ -93,7 +93,7 @@ export default function AdminDashboard() {
                 <ShoppingBag size={16} /> Kitchen Orders
              </Link>
              <Link href="/admin/menu" className="btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2">
-                <Layers size={16} /> Manage 70 Dishes
+                <Layers size={16} /> Manage Menu Items
              </Link>
           </div>
         </div>

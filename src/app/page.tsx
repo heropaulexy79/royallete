@@ -317,7 +317,7 @@ export default function HomePage() {
             href="/menu"
             className="btn-primary inline-flex py-3.5 px-10 text-base font-black"
           >
-            Explore All 70 Dishes <ArrowRight size={18} className="ml-2" />
+            Explore Full Menu <ArrowRight size={18} className="ml-2" />
           </Link>
         </div>
       </section>
@@ -342,7 +342,7 @@ export default function HomePage() {
               {
                 step: '01',
                 title: 'Select Your Dishes',
-                desc: 'Browse our complete 70-product catalogue across Shawarma, Pizza, Burgers, Rice meals, and Ice cream.',
+                desc: 'Browse our complete full menu across Shawarma, Pizza, Burgers, Rice meals, and Ice cream.',
                 icon: UtensilsCrossed,
               },
               {
@@ -436,7 +436,7 @@ export default function HomePage() {
           </div>
           <h2 className="text-3xl sm:text-5xl font-black">Ready to satisfy your hunger?</h2>
           <p className="text-rose-100 text-sm sm:text-base max-w-lg mx-auto">
-            Browse our full 70-product approved catalogue, customize your portions, and hand your order directly to our kitchen.
+            Browse our full menu, customize your portions, and hand your order directly to our kitchen.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -451,7 +451,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-black px-8 py-3.5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              <MessageSquare size={18} /> Chat with Kitchen
+              <MessageSquare size={18} /> Chat with the Restaurant
             </a>
           </div>
         </div>
