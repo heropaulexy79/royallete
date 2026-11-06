@@ -8,7 +8,7 @@ import { useCart } from '@/context/CartContext';
 import { FoodItem } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import AddToCartPopup from '@/components/AddToCartPopup';
 import CategoryCarousel from '@/components/CategoryCarousel';
@@ -32,16 +32,28 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-// Category discovery card data
-const CATEGORY_TILES = [
-  { name: 'Shawarma', count: '12 items', image: 'https://images.unsplash.com/photo-1642962002196-80415d487f3b?q=80&w=800', tag: 'Chicken & Suya' },
-  { name: 'Pizza', count: '9 items', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800', tag: 'Personal & Sharing' },
-  { name: 'Burger', count: '2 items', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800', tag: 'Beef Patties' },
-  { name: 'Chicken & Chips', count: '4 items', image: 'https://images.unsplash.com/photo-1518013034477-2990fa317e23?q=80&w=800', tag: 'Golden Fries' },
-  { name: 'Food', count: '8 items', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800', tag: 'Rice & Soups' },
-  { name: 'Drinks', count: '18 items', image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=800', tag: 'Chilled & Fresh' },
-  { name: 'Ice Cream', count: '12 items', image: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=800', tag: 'Sweet Scoops' },
-  { name: 'Snacks', count: '5 items', image: 'https://images.unsplash.com/photo-1621200414838-84423c723707?q=80&w=800', tag: 'Fresh Pastries' },
+// Category discovery card default mapping
+const DEFAULT_CATEGORY_IMAGES: Record<string, { image: string; tag: string }> = {
+  Shawarma: { image: 'https://images.unsplash.com/photo-1642962002196-80415d487f3b?q=80&w=800', tag: 'Chicken & Suya' },
+  Pizza: { image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800', tag: 'Personal & Sharing' },
+  Burger: { image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800', tag: 'Beef Patties' },
+  'Chicken & Chips': { image: 'https://images.unsplash.com/photo-1518013034477-2990fa317e23?q=80&w=800', tag: 'Golden Fries' },
+  Food: { image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800', tag: 'Rice & Soups' },
+  Combo: { image: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800', tag: 'Value Combos' },
+  Drinks: { image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=800', tag: 'Chilled & Fresh' },
+  'Ice Cream': { image: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=800', tag: 'Sweet Scoops' },
+  Snacks: { image: 'https://images.unsplash.com/photo-1621200414838-84423c723707?q=80&w=800', tag: 'Fresh Pastries' },
+};
+
+const BASE_APPROVED_CATEGORIES = [
+  'Shawarma',
+  'Pizza',
+  'Burger',
+  'Chicken & Chips',
+  'Food',
+  'Drinks',
+  'Ice Cream',
+  'Snacks',
 ];
 
 function FeaturedFoodCard({
@@ -143,30 +155,85 @@ export default function HomePage() {
   const { settings } = useFeatureSettings();
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>([]);
   const [allItems, setAllItems] = useState<FoodItem[]>([]);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
   useEffect(() => {
-    async function loadFeatured() {
-      let itemsList: FoodItem[] = [];
-      try {
-        const q = query(collection(db, 'foodItems'), where('is_available', '==', true));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          itemsList = snap.docs.map((d) => ({ id: d.id, ...d.data() } as FoodItem));
+    // 1. Listen for items
+    const q = query(collection(db, 'foodItems'));
+    const unsubItems = onSnapshot(
+      q,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const itemsList = snapshot.docs
+            .map((d) => ({ id: d.id, ...d.data() } as FoodItem))
+            .filter((item) => !(item as { is_legacy?: boolean }).is_legacy);
+          setAllItems(itemsList);
+          const available = itemsList.filter((d) => d.is_available);
+          const highlighted = available.filter((d) => d.is_featured).slice(0, 4);
+          setFeaturedItems(highlighted.length > 0 ? highlighted : available.slice(0, 4));
+        } else {
+          const fallback = APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+          setAllItems(fallback);
+          setFeaturedItems(fallback.slice(0, 4));
         }
-      } catch (err) {
-        console.warn('Using catalogue fallbacks for featured cards:', err);
+      },
+      (err) => {
+        console.warn('Items listener error:', err);
+        const fallback = APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+        setAllItems(fallback);
+        setFeaturedItems(fallback.slice(0, 4));
       }
-      if (itemsList.length === 0) {
-        itemsList = APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+    );
+
+    // 2. Listen for custom categories added from admin dashboard
+    const catQuery = query(collection(db, 'custom_categories'));
+    const unsubCats = onSnapshot(
+      catQuery,
+      (snapshot) => {
+        const cats = snapshot.docs.map((doc) => doc.data().name as string).filter(Boolean);
+        setCustomCategories(cats);
+      },
+      (err) => {
+        console.warn('Category listener error on homepage:', err);
       }
-      setAllItems(itemsList);
-      const highlighted = itemsList.filter((d) => d.is_featured).slice(0, 4);
-      setFeaturedItems(highlighted.length > 0 ? highlighted : itemsList.slice(0, 4));
-    }
-    loadFeatured();
+    );
+
+    return () => {
+      unsubItems();
+      unsubCats();
+    };
   }, []);
+
+  // Compute dynamic category tiles combining approved presets, custom categories, and any items in database
+  const categoryTiles = React.useMemo(() => {
+    const categorySet = new Set<string>(BASE_APPROVED_CATEGORIES);
+    customCategories.forEach((c) => categorySet.add(c));
+    allItems.forEach((i) => {
+      if (i.category) categorySet.add(i.category);
+    });
+
+    const orderedCategories = Array.from(categorySet);
+
+    return orderedCategories.map((catName) => {
+      const itemsInCat = allItems.filter((i) => i.category?.toLowerCase() === catName.toLowerCase());
+      const defaultInfo = DEFAULT_CATEGORY_IMAGES[catName] || {
+        image: itemsInCat[0]?.image_url || 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800',
+        tag: 'Déskilz Special',
+      };
+
+      const displayImage = itemsInCat[0]?.image_url || defaultInfo.image;
+      const countLabel = `${itemsInCat.length} ${itemsInCat.length === 1 ? 'dish' : 'items'}`;
+
+      return {
+        name: catName,
+        count: countLabel,
+        image: displayImage,
+        tag: defaultInfo.tag,
+      };
+    });
+  }, [allItems, customCategories]);
 
   return (
     <main className="min-h-screen bg-[#faf6f0] flex flex-col">
@@ -178,7 +245,7 @@ export default function HomePage() {
       {/* ── Section: Explore by Category ── */}
       <section className="py-8 sm:py-14 px-4 max-w-7xl mx-auto w-full">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
-          {CATEGORY_TILES.map((cat) => (
+          {categoryTiles.map((cat) => (
             <Link
               key={cat.name}
               href={`/menu?category=${encodeURIComponent(cat.name)}`}

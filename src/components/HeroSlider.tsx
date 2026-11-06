@@ -89,7 +89,7 @@ const SLIDES: Slide[] = [
     cardDetail: {
       tag: 'Made Fresh',
       value: 'Cooked to Order',
-      sub: 'Across 8 rich categories',
+      sub: 'Across 9 rich categories',
     },
   },
 ];

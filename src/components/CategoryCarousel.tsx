@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { FoodItem } from '@/types/schema';
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CategoryCarouselProps {
   category: string;
@@ -18,7 +18,6 @@ export default function CategoryCarousel({
   const containerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
 
   const checkScroll = () => {
     const el = containerRef.current;
@@ -39,31 +38,6 @@ export default function CategoryCarousel({
     };
   }, [items]);
 
-  // Auto-scroll loop
-  useEffect(() => {
-    if (items.length <= 4 || isPaused) return;
-
-    const interval = setInterval(() => {
-      const el = containerRef.current;
-      if (!el) return;
-
-      const cardWidth = el.clientWidth >= 1024 
-        ? el.clientWidth / 4 
-        : el.clientWidth >= 640 
-          ? el.clientWidth / 2 
-          : el.clientWidth * 0.85;
-
-      const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 15;
-      if (isAtEnd) {
-        el.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: cardWidth, behavior: 'smooth' });
-      }
-    }, 2200);
-
-    return () => clearInterval(interval);
-  }, [items.length, isPaused]);
-
   const scroll = (direction: 'left' | 'right') => {
     const el = containerRef.current;
     if (!el) return;
@@ -77,13 +51,7 @@ export default function CategoryCarousel({
   if (items.length === 0) return null;
 
   return (
-    <div 
-      className="mb-10 sm:mb-14 relative"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={() => setIsPaused(true)}
-      onTouchEnd={() => setIsPaused(false)}
-    >
+    <div className="mb-10 sm:mb-14 relative">
       {/* Category Header with Counter & Nav Buttons */}
       <div className="flex items-center justify-between mb-4 px-1">
         <div className="flex items-baseline gap-2.5">
@@ -97,16 +65,6 @@ export default function CategoryCarousel({
 
         {/* Carousel controls */}
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setIsPaused(!isPaused)}
-            className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-[#ede5da]/50 transition-colors hidden sm:inline-flex"
-            title={isPaused ? 'Resume auto-scroll' : 'Pause auto-scroll'}
-            aria-label={isPaused ? 'Resume auto-scroll' : 'Pause auto-scroll'}
-          >
-            {isPaused ? <Play size={14} /> : <Pause size={14} />}
-          </button>
-
           <button
             type="button"
             onClick={() => scroll('left')}
