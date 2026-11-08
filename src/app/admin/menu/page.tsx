@@ -55,6 +55,59 @@ const SAMPLE_PRESET_IMAGES = [
   { label: 'Snack / Pastry', url: 'https://images.unsplash.com/photo-1621200414838-84423c723707?q=80&w=800' },
 ];
 
+/**
+ * Client-side browser image compressor
+ * Scales any camera photo down to max 800px and exports as clean WebP/JPEG (~30-70KB)
+ * so it saves smoothly in Firestore without hitting size limits or timeout errors.
+ */
+function compressImageFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Failed to parse image'));
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIMENSION = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_DIMENSION) {
+            height = Math.round((height * MAX_DIMENSION) / width);
+            width = MAX_DIMENSION;
+          }
+        } else {
+          if (height > MAX_DIMENSION) {
+            width = Math.round((width * MAX_DIMENSION) / height);
+            height = MAX_DIMENSION;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Try WebP first (highest compression ratio), fallback to JPEG
+        let dataUrl = canvas.toDataURL('image/webp', 0.82);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        }
+        resolve(dataUrl);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function MenuManagement() {
   const [items, setItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,57 +274,62 @@ export default function MenuManagement() {
       return;
     }
 
-    // Validate size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image file size should not exceed 5MB.');
+    // Validate size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image file size should not exceed 10MB.');
       return;
     }
 
     setUploadingImage(true);
-    setUploadProgress(0);
+    setUploadProgress(20);
 
     try {
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const storagePath = `menu-images/${Date.now()}_${sanitizedName}`;
-      const imageRef = ref(storage, storagePath);
+      // 1. Immediately compress in the browser to clean WebP/JPEG under 80KB
+      const compressedDataUrl = await compressImageFile(file);
+      setUploadProgress(50);
 
-      const uploadTask = uploadBytesResumable(imageRef, file);
+      // Set optimized preview immediately
+      setFormData((prev) => ({ ...prev, image_url: compressedDataUrl }));
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-          setUploadProgress(progress);
-        },
-        async (error) => {
-          console.warn('Firebase Storage upload failed or not enabled, falling back to base64 preview/storage:', error);
-          // Graceful fallback to data URL if Firebase Storage bucket has restrictive rules or is unconfigured
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const resultUrl = event.target?.result as string;
-            setFormData(prev => ({ ...prev, image_url: resultUrl }));
+      // 2. Attempt Firebase Storage upload in background if available
+      try {
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const storagePath = `menu-images/${Date.now()}_${sanitizedName}`;
+        const imageRef = ref(storage, storagePath);
+
+        const uploadTask = uploadBytesResumable(imageRef, file);
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            setUploadProgress(progress);
+          },
+          (storageErr) => {
+            console.warn('Storage bucket upload not available; using optimized WebP image:', storageErr);
             setUploadingImage(false);
             setUploadProgress(null);
-          };
-          reader.readAsDataURL(file);
-        },
-        async () => {
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          setFormData(prev => ({ ...prev, image_url: downloadUrl }));
-          setUploadingImage(false);
-          setUploadProgress(null);
-        }
-      );
-    } catch (err) {
-      console.warn('Direct upload exception, reading as data URL:', err);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const resultUrl = event.target?.result as string;
-        setFormData(prev => ({ ...prev, image_url: resultUrl }));
+          },
+          async () => {
+            try {
+              const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              setFormData((prev) => ({ ...prev, image_url: downloadUrl }));
+            } catch (err) {
+              console.warn('Could not retrieve download URL, keeping compressed data:', err);
+            }
+            setUploadingImage(false);
+            setUploadProgress(null);
+          }
+        );
+      } catch (storageErr) {
+        console.warn('Direct storage error, keeping compressed image:', storageErr);
         setUploadingImage(false);
         setUploadProgress(null);
-      };
-      reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      console.error('Image compression error:', err);
+      alert('Could not process this image file. Please try another image or use an image URL.');
+      setUploadingImage(false);
+      setUploadProgress(null);
     }
   };
 
