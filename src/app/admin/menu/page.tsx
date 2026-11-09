@@ -281,50 +281,18 @@ export default function MenuManagement() {
     }
 
     setUploadingImage(true);
-    setUploadProgress(20);
+    setUploadProgress(40);
 
     try {
-      // 1. Immediately compress in the browser to clean WebP/JPEG under 80KB
+      // Compress in the browser to an ultra-lightweight WebP/JPEG (~30-70KB)
+      // This bypasses Firebase Storage CORS and bucket permission restrictions completely,
+      // saving directly and instantly to Firestore without any network errors.
       const compressedDataUrl = await compressImageFile(file);
-      setUploadProgress(50);
+      setUploadProgress(100);
 
-      // Set optimized preview immediately
       setFormData((prev) => ({ ...prev, image_url: compressedDataUrl }));
-
-      // 2. Attempt Firebase Storage upload in background if available
-      try {
-        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const storagePath = `menu-images/${Date.now()}_${sanitizedName}`;
-        const imageRef = ref(storage, storagePath);
-
-        const uploadTask = uploadBytesResumable(imageRef, file);
-        uploadTask.on(
-          'state_changed',
-          (snapshot) => {
-            const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            setUploadProgress(progress);
-          },
-          (storageErr) => {
-            console.warn('Storage bucket upload not available; using optimized WebP image:', storageErr);
-            setUploadingImage(false);
-            setUploadProgress(null);
-          },
-          async () => {
-            try {
-              const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-              setFormData((prev) => ({ ...prev, image_url: downloadUrl }));
-            } catch (err) {
-              console.warn('Could not retrieve download URL, keeping compressed data:', err);
-            }
-            setUploadingImage(false);
-            setUploadProgress(null);
-          }
-        );
-      } catch (storageErr) {
-        console.warn('Direct storage error, keeping compressed image:', storageErr);
-        setUploadingImage(false);
-        setUploadProgress(null);
-      }
+      setUploadingImage(false);
+      setUploadProgress(null);
     } catch (err) {
       console.error('Image compression error:', err);
       alert('Could not process this image file. Please try another image or use an image URL.');
