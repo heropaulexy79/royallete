@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { db, storage } from '@/lib/firebase';
 import { 
@@ -28,7 +29,8 @@ import {
   Loader2,
   CheckCircle2,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -378,6 +380,17 @@ export default function MenuManagement() {
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-10 w-full flex-1">
+        {/* Back Link to Admin Dashboard */}
+        <div className="mb-4">
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-stone-600 hover:text-brand-primary bg-white hover:bg-stone-50 border border-[#ede5da] px-3.5 py-2 rounded-xl transition-all shadow-xs group"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span>Back to Admin Dashboard</span>
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>

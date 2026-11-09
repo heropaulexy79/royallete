@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
@@ -15,7 +16,8 @@ import {
   Utensils,
   ShoppingBag,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  ArrowLeft
 } from 'lucide-react';
 import { computeOrderChecksum } from '@/lib/whatsapp';
 
@@ -79,6 +81,17 @@ export default function AdminOrders() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+        {/* Back Link to Admin Dashboard */}
+        <div className="mb-4">
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-stone-600 hover:text-brand-primary bg-white hover:bg-stone-50 border border-[#ede5da] px-3.5 py-2 rounded-xl transition-all shadow-xs group"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <span>Back to Admin Dashboard</span>
+          </Link>
+        </div>
+
         <div className="flex flex-col gap-4 mb-6 sm:mb-8">
           <div>
             <div className="inline-flex items-center gap-2 bg-red-50 text-brand-primary px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2">
