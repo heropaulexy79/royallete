@@ -32,9 +32,11 @@ import { generateWhatsAppUrl, RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp'
 function OrderConfirmed({
   orderId,
   whatsappUrl,
+  restaurantNumber,
 }: {
   orderId: string;
   whatsappUrl: string;
+  restaurantNumber?: string;
 }) {
   return (
     <motion.div
@@ -59,7 +61,7 @@ function OrderConfirmed({
         </div>
         <div className="flex justify-between items-center border-b border-[#ede5da] pb-3">
           <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Déskilz Kitchen</span>
-          <span className="font-bold text-stone-700 text-sm">+{RESTAURANT_WHATSAPP_NUMBER}</span>
+          <span className="font-bold text-stone-700 text-sm">+{restaurantNumber || RESTAURANT_WHATSAPP_NUMBER}</span>
         </div>
       </div>
 
@@ -158,13 +160,18 @@ export default function CartPage() {
       console.warn('Firestore offline or fallback order generation:', error);
     }
 
-    const whatsappUrl = generateWhatsAppUrl({
-      orderId,
-      customerName: formData.name,
-      phone: formData.phone,
-      items: cart,
-      totalPrice: verifiedTotalPrice,
-    });
+    const targetWhatsAppNumber = settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER;
+
+    const whatsappUrl = generateWhatsAppUrl(
+      {
+        orderId,
+        customerName: formData.name,
+        phone: formData.phone,
+        items: cart,
+        totalPrice: verifiedTotalPrice,
+      },
+      targetWhatsAppNumber
+    );
 
     clearCart();
     setOrderComplete({ id: orderId, whatsappUrl });
@@ -198,7 +205,11 @@ export default function CartPage() {
     return (
       <main className="min-h-screen bg-[#faf6f0] pb-28 sm:pb-0 flex flex-col">
         <Navbar />
-        <OrderConfirmed orderId={orderComplete.id} whatsappUrl={orderComplete.whatsappUrl} />
+        <OrderConfirmed
+          orderId={orderComplete.id}
+          whatsappUrl={orderComplete.whatsappUrl}
+          restaurantNumber={settings.whatsapp_number}
+        />
       </main>
     );
   }

@@ -17,7 +17,9 @@ import {
   Layers,
   Sliders,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Phone,
+  Save
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -25,6 +27,29 @@ import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 
 export default function AdminDashboard() {
   const { settings, updateSetting } = useFeatureSettings();
+  const [whatsappInput, setWhatsappInput] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneSaved, setPhoneSaved] = useState(false);
+
+  useEffect(() => {
+    if (settings.whatsapp_number) {
+      setWhatsappInput(settings.whatsapp_number);
+    }
+  }, [settings.whatsapp_number]);
+
+  const handleSavePhone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = whatsappInput.replace(/\D/g, '');
+    if (cleaned.length < 10) {
+      alert('Please enter a valid WhatsApp phone number with country code (e.g. 2347030574580).');
+      return;
+    }
+    setSavingPhone(true);
+    await updateSetting('whatsapp_number', cleaned);
+    setSavingPhone(false);
+    setPhoneSaved(true);
+    setTimeout(() => setPhoneSaved(false), 2500);
+  };
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -183,6 +208,56 @@ export default function AdminDashboard() {
                 {settings.enable_cart_frequently_bought ? 'Suspend Feature' : 'Reactivate Feature'}
               </button>
             </div>
+          </div>
+
+          {/* Section: Live WhatsApp Order Destination Number */}
+          <div className="mt-5 pt-5 border-t border-[#ede5da]">
+            <form onSubmit={handleSavePhone} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#faf6f0] border border-[#ede5da]">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-[#25D366]/20 text-[#25D366] flex items-center justify-center">
+                    <Phone size={13} />
+                  </div>
+                  <h3 className="text-sm font-black text-brand-dark">Kitchen & Order WhatsApp Number</h3>
+                  <span className="text-[10px] font-bold text-stone-500 bg-white px-2 py-0.5 rounded-md border border-[#ede5da]">
+                    Active: +{settings.whatsapp_number}
+                  </span>
+                </div>
+                <p className="text-xs text-stone-600 leading-snug">
+                  Every order submitted by customers and all &quot;Chat with Restaurant&quot; buttons redirect to this phone number in real time.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-stretch sm:self-auto">
+                <div className="relative flex-1 sm:w-60">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">+</span>
+                  <input
+                    type="text"
+                    value={whatsappInput}
+                    onChange={(e) => setWhatsappInput(e.target.value)}
+                    placeholder="2347030574580"
+                    className="w-full bg-white border border-[#ede5da] rounded-xl pl-7 pr-3 py-2 text-xs font-mono font-bold text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={savingPhone}
+                  className="px-4 py-2 bg-brand-primary hover:bg-[#c4131e] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                >
+                  {savingPhone ? (
+                    'Saving...'
+                  ) : phoneSaved ? (
+                    <>
+                      <CheckCircle2 size={13} /> Saved!
+                    </>
+                  ) : (
+                    <>
+                      <Save size={13} /> Update Number
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 

@@ -7,11 +7,13 @@ import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 export interface FeatureSettings {
   enable_upsell_popup: boolean;
   enable_cart_frequently_bought: boolean;
+  whatsapp_number: string;
 }
 
 const DEFAULT_SETTINGS: FeatureSettings = {
   enable_upsell_popup: false, // Suspended by default as requested
   enable_cart_frequently_bought: true,
+  whatsapp_number: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '2347030574580',
 };
 
 export function useFeatureSettings() {
@@ -26,6 +28,7 @@ export function useFeatureSettings() {
           setSettings({
             enable_upsell_popup: snap.data().enable_upsell_popup ?? false,
             enable_cart_frequently_bought: snap.data().enable_cart_frequently_bought ?? true,
+            whatsapp_number: snap.data().whatsapp_number || (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '2347030574580'),
           });
         } else {
           setSettings(DEFAULT_SETTINGS);
@@ -42,7 +45,7 @@ export function useFeatureSettings() {
     return () => unsub();
   }, []);
 
-  const updateSetting = async (key: keyof FeatureSettings, value: boolean) => {
+  const updateSetting = async <K extends keyof FeatureSettings>(key: K, value: FeatureSettings[K]) => {
     try {
       await setDoc(doc(db, 'settings', 'features'), { [key]: value }, { merge: true });
     } catch (err) {

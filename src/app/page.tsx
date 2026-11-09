@@ -446,7 +446,7 @@ export default function HomePage() {
               Browse Full Menu
             </Link>
             <a
-              href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
+              href={`https://wa.me/${settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-black px-8 py-3.5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2"
@@ -493,7 +493,7 @@ export default function HomePage() {
             <h4 className="text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Orders & Location</h4>
             <ul className="space-y-2 text-xs">
               <li className="flex items-center gap-2 text-white">
-                <Phone size={14} className="text-[#25D366]" /> +{RESTAURANT_WHATSAPP_NUMBER}
+                <Phone size={14} className="text-[#25D366]" /> +{settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER}
               </li>
               <li className="flex items-center gap-2">
                 <MessageSquare size={14} className="text-[#25D366]" /> Direct WhatsApp Kitchen Handoff

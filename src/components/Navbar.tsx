@@ -22,6 +22,7 @@ import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import { getKitchenStatus, KitchenStatus } from '@/lib/kitchenStatus';
 import { isAdminAuthenticated } from '@/lib/adminAuth';
 import AdminLoginModal from '@/components/AdminLoginModal';
+import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 
 export const RESTAURANT_ADDRESS = 'Inside Mobil filling station, Odo-Eran, Obantoko';
 export const GOOGLE_MAPS_URL = 'https://maps.google.com/?q=Mobil+filling+station,+Odo-Eran,+Obantoko';
@@ -62,6 +63,8 @@ function TikTokIcon({ size = 14, className = '' }: { size?: number; className?: 
 export default function Navbar() {
   const router = useRouter();
   const { cart } = useCart();
+  const { settings } = useFeatureSettings();
+  const activeWhatsAppNumber = settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER;
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [kitchenStatus, setKitchenStatus] = useState<KitchenStatus>(getKitchenStatus());
@@ -152,14 +155,14 @@ export default function Navbar() {
 
               {/* 4. WhatsApp Direct Order */}
               <a
-                href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
+                href={`https://wa.me/${activeWhatsAppNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-[#fbbf24] hover:text-white transition-colors group font-bold"
               >
                 <MessageSquare size={13} className="text-[#25D366] flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <span className="group-hover:underline">
-                  WhatsApp Orders: +{RESTAURANT_WHATSAPP_NUMBER}
+                  WhatsApp Orders: +{activeWhatsAppNumber}
                 </span>
               </a>
 
@@ -378,7 +381,7 @@ export default function Navbar() {
             </button>
 
             <a
-              href={`https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`}
+              href={`https://wa.me/${activeWhatsAppNumber}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMenuOpen(false)}
