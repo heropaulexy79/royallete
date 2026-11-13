@@ -135,9 +135,12 @@ function MenuInner() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'All';
 
-  const [items, setItems] = useState<FoodItem[]>([]);
+  const [items, setItems] = useState<FoodItem[]>(() => {
+    // Instant initial render from catalogue so user never waits with a blank screen
+    return APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item }));
+  });
   const [dbCategories, setDbCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
 

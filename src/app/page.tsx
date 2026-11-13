@@ -153,8 +153,14 @@ function FeaturedFoodCard({
 export default function HomePage() {
   const { cart, addToCart } = useCart();
   const { settings } = useFeatureSettings();
-  const [featuredItems, setFeaturedItems] = useState<FoodItem[]>([]);
-  const [allItems, setAllItems] = useState<FoodItem[]>([]);
+  const [allItems, setAllItems] = useState<FoodItem[]>(() => {
+    return APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+  });
+  const [featuredItems, setFeaturedItems] = useState<FoodItem[]>(() => {
+    const list = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+    const highlighted = list.filter((d) => d.is_featured).slice(0, 4);
+    return highlighted.length > 0 ? highlighted : list.slice(0, 4);
+  });
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
