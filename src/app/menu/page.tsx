@@ -61,13 +61,6 @@ function FoodCard({ item, onAdd }: { item: FoodItem; onAdd: (item: FoodItem, qty
           <div className="absolute top-3 left-3 bg-[#191514]/85 backdrop-blur-sm px-2.5 py-0.5 rounded-lg text-[10px] font-bold text-amber-300 uppercase tracking-wider border border-amber-400/20">
             {item.category}
           </div>
-
-          {/* Sold Out Overlay */}
-          {!item.is_available && (
-            <div className="absolute inset-0 bg-[#191514]/75 backdrop-blur-[2px] flex items-center justify-center text-white font-extrabold uppercase text-xs sm:text-sm tracking-widest">
-              Sold Out
-            </div>
-          )}
         </div>
 
         {/* Info */}
@@ -84,61 +77,53 @@ function FoodCard({ item, onAdd }: { item: FoodItem; onAdd: (item: FoodItem, qty
 
       {/* Action Row */}
       <div className="mt-4 pt-3 border-t border-[#ede5da] space-y-2.5">
-        {item.is_available ? (
-          <>
-            <div className="flex items-center justify-between bg-[#fbf8f3] p-1.5 rounded-xl border border-[#ede5da]">
-              <span className="text-[10px] font-bold text-stone-400 uppercase pl-1.5 hidden sm:inline">Qty</span>
-              <div className="flex items-center gap-2 mx-auto sm:mx-0">
-                <button
-                  type="button"
-                  onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus size={12} />
-                </button>
-                <span className="w-5 text-center font-black text-brand-dark text-xs sm:text-sm">{qty}</span>
-                <button
-                  type="button"
-                  onClick={() => setQty((q) => q + 1)}
-                  className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
-                  aria-label="Increase quantity"
-                >
-                  <Plus size={12} />
-                </button>
-              </div>
-              <span className="text-xs font-black text-brand-primary pr-1">
-                ₦{(item.price * qty).toLocaleString()}
-              </span>
-            </div>
-
+        <div className="flex items-center justify-between bg-[#fbf8f3] p-1.5 rounded-xl border border-[#ede5da]">
+          <span className="text-[10px] font-bold text-stone-400 uppercase pl-1.5 hidden sm:inline">Qty</span>
+          <div className="flex items-center gap-2 mx-auto sm:mx-0">
             <button
               type="button"
-              onClick={handleAdd}
-              className={`w-full h-11 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm ${
-                isAdded
-                  ? 'bg-[#25D366] text-white shadow-emerald-500/20'
-                  : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20 active:scale-95'
-              }`}
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+              aria-label="Decrease quantity"
             >
-              <AnimatePresence mode="wait">
-                {isAdded ? (
-                  <motion.div key="added" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
-                    <Check size={16} /> Added!
-                  </motion.div>
-                ) : (
-                  <motion.div key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
-                    <ShoppingCart size={15} /> Add to Cart
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <Minus size={12} />
             </button>
-          </>
-        ) : (
-          <div className="w-full h-11 rounded-xl bg-stone-100 text-stone-400 font-bold text-xs flex items-center justify-center">
-            Currently Unavailable
+            <span className="w-5 text-center font-black text-brand-dark text-xs sm:text-sm">{qty}</span>
+            <button
+              type="button"
+              onClick={() => setQty((q) => q + 1)}
+              className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+              aria-label="Increase quantity"
+            >
+              <Plus size={12} />
+            </button>
           </div>
-        )}
+          <span className="text-xs font-black text-brand-primary pr-1">
+            ₦{(item.price * qty).toLocaleString()}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAdd}
+          className={`w-full h-11 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm ${
+            isAdded
+              ? 'bg-[#25D366] text-white shadow-emerald-500/20'
+              : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20 active:scale-95'
+          }`}
+        >
+          <AnimatePresence mode="wait">
+            {isAdded ? (
+              <motion.div key="added" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                <Check size={16} /> Added!
+              </motion.div>
+            ) : (
+              <motion.div key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                <ShoppingCart size={15} /> Add to Cart
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
       </div>
     </motion.div>
   );
@@ -168,16 +153,16 @@ function MenuInner() {
         if (!snapshot.empty) {
           const fetched = snapshot.docs
             .map((doc) => ({ id: doc.id, ...doc.data() } as FoodItem))
-            .filter((item) => !(item as { is_legacy?: boolean }).is_legacy);
+            .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
           setItems(fetched);
         } else {
-          setItems(APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item })));
+          setItems(APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
         }
         setLoading(false);
       },
       (err) => {
         console.warn('Firestore menu snapshot listener fallback:', err);
-        setItems(APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item })));
+        setItems(APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
         setLoading(false);
       }
     );

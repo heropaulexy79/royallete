@@ -168,20 +168,19 @@ export default function HomePage() {
         if (!snapshot.empty) {
           const itemsList = snapshot.docs
             .map((d) => ({ id: d.id, ...d.data() } as FoodItem))
-            .filter((item) => !(item as { is_legacy?: boolean }).is_legacy);
+            .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
           setAllItems(itemsList);
-          const available = itemsList.filter((d) => d.is_available);
-          const highlighted = available.filter((d) => d.is_featured).slice(0, 4);
-          setFeaturedItems(highlighted.length > 0 ? highlighted : available.slice(0, 4));
+          const highlighted = itemsList.filter((d) => d.is_featured).slice(0, 4);
+          setFeaturedItems(highlighted.length > 0 ? highlighted : itemsList.slice(0, 4));
         } else {
-          const fallback = APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+          const fallback = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
           setAllItems(fallback);
           setFeaturedItems(fallback.slice(0, 4));
         }
       },
       (err) => {
         console.warn('Items listener error:', err);
-        const fallback = APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+        const fallback = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
         setAllItems(fallback);
         setFeaturedItems(fallback.slice(0, 4));
       }
