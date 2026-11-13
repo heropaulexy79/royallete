@@ -483,11 +483,16 @@ export default function HomePage() {
           <div>
             <h4 className="text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Categories</h4>
             <ul className="space-y-1.5 text-xs">
-              <li><Link href="/menu?category=Shawarma" className="hover:text-white transition-colors">Shawarma (12 dishes)</Link></li>
-              <li><Link href="/menu?category=Pizza" className="hover:text-white transition-colors">Pizza (9 dishes)</Link></li>
-              <li><Link href="/menu?category=Burger" className="hover:text-white transition-colors">Burgers (2 dishes)</Link></li>
-              <li><Link href="/menu?category=Food" className="hover:text-white transition-colors">Rice & Food (8 dishes)</Link></li>
-              <li><Link href="/menu?category=Ice Cream" className="hover:text-white transition-colors">Ice Cream (12 flavours)</Link></li>
+              {categoryTiles.map((cat) => (
+                <li key={cat.name}>
+                  <Link
+                    href={`/menu?category=${encodeURIComponent(cat.name)}`}
+                    className="hover:text-white transition-colors"
+                  >
+                    {cat.name} ({cat.count})
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
