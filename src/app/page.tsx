@@ -86,9 +86,6 @@ function FeaturedFoodCard({
           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full font-black text-brand-dark text-xs sm:text-sm shadow-sm border border-[#ede5da]">
             ₦{item.price.toLocaleString()}
           </div>
-          <div className="absolute bottom-3 left-3 bg-[#191514]/85 backdrop-blur-sm text-amber-300 border border-amber-400/20 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider">
-            {item.category}
-          </div>
         </div>
 
         <h3 className="font-extrabold text-brand-dark text-base sm:text-lg group-hover:text-brand-primary transition-colors line-clamp-1">

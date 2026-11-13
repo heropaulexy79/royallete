@@ -179,9 +179,6 @@ export default function FrequentlyBoughtTogether({
                     alt={rec.name}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-1.5 left-1.5 bg-[#191514]/80 text-amber-300 text-[8px] font-black uppercase px-1.5 py-0.5 rounded">
-                    {rec.category}
-                  </div>
                 </div>
                 <span
                   className={`inline-block text-[9px] font-black uppercase px-2 py-0.5 rounded-md mb-1 leading-none ${

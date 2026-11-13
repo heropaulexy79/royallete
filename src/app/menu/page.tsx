@@ -56,11 +56,6 @@ function FoodCard({ item, onAdd }: { item: FoodItem; onAdd: (item: FoodItem, qty
           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full font-black text-brand-dark text-xs sm:text-sm shadow-md border border-[#ede5da]">
             ₦{item.price.toLocaleString()}
           </div>
-
-          {/* Category Tag in warm dark & amber */}
-          <div className="absolute top-3 left-3 bg-[#191514]/85 backdrop-blur-sm px-2.5 py-0.5 rounded-lg text-[10px] font-bold text-amber-300 uppercase tracking-wider border border-amber-400/20">
-            {item.category}
-          </div>
         </div>
 
         {/* Info */}

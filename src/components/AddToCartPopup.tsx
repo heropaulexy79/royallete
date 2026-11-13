@@ -52,9 +52,6 @@ function RecommendationCard({
           alt={item.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute bottom-0 left-0 right-0 bg-[#191514]/80 backdrop-blur-xs text-amber-300 text-[8px] font-black uppercase tracking-wider text-center py-0.5 leading-none">
-          {item.category}
-        </div>
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-extrabold text-[#191514] text-sm leading-tight line-clamp-1">{item.name}</p>
