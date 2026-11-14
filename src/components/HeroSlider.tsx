@@ -42,7 +42,7 @@ const SLIDES: Slide[] = [
     primaryCtaLink: '/menu?category=Combo',
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: '/image/double-delight.png',
+    image: '/image/double-delight.png?v=2',
     cardDetail: {
       tag: 'Special Combo Deal',
       value: 'JUST ₦10,500',
@@ -64,7 +64,7 @@ const SLIDES: Slide[] = [
     primaryCtaLink: '/menu?category=Food',
     secondaryCtaText: 'ORDER ON WHATSAPP',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: '/image/Signature%20Rice%20Combo.png',
+    image: '/image/Signature%20Rice%20Combo.png?v=2',
   },
 
   // Slide 3: Snack Time Deal
@@ -81,7 +81,7 @@ const SLIDES: Slide[] = [
     primaryCtaLink: '/menu?category=Snacks',
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: '/image/snack-time.png',
+    image: '/image/snack-time.png?v=2',
   },
 
   // Slide 4: Family Feast
@@ -98,7 +98,7 @@ const SLIDES: Slide[] = [
     primaryCtaLink: '/menu?category=Combo',
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: '/image/everyone.png',
+    image: '/image/everyone.png?v=2',
     cardDetail: {
       tag: 'Family Feast Combo',
       value: 'JUST ₦19,500',
@@ -120,7 +120,7 @@ const SLIDES: Slide[] = [
     primaryCtaLink: '/menu?category=Chicken%20%26%20Chips',
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: '/image/big-cravings.png',
+    image: '/image/big-cravings.png?v=2',
     cardDetail: {
       tag: 'Irresistible Combo',
       value: 'JUST ₦6,000',

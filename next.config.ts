@@ -25,6 +25,26 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Prevent stale browser / edge caching for images inside /image/ and /uploads/
+      {
+        source: "/image/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      // Ensure HTML pages always fetch the freshest version immediately
+      {
+        source: "/((?!_next/static|_next/image|favicon.ico).*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
