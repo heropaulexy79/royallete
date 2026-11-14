@@ -382,13 +382,16 @@ export default function HomePage() {
 
       {/* ── Section: Why Choose Déskilz ── */}
       <section className="py-14 sm:py-20 px-4 max-w-7xl mx-auto w-full">
-        <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
           <span className="text-brand-primary font-black text-xs uppercase tracking-widest flex items-center justify-center gap-1.5">
-            <Sparkles size={14} className="text-[#f59e0b]" /> The Déskilz Standard
+            <Sparkles size={14} className="text-[#f59e0b]" /> The Déskilz Experience
           </span>
-          <h2 className="text-2xl sm:text-4xl font-black text-brand-dark mt-1">
+          <h2 className="text-2xl sm:text-4xl font-black text-brand-dark mt-2 mb-3">
             Why Food Lovers Choose Us
           </h2>
+          <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+            At Déskilz, every meal is an opportunity to enjoy something delicious. From freshly prepared favourites to irresistible treats, we bring you satisfying meals, generous portions and flavours worth coming back for.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -397,9 +400,9 @@ export default function HomePage() {
               <ChefHat size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-brand-dark text-base mb-1">Authentic Suya & Spices</h3>
+              <h3 className="font-bold text-brand-dark text-base mb-1">Made Fresh. Served Hot.</h3>
               <p className="text-stone-500 text-xs sm:text-sm leading-relaxed">
-                Handcrafted using secret suya spices and fresh ingredients sourced daily for full aroma and flavor.
+                We prepare your meals fresh when you order, so you can enjoy great food just the way it should be.
               </p>
             </div>
           </div>
@@ -409,9 +412,9 @@ export default function HomePage() {
               <Clock size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-brand-dark text-base mb-1">Rapid Kitchen Turnaround</h3>
+              <h3 className="font-bold text-brand-dark text-base mb-1">Order. Pick up. Enjoy.</h3>
               <p className="text-stone-500 text-xs sm:text-sm leading-relaxed">
-                Orders are queued instantly upon WhatsApp confirmation so your food is sizzling hot when you arrive.
+                Order your favourites easily, pick up at your convenience, and enjoy every bite without long waits.
               </p>
             </div>
           </div>
