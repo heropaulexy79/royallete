@@ -98,11 +98,33 @@ const SLIDES: Slide[] = [
     primaryCtaLink: '/menu?category=Combo',
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: '/image/big-cravings.png',
+    image: '/image/everyone.png',
     cardDetail: {
       tag: 'Family Feast Combo',
       value: 'JUST ₦19,500',
       sub: '4 Burgers + 1 Medium Pizza',
+    },
+  },
+
+  // Slide 5: Big Cravings (Fries Combo)
+  {
+    id: 5,
+    badge: 'BIG CRAVINGS? WE\'VE GOT YOU!',
+    badgeIcon: Flame,
+    title: 'Big Cravings?',
+    highlight: "We've Got You!",
+    subtitle: 'LARGER FRIES + 2 PIECES OF CHICKEN + 1 DRINK',
+    description:
+      'Everything you need for a satisfying meal, all in one irresistible combo!',
+    primaryCtaText: 'Explore Fries Combo',
+    primaryCtaLink: '/menu?category=Chicken%20%26%20Chips',
+    secondaryCtaText: 'WhatsApp Order',
+    secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
+    image: '/image/big-cravings.png',
+    cardDetail: {
+      tag: 'Irresistible Combo',
+      value: 'JUST ₦6,000',
+      sub: 'Fries + 2 Chicken + 1 Drink',
     },
   },
 ];
