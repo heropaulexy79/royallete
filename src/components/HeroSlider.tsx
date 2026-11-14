@@ -185,14 +185,14 @@ export default function HeroSlider() {
             <img
               src={slide.image}
               alt={slide.title}
-              className="w-full h-full object-cover object-center opacity-90"
+              className="w-full h-full object-cover object-center opacity-95"
             />
           </picture>
           {/* Subtle directional gradients that keep the photo vibrant while guaranteeing crystal-clear text readability */}
-          {/* Horizontal fade: dark behind text on desktop */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#191514]/85 via-[#191514]/40 to-transparent sm:from-[#191514]/95 sm:via-[#191514]/70 sm:to-transparent" />
+          {/* Horizontal fade: gentle on mobile so pictures stay bright, full contrast on desktop */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#191514]/65 via-[#191514]/20 to-transparent sm:from-[#191514]/95 sm:via-[#191514]/70 sm:to-transparent" />
           {/* Gentle vertical gradient for mobile readability and seamless contrast */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#191514]/90 via-[#191514]/30 to-[#191514]/40 sm:from-[#191514]/80 sm:via-transparent sm:to-[#191514]/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#191514]/70 via-transparent to-[#191514]/20 sm:from-[#191514]/80 sm:via-transparent sm:to-[#191514]/30" />
         </motion.div>
       </AnimatePresence>
 
