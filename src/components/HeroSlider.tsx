@@ -152,17 +152,19 @@ export default function HeroSlider() {
           <img
             src={slide.image}
             alt={slide.title}
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-right sm:object-center opacity-90"
           />
-          {/* Multi-layered cinematic gradient overlays in warm espresso & charcoal for contrast */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#191514] via-[#191514]/90 to-transparent sm:via-[#191514]/80" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#191514] via-transparent to-[#191514]/50" />
+          {/* Subtle directional gradients that keep the photo vibrant while guaranteeing crystal-clear text readability */}
+          {/* Horizontal fade: dark behind text on the left, clear and bright over the food image on the right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#191514]/90 via-[#191514]/50 to-transparent sm:from-[#191514]/95 sm:via-[#191514]/70 sm:to-transparent" />
+          {/* Gentle vertical gradient for bottom contrast and seamless section transition */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#191514]/80 via-transparent to-[#191514]/30" />
         </motion.div>
       </AnimatePresence>
 
       {/* Main Slide Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 w-full">
-        <div className="max-w-2xl">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-24 w-full">
+        <div className="max-w-xl lg:max-w-2xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id}
@@ -170,27 +172,27 @@ export default function HeroSlider() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="space-y-4 sm:space-y-6"
+              className="space-y-3.5 sm:space-y-6"
             >
               {/* Harmonious Red + Amber Badge */}
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-950/80 to-amber-950/60 backdrop-blur-md border border-amber-400/30 text-amber-300 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider shadow-sm">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-950/90 to-amber-950/70 backdrop-blur-md border border-amber-400/30 text-amber-300 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider shadow-sm">
                 <BadgeIcon size={14} className="text-[#fbbf24]" />
                 {slide.badge}
               </div>
 
               {/* Headline with accompanying gold highlight */}
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.08] tracking-tight">
+              <h1 className="text-2xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.12] tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                 {slide.title} <br />
-                <span className="text-[#fbbf24] drop-shadow-sm">{slide.highlight}</span>
+                <span className="text-[#fbbf24] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">{slide.highlight}</span>
               </h1>
 
               {/* Subtitle tag */}
-              <p className="text-base sm:text-xl font-extrabold text-amber-300 drop-shadow-sm tracking-wide">
+              <p className="text-sm sm:text-xl font-extrabold text-amber-300 tracking-wide drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">
                 {slide.subtitle}
               </p>
 
               {/* Description */}
-              <p className="text-[#ede5da] text-sm sm:text-lg leading-relaxed max-w-xl font-normal">
+              <p className="text-[#ede5da] text-xs sm:text-lg leading-relaxed max-w-lg font-normal drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
                 {slide.description}
               </p>
 
