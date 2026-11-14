@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight, MessageSquare, Sparkles, UtensilsCrossed, Pizza, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
+import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 
 interface Slide {
   id: number;
@@ -27,74 +28,88 @@ interface Slide {
 }
 
 const SLIDES: Slide[] = [
-  // Slide 1: Brand Introduction
+  // Slide 1: Duo Deal (Double Delight)
   {
     id: 1,
-    badge: 'Welcome to Déskilz',
+    badge: 'GOOD FOOD IS BETTER SHARED!',
     badgeIcon: Sparkles,
-    title: 'Satisfying Meals,',
-    highlight: 'Craved Flavors.',
-    subtitle: 'Fast Casual Dining Redefined',
+    title: 'Double the Burgers.',
+    highlight: 'Double the Enjoyment.',
+    subtitle: 'TWO CLASSIC BEEF BURGERS. ONE DELICIOUS PIZZA.',
     description:
-      'Déskilz is your premier destination for mouth-watering shawarmas, hand-crafted pizzas, flame-grilled burgers, authentic rice dishes, creamy ice cream, and chilled drinks.',
-    primaryCtaText: 'Explore Menu',
-    primaryCtaLink: '/menu',
+      'The perfect combination for sharing, bonding and satisfying those serious cravings. TWICE THE BURGER. MORE REASONS TO ENJOY!',
+    primaryCtaText: 'Explore Duo Deal',
+    primaryCtaLink: '/menu?category=Combo',
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1600',
+    image: '/image/double-delight.png',
     cardDetail: {
-      tag: 'Fresh Kitchen',
-      value: '100% Cooked to Order',
-      sub: 'Zero cold reheating',
+      tag: 'Special Combo Deal',
+      value: 'JUST ₦10,500',
+      sub: '2 Beef Burgers + 1 Pizza',
     },
   },
 
-  // Slide 2: Featured Food or Meal (Approved Rice Combo at ₦3,000)
+  // Slide 2: Featured Food or Meal (Signature Rice Combo)
   {
     id: 2,
     badge: 'Verified Customer Favorite',
     badgeIcon: Flame,
     title: 'The Signature',
-    highlight: 'Rice Combo ₦3,000',
+    highlight: 'Rice Combo',
     subtitle: 'Smoky Jollof, Fried Rice & Chicken',
     description:
-      'Indulge in our chef-prepared combination of rich smoky Nigerian Jollof rice, seasoned vegetable Fried rice, and tender golden flame-grilled chicken quarter.',
-    primaryCtaText: 'Order Now',
+      'More variety, great taste and incredible value in every plate. Your next satisfying meal is waiting at Déskilz',
+    primaryCtaText: 'EXPLORE MENU',
     primaryCtaLink: '/menu?category=Food',
-    secondaryCtaText: 'View Food Section',
-    secondaryCtaLink: '/menu?category=Food',
-    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1600',
-    cardDetail: {
-      tag: 'Approved Special',
-      value: '₦3,000',
-      sub: 'Jollof + Fried Rice + Chicken',
-    },
+    secondaryCtaText: 'ORDER ON WHATSAPP',
+    secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
+    image: '/image/Signature%20Rice%20Combo.png',
   },
 
-  // Slide 3: Explore More (Category Discovery)
+  // Slide 3: Snack Time Deal
   {
     id: 3,
-    badge: '8 Distinct Categories',
-    badgeIcon: Pizza,
-    title: 'Shawarma, Pizza,',
-    highlight: 'Burgers & Treats',
-    subtitle: 'Handcrafted Meals & Chilled Treats',
+    badge: 'JUST ₦2,200',
+    badgeIcon: Sparkles,
+    title: 'Snack Time,',
+    highlight: 'Made Better.',
+    subtitle: 'THREE FAVOURITES. ONE DELICIOUS DEAL.',
     description:
-      'Whether you crave a fiery Chicken Suya Shawarma, a cheesy Meatball Pizza, a creamy Double Beef Burger, or sweet VanChoco Ice Cream, we have your craving covered.',
-    primaryCtaText: 'Browse Menu',
-    primaryCtaLink: '/menu?category=Shawarma',
-    secondaryCtaText: 'Chat with the Restaurant',
+      'Enjoy the perfect snack combination with our golden Meat Pie, delicious Chicken Pie and tasty Sausage Roll.',
+    primaryCtaText: 'Explore menu',
+    primaryCtaLink: '/menu?category=Snacks',
+    secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1600',
+    image: '/image/snack-time.png',
+  },
+
+  // Slide 4: Family Feast
+  {
+    id: 4,
+    badge: 'BRING EVERYONE TO THE TABLE!',
+    badgeIcon: Sparkles,
+    title: 'More to Share.',
+    highlight: 'More to Love.',
+    subtitle: '4 CLASSIC BEEF BURGERS + 1 MEDIUM PIZZA',
+    description:
+      'Make every gathering more delicious! Perfect for sharing with family and friends.',
+    primaryCtaText: 'Explore Family Feast',
+    primaryCtaLink: '/menu?category=Combo',
+    secondaryCtaText: 'WhatsApp Order',
+    secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
+    image: '/image/big-cravings.png',
     cardDetail: {
-      tag: 'Made Fresh',
-      value: 'Cooked to Order',
-      sub: 'Across 9 rich categories',
+      tag: 'Family Feast Combo',
+      value: 'JUST ₦19,500',
+      sub: '4 Burgers + 1 Medium Pizza',
     },
   },
 ];
 
 export default function HeroSlider() {
+  const { settings } = useFeatureSettings();
+  const whatsappNumber = settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER;
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -170,7 +185,7 @@ export default function HeroSlider() {
               </h1>
 
               {/* Subtitle tag */}
-              <p className="text-sm sm:text-base font-bold text-amber-200/90 tracking-wide uppercase">
+              <p className="text-base sm:text-xl font-extrabold text-amber-300 drop-shadow-sm tracking-wide">
                 {slide.subtitle}
               </p>
 
@@ -195,7 +210,11 @@ export default function HeroSlider() {
 
                 {slide.secondaryCtaLink && (
                   <a
-                    href={slide.secondaryCtaLink}
+                    href={
+                      slide.secondaryCtaLink.includes('wa.me')
+                        ? `https://wa.me/${whatsappNumber}`
+                        : slide.secondaryCtaLink
+                    }
                     target={slide.secondaryCtaLink.startsWith('http') ? '_blank' : '_self'}
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-amber-500/15 hover:bg-amber-500/25 text-[#fbbf24] border border-amber-400/30 py-3.5 px-6 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base backdrop-blur-md transition-all active:scale-95"
