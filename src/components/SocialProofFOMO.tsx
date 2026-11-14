@@ -73,10 +73,10 @@ export default function SocialProofFOMO() {
   useEffect(() => {
     if (isDismissed) return;
 
-    // Initial delay before first FOMO appears (3.5s)
+    // Initial delay before first FOMO appears: give user time to browse without disturbance (10s)
     const initialTimer = setTimeout(() => {
       setVisible(true);
-    }, 3500);
+    }, 10000);
 
     return () => clearTimeout(initialTimer);
   }, [isDismissed]);
@@ -84,14 +84,14 @@ export default function SocialProofFOMO() {
   useEffect(() => {
     if (isDismissed || isHovered) return;
 
-    // Cycle order every 8 seconds
+    // Cycle order every 20 seconds, and stay visible for only 5 seconds so it feels gentle and non-intrusive
     const interval = setInterval(() => {
       setVisible(false);
       setTimeout(() => {
         setIndex((prev) => (prev + 1) % SAMPLE_ORDERS.length);
         setVisible(true);
-      }, 700);
-    }, 8500);
+      }, 15000);
+    }, 20000);
 
     return () => clearInterval(interval);
   }, [isDismissed, isHovered]);
@@ -102,7 +102,7 @@ export default function SocialProofFOMO() {
 
   return (
     <div
-      className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-30 max-w-[340px] pointer-events-auto"
+      className="fixed bottom-20 sm:bottom-6 left-3 sm:left-6 z-30 max-w-[280px] sm:max-w-[340px] pointer-events-auto"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -110,37 +110,37 @@ export default function SocialProofFOMO() {
         {visible && (
           <motion.div
             key={current.id}
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-            className="flex items-center gap-3 bg-[#191514]/95 backdrop-blur-md text-white p-2.5 sm:p-3 rounded-2xl border border-stone-700/80 shadow-2xl shadow-black/50 group"
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+            className="flex items-center gap-2.5 sm:gap-3 bg-[#191514]/90 backdrop-blur-md text-white p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-stone-700/60 shadow-xl shadow-black/40 group"
           >
             {/* Dish Thumbnail with Fire Badge */}
-            <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden bg-stone-800 border border-stone-700">
+            <div className="relative w-9 h-9 sm:w-12 sm:h-12 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden bg-stone-800 border border-stone-700">
               <img
                 src={current.image}
                 alt={current.item}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               />
-              <div className="absolute top-0 left-0 bg-brand-primary p-0.5 rounded-br-lg text-[9px] text-white">
-                <Flame size={10} className="fill-white" />
+              <div className="absolute top-0 left-0 bg-brand-primary p-0.5 rounded-br-md sm:rounded-br-lg text-[8px] sm:text-[9px] text-white">
+                <Flame size={9} className="fill-white" />
               </div>
             </div>
 
             {/* Order Copy */}
-            <div className="flex-1 min-w-0 pr-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-0.5 uppercase tracking-wider">
-                  <CheckCircle size={10} className="stroke-[3]" /> Verified Pickup
+            <div className="flex-1 min-w-0 pr-0.5 sm:pr-1">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400 flex items-center gap-0.5 uppercase tracking-wider">
+                  <CheckCircle size={9} className="stroke-[3]" /> Verified Pickup
                 </span>
-                <span className="text-stone-500 text-[10px]">•</span>
-                <span className="text-[10px] text-stone-400 font-medium">{current.timeAgo}</span>
+                <span className="text-stone-500 text-[9px] sm:text-[10px]">•</span>
+                <span className="text-[9px] sm:text-[10px] text-stone-400 font-medium">{current.timeAgo}</span>
               </div>
-              <p className="font-extrabold text-xs sm:text-sm text-stone-100 truncate leading-snug">
+              <p className="font-bold text-[11px] sm:text-sm text-stone-100 truncate leading-tight mt-0.5">
                 {current.item}
               </p>
-              <p className="text-[11px] text-amber-300/90 leading-none mt-0.5 font-medium truncate">
+              <p className="hidden sm:block text-[11px] text-amber-300/90 leading-none mt-1 font-medium truncate">
                 Hot takeaway pickup • <span className="font-bold text-emerald-300">Ready in ~15 mins</span>
               </p>
             </div>
@@ -152,9 +152,9 @@ export default function SocialProofFOMO() {
                 setIsDismissed(true);
               }}
               aria-label="Dismiss notification"
-              className="w-6 h-6 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 flex items-center justify-center transition-colors flex-shrink-0"
+              className="w-5 h-5 sm:w-6 sm:h-6 rounded-md sm:rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 flex items-center justify-center transition-colors flex-shrink-0"
             >
-              <X size={13} />
+              <X size={12} />
             </button>
           </motion.div>
         )}
