@@ -67,6 +67,7 @@ const SLIDES: Slide[] = [
     secondaryCtaText: 'ORDER ON WHATSAPP',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
     image: '/image/Signature%20Rice%20Combo.png?v=2',
+    mobileImage: '/image/Signature%20Rice%20Combo%20Mobile.jpeg?v=1',
   },
 
   // Slide 3: Snack Time Deal
@@ -84,6 +85,7 @@ const SLIDES: Slide[] = [
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
     image: '/image/snack-time.png?v=2',
+    mobileImage: '/image/snack-time-mobile.jpeg?v=1',
   },
 
   // Slide 4: Family Feast
