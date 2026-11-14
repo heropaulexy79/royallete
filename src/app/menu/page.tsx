@@ -241,13 +241,13 @@ function MenuInner() {
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#f59e0b]/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-950/80 to-amber-950/60 text-[#fbbf24] border border-amber-400/30 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
-            <Sparkles size={13} className="text-[#f59e0b]" /> Full Approved Catalogue
+            <Sparkles size={13} className="text-[#f59e0b]" /> Explore Our Menu
           </div>
           <h1 className="text-3xl sm:text-5xl font-black mb-2 tracking-tight text-white">
-            Déskilz <span className="text-[#fbbf24]">Restaurant Menu</span>
+            Something Delicious <span className="text-[#fbbf24]">For Every Craving</span>
           </h1>
-          <p className="text-[#ede5da]/80 text-sm sm:text-base max-w-xl mb-6 sm:mb-8">
-            Authentic Shawarma, artisanal Pizza, flame-grilled Burgers, delicious Nigerian Food, refreshing Drinks, and sweet Ice Cream.
+          <p className="text-[#ede5da]/80 text-sm sm:text-base max-w-xl mb-6 sm:mb-8 leading-relaxed">
+            From flavour-packed shawarmas and handcrafted pizzas to juicy burgers, freshly baked pastries, creamy ice cream to the tastiest rice, there&apos;s something for everyone at Déskilz.
           </p>
 
           {/* Search Bar */}
@@ -255,7 +255,7 @@ function MenuInner() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
             <input
               type="text"
-              placeholder="Search by dish name (e.g. Suya Shawarma, Rice Combo, Meatball Pizza)..."
+              placeholder="Search by dish name (e.g. Suya Shawarma, Meat Pie, Jollof Rice)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-[#241e1c] border border-stone-700/80 rounded-2xl py-3.5 pl-12 pr-10 text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm sm:text-base"
