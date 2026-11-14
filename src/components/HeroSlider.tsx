@@ -20,6 +20,7 @@ interface Slide {
   secondaryCtaText?: string;
   secondaryCtaLink?: string;
   image: string;
+  mobileImage?: string;
   cardDetail?: {
     tag: string;
     value: string;
@@ -43,6 +44,7 @@ const SLIDES: Slide[] = [
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
     image: '/image/double-delight.png?v=2',
+    mobileImage: '/image/double-delight-mobile.jpeg?v=1',
     cardDetail: {
       tag: 'Special Combo Deal',
       value: 'JUST ₦10,500',
@@ -99,6 +101,7 @@ const SLIDES: Slide[] = [
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
     image: '/image/everyone.png?v=2',
+    mobileImage: '/image/everyone-mobile.jpeg?v=1',
     cardDetail: {
       tag: 'Family Feast Combo',
       value: 'JUST ₦19,500',
@@ -121,6 +124,7 @@ const SLIDES: Slide[] = [
     secondaryCtaText: 'WhatsApp Order',
     secondaryCtaLink: `https://wa.me/${RESTAURANT_WHATSAPP_NUMBER}`,
     image: '/image/big-cravings.png?v=2',
+    mobileImage: '/image/big-cravings-mobile.jpeg?v=1',
     cardDetail: {
       tag: 'Irresistible Combo',
       value: 'JUST ₦6,000',
@@ -171,16 +175,22 @@ export default function HeroSlider() {
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="absolute inset-0 z-0"
         >
-          <img
-            src={slide.image}
-            alt={slide.title}
-            className="w-full h-full object-cover object-right sm:object-center opacity-90"
-          />
+          {/* Responsive picture element: loads dedicated portrait image on mobile, landscape on desktop */}
+          <picture className="w-full h-full block">
+            {slide.mobileImage && (
+              <source media="(max-width: 640px)" srcSet={slide.mobileImage} />
+            )}
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover object-center opacity-90"
+            />
+          </picture>
           {/* Subtle directional gradients that keep the photo vibrant while guaranteeing crystal-clear text readability */}
-          {/* Horizontal fade: dark behind text on the left, clear and bright over the food image on the right */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#191514]/90 via-[#191514]/50 to-transparent sm:from-[#191514]/95 sm:via-[#191514]/70 sm:to-transparent" />
-          {/* Gentle vertical gradient for bottom contrast and seamless section transition */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#191514]/80 via-transparent to-[#191514]/30" />
+          {/* Horizontal fade: dark behind text on desktop */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#191514]/85 via-[#191514]/40 to-transparent sm:from-[#191514]/95 sm:via-[#191514]/70 sm:to-transparent" />
+          {/* Gentle vertical gradient for mobile readability and seamless contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#191514]/90 via-[#191514]/30 to-[#191514]/40 sm:from-[#191514]/80 sm:via-transparent sm:to-[#191514]/30" />
         </motion.div>
       </AnimatePresence>
 
