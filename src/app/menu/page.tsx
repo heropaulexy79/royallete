@@ -200,11 +200,15 @@ function MenuInner() {
   }, []);
 
   const filteredItems = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
     return items.filter((item) => {
       const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
+      if (!term) return matchCat;
+
       const matchSearch =
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+        item.name.toLowerCase().includes(term) ||
+        (item.description && item.description.toLowerCase().includes(term)) ||
+        (item.category && item.category.toLowerCase().includes(term));
       return matchCat && matchSearch;
     });
   }, [items, selectedCategory, searchTerm]);
@@ -221,6 +225,8 @@ function MenuInner() {
 
   // Group items by category for carousels
   const categoryGroups = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
     // If user selected a specific category (not 'All'), only show that category
     const activeCats = selectedCategory === 'All'
       ? categories.filter((c) => c !== 'All')
@@ -228,14 +234,21 @@ function MenuInner() {
 
     return activeCats
       .map((cat) => {
+        const catMatchesSearch = term && cat.toLowerCase().includes(term);
+
         const catItems = items
           .filter((item) => {
             const matchCat = item.category === cat;
-            const matchSearch =
-              !searchTerm ||
-              item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
-            return matchCat && matchSearch;
+            if (!matchCat) return false;
+            if (!term) return true;
+
+            // If the category itself matches (e.g. searching "shawarma"), show all items in this category
+            if (catMatchesSearch) return true;
+
+            return (
+              item.name.toLowerCase().includes(term) ||
+              (item.description && item.description.toLowerCase().includes(term))
+            );
           })
           .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
 
