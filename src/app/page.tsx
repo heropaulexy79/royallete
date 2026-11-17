@@ -313,15 +313,16 @@ export default function HomePage() {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#191514] via-[#191514]/75 to-transparent sm:via-[#191514]/40" />
-                <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <span className="text-[10px] font-extrabold text-[#fbbf24] uppercase tracking-wider block drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">
+                {/* Subtle black gradient strictly behind the text at the bottom */}
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/50 to-transparent pointer-events-none" />
+                <div className="absolute bottom-2.5 sm:bottom-3 left-3 right-3 text-white z-10">
+                  <span className="text-[10px] font-extrabold text-[#fbbf24] uppercase tracking-wider block leading-tight mb-0.5">
                     {cat.tag}
                   </span>
-                  <h3 className="text-base sm:text-xl font-black leading-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+                  <h3 className="text-base sm:text-xl font-black leading-tight text-white">
                     {cat.name}
                   </h3>
-                  <span className="text-[11px] text-amber-100/90 font-bold drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{cat.count}</span>
+                  <span className="text-[11px] text-[#fbbf24]/90 font-bold block mt-0.5">{cat.count}</span>
                 </div>
               </div>
             </Link>
