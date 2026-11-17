@@ -130,12 +130,9 @@ function MenuInner() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'All';
 
-  const [items, setItems] = useState<FoodItem[]>(() => {
-    // Instant initial render from catalogue so user never waits with a blank screen
-    return APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item }));
-  });
+  const [items, setItems] = useState<FoodItem[]>([]);
   const [dbCategories, setDbCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -144,6 +141,20 @@ function MenuInner() {
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
   useEffect(() => {
+    // 1. Try retrieving cached items from localStorage for instant, non-flickering display
+    try {
+      const cached = localStorage.getItem('deskilz_menu_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setItems(parsed);
+          setLoading(false);
+        }
+      }
+    } catch (e) {
+      console.warn('Menu cache read error:', e);
+    }
+
     const q = query(collection(db, 'foodItems'));
     const unsubItems = onSnapshot(
       q,
@@ -153,6 +164,11 @@ function MenuInner() {
             .map((doc) => ({ id: doc.id, ...doc.data() } as FoodItem))
             .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
           setItems(fetched);
+          try {
+            localStorage.setItem('deskilz_menu_cache', JSON.stringify(fetched));
+          } catch (e) {
+            console.warn('Menu cache write error:', e);
+          }
         } else {
           setItems(APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
         }
@@ -160,7 +176,7 @@ function MenuInner() {
       },
       (err) => {
         console.warn('Firestore menu snapshot listener fallback:', err);
-        setItems(APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
+        setItems((prev) => prev.length > 0 ? prev : APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
         setLoading(false);
       }
     );

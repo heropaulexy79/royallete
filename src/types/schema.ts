@@ -29,6 +29,15 @@ export interface User {
   role: 'customer' | 'admin';
 }
 
+export interface CategoryMeta {
+  id: string; // usually slugified category name, e.g. "shawarma"
+  name: string; // display name e.g. "Shawarma"
+  image_url?: string;
+  tag?: string;
+  order_index?: number;
+  created_at?: string;
+}
+
 export interface FoodItem {
   id: string;
   name: string;

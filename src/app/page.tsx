@@ -151,14 +151,47 @@ export default function HomePage() {
   const { cart, addToCart } = useCart();
   const { settings } = useFeatureSettings();
   const [allItems, setAllItems] = useState<FoodItem[]>(() => {
-    return APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_menu_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.warn('HomePage cache read error:', e);
+      }
+    }
+    return [];
   });
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>(() => {
-    const list = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
-    const highlighted = list.filter((d) => d.is_featured).slice(0, 4);
-    return highlighted.length > 0 ? highlighted : list.slice(0, 4);
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_menu_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const feat = parsed.filter((d: FoodItem) => d.is_featured).slice(0, 4);
+            return feat.length > 0 ? feat : parsed.slice(0, 4);
+          }
+        }
+      } catch (e) {
+        console.warn('HomePage featured cache read error:', e);
+      }
+    }
+    return [];
   });
-  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [customCategories, setCustomCategories] = useState<{ name: string; image_url?: string; tag?: string }[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_categories_cache');
+        if (cached) return JSON.parse(cached);
+      } catch (e) {
+        console.warn('HomePage categories cache read error:', e);
+      }
+    }
+    return [];
+  });
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
@@ -175,6 +208,11 @@ export default function HomePage() {
           setAllItems(itemsList);
           const highlighted = itemsList.filter((d) => d.is_featured).slice(0, 4);
           setFeaturedItems(highlighted.length > 0 ? highlighted : itemsList.slice(0, 4));
+          try {
+            localStorage.setItem('deskilz_menu_cache', JSON.stringify(itemsList));
+          } catch (e) {
+            console.warn('HomePage cache write error:', e);
+          }
         } else {
           const fallback = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
           setAllItems(fallback);
@@ -183,19 +221,26 @@ export default function HomePage() {
       },
       (err) => {
         console.warn('Items listener error:', err);
-        const fallback = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
-        setAllItems(fallback);
-        setFeaturedItems(fallback.slice(0, 4));
+        setAllItems((prev) => prev.length > 0 ? prev : APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem)));
       }
     );
 
-    // 2. Listen for custom categories added from admin dashboard
+    // 2. Listen for custom categories and custom category metadata added from admin dashboard
     const catQuery = query(collection(db, 'custom_categories'));
     const unsubCats = onSnapshot(
       catQuery,
       (snapshot) => {
-        const cats = snapshot.docs.map((doc) => doc.data().name as string).filter(Boolean);
+        const cats = snapshot.docs.map((doc) => ({
+          name: (doc.data().name as string) || doc.id,
+          image_url: doc.data().image_url as string | undefined,
+          tag: doc.data().tag as string | undefined,
+        })).filter((c) => Boolean(c.name));
         setCustomCategories(cats);
+        try {
+          localStorage.setItem('deskilz_categories_cache', JSON.stringify(cats));
+        } catch (e) {
+          console.warn('HomePage categories cache write error:', e);
+        }
       },
       (err) => {
         console.warn('Category listener error on homepage:', err);
@@ -211,28 +256,36 @@ export default function HomePage() {
   // Compute dynamic category tiles combining approved presets, custom categories, and any items in database
   const categoryTiles = React.useMemo(() => {
     const categorySet = new Set<string>(BASE_APPROVED_CATEGORIES);
-    customCategories.forEach((c) => categorySet.add(c));
+    customCategories.forEach((c) => categorySet.add(c.name));
     allItems.forEach((i) => {
       if (i.category) categorySet.add(i.category);
+    });
+
+    const customMetaMap = new Map<string, { image_url?: string; tag?: string }>();
+    customCategories.forEach((c) => {
+      customMetaMap.set(c.name.toLowerCase(), { image_url: c.image_url, tag: c.tag });
     });
 
     const orderedCategories = Array.from(categorySet);
 
     return orderedCategories.map((catName) => {
       const itemsInCat = allItems.filter((i) => i.category?.toLowerCase() === catName.toLowerCase());
+      const customMeta = customMetaMap.get(catName.toLowerCase());
       const defaultInfo = DEFAULT_CATEGORY_IMAGES[catName] || {
-        image: itemsInCat[0]?.image_url || 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800',
+        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800',
         tag: 'Déskilz Special',
       };
 
-      const displayImage = itemsInCat[0]?.image_url || defaultInfo.image;
+      // Priority: Admin custom-chosen image > first available dish image > default preset image
+      const displayImage = customMeta?.image_url || defaultInfo.image || itemsInCat[0]?.image_url;
+      const displayTag = customMeta?.tag || defaultInfo.tag || 'Déskilz Special';
       const countLabel = `${itemsInCat.length} ${itemsInCat.length === 1 ? 'dish' : 'items'}`;
 
       return {
         name: catName,
         count: countLabel,
         image: displayImage,
-        tag: defaultInfo.tag,
+        tag: displayTag,
       };
     });
   }, [allItems, customCategories]);

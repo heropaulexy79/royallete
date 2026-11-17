@@ -15,7 +15,7 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { FoodItem, ProductCategory } from '@/types/schema';
+import { FoodItem, ProductCategory, CategoryMeta } from '@/types/schema';
 import { 
   Plus, 
   Trash2, 
@@ -30,7 +30,8 @@ import {
   CheckCircle2,
   ArrowUp,
   ArrowDown,
-  ArrowLeft
+  ArrowLeft,
+  ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -122,7 +123,16 @@ export default function MenuManagement() {
   // Custom Category State
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
-  const [dbCategories, setDbCategories] = useState<string[]>([]);
+  const [dbCategories, setDbCategories] = useState<{ id: string; name: string; image_url?: string; tag?: string }[]>([]);
+
+  // Category Banner Image Modal State
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; image_url?: string; tag?: string } | null>(null);
+  const [categoryImageInput, setCategoryImageInput] = useState('');
+  const [categoryTagInput, setCategoryTagInput] = useState('');
+  const [savingCategoryMeta, setSavingCategoryMeta] = useState(false);
+  const categoryFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCategoryImg, setUploadingCategoryImg] = useState(false);
 
   // Image Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -156,7 +166,12 @@ export default function MenuManagement() {
 
     const catQuery = query(collection(db, 'custom_categories'));
     const unsubCats = onSnapshot(catQuery, (snapshot) => {
-      const cats = snapshot.docs.map(doc => (doc.data().name as string)).filter(Boolean);
+      const cats = snapshot.docs.map(doc => ({
+        id: doc.id,
+        name: (doc.data().name as string) || doc.id,
+        image_url: doc.data().image_url as string | undefined,
+        tag: doc.data().tag as string | undefined,
+      })).filter(c => Boolean(c.name));
       setDbCategories(cats);
     }, (err) => {
       console.warn("Category listener error:", err);
@@ -348,11 +363,69 @@ export default function MenuManagement() {
     }
   };
 
+  // Open Category Banner / Image customizer
+  const openCategoryModal = (catName: string) => {
+    const slug = catName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const existing = dbCategories.find(c => c.name.toLowerCase() === catName.toLowerCase());
+    setEditingCategory({
+      id: existing?.id || slug,
+      name: catName,
+      image_url: existing?.image_url || '',
+      tag: existing?.tag || '',
+    });
+    setCategoryImageInput(existing?.image_url || '');
+    setCategoryTagInput(existing?.tag || '');
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleSaveCategoryMeta = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    setSavingCategoryMeta(true);
+    try {
+      const slug = editingCategory.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      await setDoc(doc(db, 'custom_categories', slug), {
+        name: editingCategory.name,
+        image_url: categoryImageInput.trim(),
+        tag: categoryTagInput.trim(),
+        updated_at: new Date().toISOString(),
+      }, { merge: true });
+      setIsCategoryModalOpen(false);
+    } catch (err) {
+      console.error('Failed to save category image metadata:', err);
+      alert('Failed to save category image. Please try again.');
+    } finally {
+      setSavingCategoryMeta(false);
+    }
+  };
+
+  const handleCategoryFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (PNG, JPG, WebP).');
+      return;
+    }
+
+    setUploadingCategoryImg(true);
+    try {
+      const base64Data = await compressImageFile(file);
+      setCategoryImageInput(base64Data);
+    } catch (error) {
+      console.error('Category image processing failed:', error);
+      alert('Could not process this image. Please select a different image.');
+    } finally {
+      setUploadingCategoryImg(false);
+      if (categoryFileInputRef.current) categoryFileInputRef.current.value = '';
+    }
+  };
+
   // Combine preset categories with any existing dynamic categories from items & database
   const allExistingCategories = Array.from(
     new Set([
       ...CATEGORY_PRESETS,
-      ...dbCategories,
+      ...dbCategories.map(c => c.name),
       ...items.map(item => item.category).filter(Boolean)
     ])
   );
@@ -425,20 +498,182 @@ export default function MenuManagement() {
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
             {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
-                  selectedCategory === cat 
-                    ? 'bg-brand-primary text-white shadow-sm' 
-                    : 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]'
-                }`}
-              >
-                {cat}
-              </button>
+              <div key={cat} className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                    selectedCategory === cat 
+                      ? 'bg-brand-primary text-white shadow-sm' 
+                      : 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]'
+                  }`}
+                >
+                  {cat}
+                </button>
+                {cat !== 'All' && (
+                  <button
+                    onClick={() => openCategoryModal(cat)}
+                    title={`Change cover picture for "${cat}"`}
+                    className="p-1 rounded-lg text-stone-400 hover:text-brand-primary hover:bg-[#fdf8f3] border border-transparent hover:border-[#ede5da] transition-all"
+                  >
+                    <ImageIcon size={13} />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>
+
+        {/* Modal: Category Cover Image Customizer */}
+        <AnimatePresence>
+          {isCategoryModalOpen && editingCategory && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#ede5da] overflow-y-auto max-h-[90vh]"
+              >
+                <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#ede5da]">
+                  <div>
+                    <h2 className="text-xl font-black text-brand-dark flex items-center gap-2">
+                      <ImageIcon className="text-brand-primary" size={20} />
+                      Category Cover Image
+                    </h2>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      Choose the picture displayed on the homepage tile for <strong>{editingCategory.name}</strong>.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsCategoryModalOpen(false)}
+                    className="p-2 rounded-xl text-[#a89080] hover:text-brand-dark hover:bg-[#fdf8f3]"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveCategoryMeta} className="space-y-5">
+                  {/* Category Tagline / Eyebrow */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-brand-dark">Category Subtitle / Tag (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Chicken & Suya, Personal & Sharing..."
+                      className="input"
+                      value={categoryTagInput}
+                      onChange={(e) => setCategoryTagInput(e.target.value)}
+                    />
+                  </div>
+
+                  {/* Image Upload & URL */}
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-brand-dark">Cover Picture *</label>
+                      <button
+                        type="button"
+                        onClick={() => categoryFileInputRef.current?.click()}
+                        disabled={uploadingCategoryImg}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-primary bg-red-50 hover:bg-red-100/80 px-2.5 py-1 rounded-lg border border-red-200 transition-colors cursor-pointer"
+                      >
+                        {uploadingCategoryImg ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin" />
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={13} />
+                            <span>Upload from Device</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <input
+                      ref={categoryFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCategoryFileUpload}
+                    />
+
+                    <input
+                      type="url"
+                      placeholder="Paste image URL (https://...) or upload above"
+                      className="input"
+                      value={categoryImageInput}
+                      onChange={(e) => setCategoryImageInput(e.target.value)}
+                    />
+
+                    {/* Quick-Pick From Existing Dishes in this Category */}
+                    {items.filter(i => i.category.toLowerCase() === editingCategory.name.toLowerCase() && i.image_url).length > 0 && (
+                      <div className="pt-2">
+                        <span className="text-[11px] font-bold text-stone-500 block mb-2">
+                          Or select from dishes in {editingCategory.name}:
+                        </span>
+                        <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1 bg-stone-50 rounded-xl border border-stone-200">
+                          {items
+                            .filter(i => i.category.toLowerCase() === editingCategory.name.toLowerCase() && i.image_url)
+                            .map((dish) => (
+                              <button
+                                key={dish.id}
+                                type="button"
+                                onClick={() => setCategoryImageInput(dish.image_url)}
+                                className={`relative rounded-lg overflow-hidden border-2 aspect-square group ${
+                                  categoryImageInput === dish.image_url ? 'border-brand-primary ring-2 ring-brand-primary/30' : 'border-transparent'
+                                }`}
+                              >
+                                <img src={dish.image_url} alt={dish.name} className="w-full h-full object-cover" />
+                                <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[9px] text-white font-bold p-1 text-center transition-opacity">
+                                  {dish.name}
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Preview */}
+                    {categoryImageInput && (
+                      <div className="relative h-36 rounded-2xl overflow-hidden border border-[#ede5da] bg-[#191514] mt-3">
+                        <img
+                          src={categoryImageInput}
+                          alt="Category preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#191514]/90 via-[#191514]/30 to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 text-white">
+                          <span className="text-[10px] font-bold text-[#fbbf24] uppercase tracking-wider block">
+                            {categoryTagInput || 'Déskilz Special'}
+                          </span>
+                          <h3 className="text-base font-black leading-tight drop-shadow-sm text-white">
+                            {editingCategory.name}
+                          </h3>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 justify-end pt-4 border-t border-[#ede5da]">
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoryModalOpen(false)}
+                      className="px-5 py-2.5 rounded-xl font-bold text-[#7a6655] hover:bg-[#fdf8f3] text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingCategoryMeta}
+                      className="btn-primary py-2.5 px-6 rounded-xl text-sm font-bold shadow-md cursor-pointer disabled:opacity-50"
+                    >
+                      {savingCategoryMeta ? 'Saving...' : 'Save Category Cover'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Modal: Add / Edit Product */}
         <AnimatePresence>
