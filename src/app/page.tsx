@@ -314,15 +314,12 @@ export default function HomePage() {
                   loading="lazy"
                 />
                 {/* Subtle black gradient strictly behind the text at the bottom */}
-                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/50 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none" />
                 <div className="absolute bottom-2.5 sm:bottom-3 left-3 right-3 text-white z-10">
-                  <span className="text-[10px] font-extrabold text-[#fbbf24] uppercase tracking-wider block leading-tight mb-0.5">
-                    {cat.tag}
-                  </span>
-                  <h3 className="text-base sm:text-xl font-black leading-tight text-white">
+                  <h3 className="text-base sm:text-xl font-black leading-tight text-white drop-shadow-sm">
                     {cat.name}
                   </h3>
-                  <span className="text-[11px] text-[#fbbf24]/90 font-bold block mt-0.5">{cat.count}</span>
+                  <span className="text-[11px] text-[#fbbf24] font-bold block mt-0.5">{cat.count}</span>
                 </div>
               </div>
             </Link>
