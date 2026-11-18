@@ -334,7 +334,7 @@ export default function HomePage() {
             <Sparkles size={14} className="text-[#f59e0b]" /> Handcrafted Specials
           </span>
           <h2 className="text-2xl sm:text-4xl font-black text-brand-dark mt-1">
-            Featured Selections
+            Popular Right Now
           </h2>
           <p className="text-stone-500 text-sm sm:text-base mt-2">
             Cooked with authentic herbs, premium cuts, and fresh ingredients.
@@ -558,13 +558,28 @@ export default function HomePage() {
           <div>
             <h4 className="text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Orders & Location</h4>
             <ul className="space-y-2 text-xs">
-              <li className="flex items-center gap-2 text-white">
-                <Phone size={14} className="text-[#25D366]" /> +{settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER}
-              </li>
-              <li className="flex items-center gap-2">
-                <MessageSquare size={14} className="text-[#25D366]" /> Direct WhatsApp Kitchen Handoff
+              <li>
+                <a
+                  href={`https://wa.me/${settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-white hover:text-[#25D366] transition-colors font-medium"
+                >
+                  <Phone size={14} className="text-[#25D366]" /> +{settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER}
+                </a>
               </li>
               <li>
+                <a
+                  href={`https://wa.me/${settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-stone-300 hover:text-[#25D366] transition-colors font-medium group"
+                >
+                  <MessageSquare size={14} className="text-[#25D366] group-hover:scale-110 transition-transform" />
+                  <span>Order on WhatsApp</span>
+                </a>
+              </li>
+              <li className="text-stone-400">
                 <span className="text-stone-500">Service:</span> Fast Hot Pickup & Takeaway
               </li>
               <li className="pt-1.5 border-t border-stone-800/80">
