@@ -548,7 +548,7 @@ export default function HomePage() {
                     href={`/menu?category=${encodeURIComponent(cat.name)}`}
                     className="hover:text-white transition-colors"
                   >
-                    {cat.name} ({cat.count})
+                    {cat.name}
                   </Link>
                 </li>
               ))}
