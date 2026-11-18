@@ -376,55 +376,60 @@ export default function HomePage() {
       </section>
 
       {/* ── Section: 3-Step WhatsApp Process ── */}
-      <section className="bg-white py-14 sm:py-20 border-t border-[#ede5da]">
+      <section className="bg-white py-8 sm:py-20 border-t border-[#ede5da]">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center max-w-xl mx-auto mb-10 sm:mb-16">
+          <div className="text-center max-w-xl mx-auto mb-5 sm:mb-16">
             <span className="text-brand-primary font-black text-xs uppercase tracking-widest">
               Frictionless Ordering
             </span>
-            <h2 className="text-2xl sm:text-4xl font-black text-brand-dark mt-1">
+            <h2 className="text-xl sm:text-4xl font-black text-brand-dark mt-0.5 sm:mt-1">
               How Ordering Works
             </h2>
-            <p className="text-stone-500 text-sm mt-1">
+            <p className="text-stone-500 text-xs sm:text-sm mt-0.5 sm:mt-1">
               No online card input. No sign-up friction. Order directly into our kitchen.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-8">
             {[
               {
                 step: '01',
-                title: 'Select Your Dishes',
-                desc: 'Browse our complete full menu across Shawarma, Pizza, Burgers, Rice meals, and Ice cream.',
+                title: 'Select Your Items',
+                desc: 'Browse our complete menu across Shawarma, Pizza, Burgers, Rice, and more.',
                 icon: UtensilsCrossed,
               },
               {
                 step: '02',
                 title: 'Review Cart & Add Notes',
-                desc: 'Confirm your items, prices in NGN, and mention your preferred pickup time or dining requests.',
+                desc: 'Confirm your items, quantity, and prices.',
                 icon: ShoppingBag,
               },
               {
                 step: '03',
                 title: 'Send on WhatsApp',
-                desc: 'One tap opens WhatsApp with your pre-formatted order. Pay cash or bank transfer upon collection!',
+                desc: 'One tap opens WhatsApp with your pre-formatted order to finalize pickup.',
                 icon: MessageSquare,
               },
             ].map((card, i) => (
               <div
                 key={i}
-                className="bg-[#faf6f0] p-6 sm:p-8 rounded-3xl border border-[#ede5da] hover:border-amber-400/50 transition-all hover:shadow-lg relative overflow-hidden"
+                className="bg-[#faf6f0] p-3.5 sm:p-8 rounded-2xl sm:rounded-3xl border border-[#ede5da] hover:border-amber-400/50 transition-all hover:shadow-lg relative overflow-hidden flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-red-100/70 text-brand-primary flex items-center justify-center font-bold">
-                    <card.icon size={22} />
+                <div className="flex sm:justify-between items-center sm:items-start sm:w-full flex-shrink-0 sm:mb-4">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-red-100/70 text-brand-primary flex items-center justify-center font-bold">
+                    <card.icon size={18} className="sm:w-[22px] sm:h-[22px]" />
                   </div>
-                  <span className="text-4xl font-black text-[#ede5da]">{card.step}</span>
+                  <span className="hidden sm:block text-4xl font-black text-[#ede5da]">{card.step}</span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-brand-dark mb-2">
-                  {card.title}
-                </h3>
-                <p className="text-stone-500 text-sm leading-relaxed">{card.desc}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between sm:block mb-0.5 sm:mb-2">
+                    <h3 className="text-sm sm:text-xl font-bold text-brand-dark leading-snug">
+                      {card.title}
+                    </h3>
+                    <span className="sm:hidden text-base font-black text-[#ede5da]">{card.step}</span>
+                  </div>
+                  <p className="text-stone-500 text-xs sm:text-sm leading-tight sm:leading-relaxed">{card.desc}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -451,9 +456,9 @@ export default function HomePage() {
               <ChefHat size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-brand-dark text-base mb-1">Made Fresh. Served Hot.</h3>
+              <h3 className="font-bold text-brand-dark text-base mb-1">Fresh food, fast service,  great taste</h3>
               <p className="text-stone-500 text-xs sm:text-sm leading-relaxed">
-                We prepare your meals fresh when you order, so you can enjoy great food just the way it should be.
+                Enjoy freshly prepared favourites,  quick and convenient service,  satisfying flavours everytime.
               </p>
             </div>
           </div>
@@ -465,7 +470,7 @@ export default function HomePage() {
             <div>
               <h3 className="font-bold text-brand-dark text-base mb-1">Order. Pick up. Enjoy.</h3>
               <p className="text-stone-500 text-xs sm:text-sm leading-relaxed">
-                Order your favourites easily, pick up at your convenience, and enjoy every bite without long waits.
+                Zero Wait Time
               </p>
             </div>
           </div>
@@ -477,7 +482,7 @@ export default function HomePage() {
             <div>
               <h3 className="font-bold text-brand-dark text-base mb-1">Zero Payment Stress</h3>
               <p className="text-stone-500 text-xs sm:text-sm leading-relaxed">
-                No credit cards needed online. Simple, transparent WhatsApp confirmation with pay on pickup.
+                No credit cards needed online. Simple, transparent WhatsApp confirmation.
               </p>
             </div>
           </div>
@@ -492,7 +497,7 @@ export default function HomePage() {
           </div>
           <h2 className="text-3xl sm:text-5xl font-black">Ready to satisfy your hunger?</h2>
           <p className="text-rose-100 text-sm sm:text-base max-w-lg mx-auto">
-            Browse our full menu, customize your portions, and hand your order directly to our kitchen.
+            Explore our menu, choose your favourites, and place your order directly with our restaurant.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -507,7 +512,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-black px-8 py-3.5 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              <MessageSquare size={18} /> Chat with the Restaurant
+              <MessageSquare size={18} /> Order on WhatsApp
             </a>
           </div>
         </div>
@@ -526,11 +531,11 @@ export default function HomePage() {
                 />
               </div>
               <span className="text-2xl font-black text-white">
-                Dé<span className="text-brand-primary">skilz</span>
+                Dé<span className="text-brand-primary">skilz</span> Restaurant
               </span>
             </div>
             <p className="text-xs text-stone-400 leading-relaxed">
-              Déskilz Restaurant & Fast Food is your home for quality shawarma, pizza, burgers, fresh Nigerian meals, desserts, and drinks.
+              Your destination for delicious shawarma, freshly made pizza, juicy burgers, authentic Nigerian meals, delightful treats and refreshing drinks.
             </p>
           </div>
 
@@ -571,7 +576,7 @@ export default function HomePage() {
                 >
                   <MapPin size={15} className="text-[#fbbf24] flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                   <div>
-                    <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider block">Pickup Address (Google Maps):</span>
+                    <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider block">Pickup Address (Get Directions):</span>
                     <span className="leading-snug block font-medium group-hover:underline text-white">
                       Inside Mobil filling station, Odo-Eran, Obantoko
                     </span>
@@ -581,18 +586,7 @@ export default function HomePage() {
             </ul>
           </div>
 
-          <div>
-            <h4 className="text-amber-300 font-bold text-sm uppercase tracking-wider mb-3">Management</h4>
-            <p className="text-xs text-stone-400 mb-3">
-              Restaurant administrator access for menu prices and live order monitoring.
-            </p>
-            <Link
-              href="/admin"
-              className="inline-block bg-[#241e1c] hover:bg-stone-800 text-amber-200 font-bold text-xs px-4 py-2.5 rounded-xl border border-stone-700 transition-colors"
-            >
-              Open Admin Portal
-            </Link>
-          </div>
+          
         </div>
 
         <div className="max-w-7xl mx-auto pt-8 border-t border-stone-800 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-stone-500">
