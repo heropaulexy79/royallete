@@ -322,6 +322,15 @@ export default function MenuManagement() {
     await updateDoc(doc(db, 'foodItems', id), { is_available: !current });
   };
 
+  const toggleFeatured = async (id: string, current: boolean) => {
+    try {
+      await updateDoc(doc(db, 'foodItems', id), { is_featured: !current });
+    } catch (err) {
+      console.error('Toggle featured error:', err);
+      alert('Failed to update featured status.');
+    }
+  };
+
   const confirmDelete = async () => {
     if (!deleteConfirmation) return;
     try {
@@ -435,7 +444,12 @@ export default function MenuManagement() {
     .filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             item.category.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+      const matchesCategory = 
+        selectedCategory === 'All'
+          ? true
+          : selectedCategory === 'Featured'
+            ? Boolean(item.is_featured)
+            : item.category === selectedCategory;
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
@@ -446,7 +460,7 @@ export default function MenuManagement() {
       return (a.order_index ?? 9999) - (b.order_index ?? 9999);
     });
 
-  const categories = ['All', ...allExistingCategories];
+  const categories = ['All', 'Featured', ...allExistingCategories];
 
   return (
     <main className="min-h-screen bg-[#faf6f0] pb-28 sm:pb-12 flex flex-col">
@@ -501,19 +515,28 @@ export default function MenuManagement() {
               <div key={cat} className="flex items-center gap-1 flex-shrink-0">
                 <button
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex-shrink-0 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
                     selectedCategory === cat 
                       ? 'bg-brand-primary text-white shadow-sm' 
-                      : 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]'
+                      : cat === 'Featured'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
+                        : 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]'
                   }`}
                 >
-                  {cat}
+                  {cat === 'Featured' && (
+                    <Sparkles size={13} className={selectedCategory === 'Featured' ? 'text-white fill-white' : 'text-amber-600 fill-amber-500'} />
+                  )}
+                  <span>
+                    {cat === 'Featured'
+                      ? `Featured (${items.filter((i) => i.is_featured).length})`
+                      : cat}
+                  </span>
                 </button>
-                {cat !== 'All' && (
+                {cat !== 'All' && cat !== 'Featured' && (
                   <button
                     onClick={() => openCategoryModal(cat)}
                     title={`Change cover picture for "${cat}"`}
-                    className="p-1 rounded-lg text-stone-400 hover:text-brand-primary hover:bg-[#fdf8f3] border border-transparent hover:border-[#ede5da] transition-all"
+                    className="p-1 rounded-lg text-stone-400 hover:text-brand-primary hover:bg-[#fdf8f3] border border-transparent hover:border-[#ede5da] transition-all cursor-pointer"
                   >
                     <ImageIcon size={13} />
                   </button>
@@ -983,6 +1006,11 @@ export default function MenuManagement() {
                         alt={item.name} 
                         className="w-full h-full object-cover" 
                       />
+                      {item.is_featured && (
+                        <div className="absolute top-1 left-1 bg-amber-500 text-white rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-sm">
+                          <Sparkles size={9} className="fill-white" /> Featured
+                        </div>
+                      )}
                       {!item.is_available && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider">
                           Sold Out
@@ -1037,23 +1065,39 @@ export default function MenuManagement() {
                   )}
                 </div>
 
-                <div className="pt-3 border-t border-[#ede5da] flex items-center justify-between">
+                <div className="pt-3 border-t border-[#ede5da] flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${item.is_available ? 'bg-emerald-500 animate-pulse' : 'bg-[#c4b8a8]'}`} />
                     <span className={`text-xs font-bold ${item.is_available ? 'text-emerald-600' : 'text-[#a89080]'}`}>
                       {item.is_available ? 'Active in Menu' : 'Sold Out'}
                     </span>
                   </div>
-                  <button 
-                    onClick={() => toggleAvailability(item.id, item.is_available)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      item.is_available 
-                        ? 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]' 
-                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                    }`}
-                  >
-                    {item.is_available ? 'Mark Sold Out' : 'Mark Active'}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      type="button"
+                      onClick={() => toggleFeatured(item.id, Boolean(item.is_featured))}
+                      title={item.is_featured ? 'Remove from Homepage Featured' : 'Feature on Homepage'}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                        item.is_featured 
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' 
+                          : 'bg-[#ede5da] text-[#7a6655] hover:bg-amber-50 hover:text-amber-800'
+                      }`}
+                    >
+                      <Sparkles size={12} className={item.is_featured ? 'text-amber-600 fill-amber-500' : 'text-[#a89080]'} />
+                      <span>{item.is_featured ? 'Featured' : 'Feature'}</span>
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => toggleAvailability(item.id, item.is_available)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        item.is_available 
+                          ? 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]' 
+                          : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {item.is_available ? 'Mark Sold Out' : 'Mark Active'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

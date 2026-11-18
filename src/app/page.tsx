@@ -171,8 +171,7 @@ export default function HomePage() {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const feat = parsed.filter((d: FoodItem) => d.is_featured).slice(0, 4);
-            return feat.length > 0 ? feat : parsed.slice(0, 4);
+            return parsed.filter((d: FoodItem) => Boolean(d.is_featured));
           }
         }
       } catch (e) {
@@ -206,8 +205,8 @@ export default function HomePage() {
             .map((d) => ({ id: d.id, ...d.data() } as FoodItem))
             .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
           setAllItems(itemsList);
-          const highlighted = itemsList.filter((d) => d.is_featured).slice(0, 4);
-          setFeaturedItems(highlighted.length > 0 ? highlighted : itemsList.slice(0, 4));
+          const highlighted = itemsList.filter((d) => Boolean(d.is_featured));
+          setFeaturedItems(highlighted);
           try {
             localStorage.setItem('deskilz_menu_cache', JSON.stringify(itemsList));
           } catch (e) {
@@ -216,7 +215,7 @@ export default function HomePage() {
         } else {
           const fallback = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
           setAllItems(fallback);
-          setFeaturedItems(fallback.slice(0, 4));
+          setFeaturedItems(fallback.filter((d) => Boolean(d.is_featured)));
         }
       },
       (err) => {
@@ -328,52 +327,54 @@ export default function HomePage() {
       </section>
 
       {/* ── Section: Must-Try Featured Selections ── */}
-      <section className="py-14 sm:py-20 px-4 max-w-7xl mx-auto w-full">
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-          <span className="text-brand-primary font-black text-xs uppercase tracking-widest flex items-center justify-center gap-1.5">
-            <Sparkles size={14} className="text-[#f59e0b]" /> Handcrafted Specials
-          </span>
-          <h2 className="text-2xl sm:text-4xl font-black text-brand-dark mt-1">
-            Popular Right Now
-          </h2>
-          <p className="text-stone-500 text-sm sm:text-base mt-2">
-            Cooked with authentic herbs, premium cuts, and fresh ingredients.
-          </p>
-        </div>
+      {featuredItems.length > 0 && (
+        <section className="py-14 sm:py-20 px-4 max-w-7xl mx-auto w-full">
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+            <span className="text-brand-primary font-black text-xs uppercase tracking-widest flex items-center justify-center gap-1.5">
+              <Sparkles size={14} className="text-[#f59e0b]" /> Handcrafted Specials
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-brand-dark mt-1">
+              Popular Right Now
+            </h2>
+            <p className="text-stone-500 text-sm sm:text-base mt-2">
+              Cooked with authentic herbs, premium cuts, and fresh ingredients.
+            </p>
+          </div>
 
-        <CategoryCarousel
-          category="Featured Selections"
-          items={featuredItems}
-          renderItem={(item) => (
-            <FeaturedFoodCard
-              key={item.id}
-              item={item}
-              onAdd={(itm, q) => {
-                addToCart(itm, q);
-                if (settings.enable_upsell_popup) {
-                  const recs = getItemRecommendations({
-                    item: itm,
-                    cart,
-                    allItems: allItems.length > 0 ? allItems : (APPROVED_CATALOGUE as unknown as FoodItem[]),
-                    limit: 3,
-                  });
-                  setPopupRecs(recs);
-                  setPopupTriggerItem(itm);
-                }
-              }}
-            />
-          )}
-        />
+          <CategoryCarousel
+            category="Featured Selections"
+            items={featuredItems}
+            renderItem={(item) => (
+              <FeaturedFoodCard
+                key={item.id}
+                item={item}
+                onAdd={(itm, q) => {
+                  addToCart(itm, q);
+                  if (settings.enable_upsell_popup) {
+                    const recs = getItemRecommendations({
+                      item: itm,
+                      cart,
+                      allItems: allItems.length > 0 ? allItems : (APPROVED_CATALOGUE as unknown as FoodItem[]),
+                      limit: 3,
+                    });
+                    setPopupRecs(recs);
+                    setPopupTriggerItem(itm);
+                  }
+                }}
+              />
+            )}
+          />
 
-        <div className="mt-12 text-center">
-          <Link
-            href="/menu"
-            className="btn-primary inline-flex py-3.5 px-10 text-base font-black"
-          >
-            Explore Full Menu <ArrowRight size={18} className="ml-2" />
-          </Link>
-        </div>
-      </section>
+          <div className="mt-12 text-center">
+            <Link
+              href="/menu"
+              className="btn-primary inline-flex py-3.5 px-10 text-base font-black"
+            >
+              Explore Full Menu <ArrowRight size={18} className="ml-2" />
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* ── Section: 3-Step WhatsApp Process ── */}
       <section className="bg-white py-8 sm:py-20 border-t border-[#ede5da]">
