@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { FoodItem, ProductCategory, CategoryMeta } from '@/types/schema';
+import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { 
   Plus, 
   Trash2, 
@@ -112,8 +113,22 @@ function compressImageFile(file: File): Promise<string> {
 }
 
 export default function MenuManagement() {
-  const [items, setItems] = useState<FoodItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<FoodItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_menu_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.warn('Admin menu cache read error:', e);
+      }
+    }
+    // Instant fallback so dishes display immediately without blank screen or long spinner
+    return APPROVED_CATALOGUE.map((item, idx) => ({ id: `seed-${idx}`, ...item } as FoodItem));
+  });
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,7 +138,20 @@ export default function MenuManagement() {
   // Custom Category State
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryInput, setCustomCategoryInput] = useState('');
-  const [dbCategories, setDbCategories] = useState<{ id: string; name: string; image_url?: string; tag?: string }[]>([]);
+  const [dbCategories, setDbCategories] = useState<{ id: string; name: string; image_url?: string; tag?: string }[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_categories_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.warn('Admin categories cache read error:', e);
+      }
+    }
+    return [];
+  });
 
   // Category Banner Image Modal State
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -154,10 +182,17 @@ export default function MenuManagement() {
   useEffect(() => {
     const q = query(collection(db, 'foodItems'));
     const unsub = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as FoodItem))
-        .filter(item => !(item as { is_legacy?: boolean }).is_legacy); // Filter out archived legacy items
-      setItems(docs);
+      if (!snapshot.empty) {
+        const docs = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as FoodItem))
+          .filter(item => !(item as { is_legacy?: boolean }).is_legacy); // Filter out archived legacy items
+        setItems(docs);
+        try {
+          localStorage.setItem('deskilz_menu_cache', JSON.stringify(docs));
+        } catch (e) {
+          console.warn("Admin menu cache write error:", e);
+        }
+      }
       setLoading(false);
     }, (error) => {
       console.warn("Firestore snapshot listener error in admin menu:", error);
@@ -173,6 +208,11 @@ export default function MenuManagement() {
         tag: doc.data().tag as string | undefined,
       })).filter(c => Boolean(c.name));
       setDbCategories(cats);
+      try {
+        localStorage.setItem('deskilz_categories_cache', JSON.stringify(cats));
+      } catch (e) {
+        console.warn("Admin categories cache write error:", e);
+      }
     }, (err) => {
       console.warn("Category listener error:", err);
     });
@@ -248,7 +288,31 @@ export default function MenuManagement() {
       }, { merge: true });
 
       if (editingItem) {
-        // Update existing item
+        // Optimistically update local items list & cache immediately
+        setItems((prev) => {
+          const next = prev.map((item) =>
+            item.id === editingItem.id
+              ? {
+                  ...item,
+                  name: formData.name.trim(),
+                  price: priceNum,
+                  category: finalCategory,
+                  description: formData.description.trim(),
+                  image_url: formData.image_url.trim(),
+                  is_available: formData.is_available,
+                  is_featured: formData.is_featured,
+                }
+              : item
+          );
+          try {
+            localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
+          } catch (e) {}
+          return next;
+        });
+
+        setIsModalOpen(false);
+
+        // Update existing item in Firestore
         await updateDoc(doc(db, 'foodItems', editingItem.id), {
           name: formData.name.trim(),
           price: priceNum,
@@ -260,8 +324,7 @@ export default function MenuManagement() {
           updated_at: new Date().toISOString(),
         });
       } else {
-        // Add new item
-        await addDoc(collection(db, 'foodItems'), {
+        const newItemData = {
           name: formData.name.trim(),
           price: priceNum,
           category: finalCategory,
@@ -271,10 +334,20 @@ export default function MenuManagement() {
           is_featured: formData.is_featured,
           restaurant_id: 'deskilz',
           created_at: new Date().toISOString(),
+        };
+
+        setIsModalOpen(false);
+
+        // Add new item in Firestore
+        const docRef = await addDoc(collection(db, 'foodItems'), newItemData);
+        setItems((prev) => {
+          const next = [{ id: docRef.id, ...newItemData } as FoodItem, ...prev];
+          try {
+            localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
+          } catch (e) {}
+          return next;
         });
       }
-
-      setIsModalOpen(false);
     } catch (error) {
       console.error('Error saving food product: ', error);
       alert('Failed to save food product. Check Firebase connection.');
@@ -319,23 +392,51 @@ export default function MenuManagement() {
   };
 
   const toggleAvailability = async (id: string, current: boolean) => {
-    await updateDoc(doc(db, 'foodItems', id), { is_available: !current });
+    setItems((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, is_available: !current } : item));
+      try {
+        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+    try {
+      await updateDoc(doc(db, 'foodItems', id), { is_available: !current });
+    } catch (err) {
+      console.error('Failed to update availability in Firestore:', err);
+      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_available: current } : item)));
+    }
   };
 
   const toggleFeatured = async (id: string, current: boolean) => {
+    setItems((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, is_featured: !current } : item));
+      try {
+        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
     try {
       await updateDoc(doc(db, 'foodItems', id), { is_featured: !current });
     } catch (err) {
       console.error('Toggle featured error:', err);
+      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_featured: current } : item)));
       alert('Failed to update featured status.');
     }
   };
 
   const confirmDelete = async () => {
     if (!deleteConfirmation) return;
+    const targetId = deleteConfirmation.id;
+    setDeleteConfirmation(null);
+    setItems((prev) => {
+      const next = prev.filter((item) => item.id !== targetId);
+      try {
+        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
     try {
-      await deleteDoc(doc(db, 'foodItems', deleteConfirmation.id));
-      setDeleteConfirmation(null);
+      await deleteDoc(doc(db, 'foodItems', targetId));
     } catch (err) {
       console.error('Delete error:', err);
       alert('Failed to delete item.');
@@ -363,6 +464,19 @@ export default function MenuManagement() {
     const newCurrentOrder = targetOrder === currentOrder 
       ? (direction === 'up' ? targetOrder - 1 : targetOrder + 1)
       : targetOrder;
+
+    // Optimistically update local state & cache
+    setItems((prev) => {
+      const next = prev.map((item) => {
+        if (item.id === currentItem.id) return { ...item, order_index: newCurrentOrder };
+        if (item.id === targetItem.id) return { ...item, order_index: currentOrder };
+        return item;
+      });
+      try {
+        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
 
     try {
       await updateDoc(doc(db, 'foodItems', currentItem.id), { order_index: newCurrentOrder });
@@ -1004,6 +1118,8 @@ export default function MenuManagement() {
                       <img 
                         src={item.image_url || SAMPLE_PRESET_IMAGES[0].url} 
                         alt={item.name} 
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover" 
                       />
                       {item.is_featured && (

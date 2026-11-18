@@ -50,14 +50,47 @@ export default function AdminDashboard() {
     setPhoneSaved(true);
     setTimeout(() => setPhoneSaved(false), 2500);
   };
-  const [stats, setStats] = useState({
-    totalRevenue: 0,
-    totalOrders: 0,
-    pendingOrders: 0,
-    averageOrder: 0
+  const [stats, setStats] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_admin_stats_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.stats) return parsed.stats;
+        }
+      } catch (e) {}
+    }
+    return {
+      totalRevenue: 0,
+      totalOrders: 0,
+      pendingOrders: 0,
+      averageOrder: 0
+    };
   });
-  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-  const [topItems, setTopItems] = useState<{name: string, count: number, revenue: number}[]>([]);
+  const [recentOrders, setRecentOrders] = useState<Order[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_admin_stats_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed?.recentOrders)) return parsed.recentOrders;
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
+  const [topItems, setTopItems] = useState<{name: string, count: number, revenue: number}[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('deskilz_admin_stats_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed?.topItems)) return parsed.topItems;
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
 
   useEffect(() => {
     const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'));
@@ -67,14 +100,16 @@ export default function AdminDashboard() {
       const revenue = orders.reduce((acc, o) => acc + (o.total_price || 0), 0);
       const pending = orders.filter(o => o.status === 'pending' || o.status === 'preparing').length;
 
-      setStats({
+      const newStats = {
         totalRevenue: revenue,
         totalOrders: orders.length,
         pendingOrders: pending,
         averageOrder: orders.length > 0 ? revenue / orders.length : 0
-      });
+      };
+      setStats(newStats);
 
-      setRecentOrders(orders.slice(0, 5));
+      const nextRecent = orders.slice(0, 5);
+      setRecentOrders(nextRecent);
 
       // Calculate Top Ordered Items
       const itemCounts: Record<string, {count: number, revenue: number}> = {};
@@ -92,6 +127,14 @@ export default function AdminDashboard() {
         .slice(0, 5);
       
       setTopItems(sortedItems);
+
+      try {
+        localStorage.setItem('deskilz_admin_stats_cache', JSON.stringify({
+          stats: newStats,
+          recentOrders: nextRecent,
+          topItems: sortedItems
+        }));
+      } catch (e) {}
     }, (error) => {
       console.warn("Firestore snapshot listener error in admin dashboard:", error);
     });
