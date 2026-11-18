@@ -17,6 +17,7 @@ import {
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { FoodItem, ProductCategory, CategoryMeta } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
+import { isItemFeatured, DEFAULT_FEATURED_NAMES } from '@/lib/featured';
 import { 
   Plus, 
   Trash2, 
@@ -192,6 +193,17 @@ export default function MenuManagement() {
         } catch (e) {
           console.warn("Admin menu cache write error:", e);
         }
+
+        // Auto-sync initial featured status to Firestore documents if not yet explicitly stored
+        snapshot.docs.forEach((d) => {
+          const data = d.data();
+          if (data.is_featured === undefined) {
+            const norm = (data.name || '').trim().toLowerCase();
+            if (DEFAULT_FEATURED_NAMES.has(norm)) {
+              updateDoc(doc(db, 'foodItems', d.id), { is_featured: true }).catch(() => {});
+            }
+          }
+        });
       }
       setLoading(false);
     }, (error) => {
@@ -252,7 +264,7 @@ export default function MenuManagement() {
       description: item.description || '',
       image_url: item.image_url || SAMPLE_PRESET_IMAGES[0].url,
       is_available: item.is_available ?? true,
-      is_featured: item.is_featured ?? false,
+      is_featured: isItemFeatured(item),
     });
     setIsModalOpen(true);
   };
@@ -562,7 +574,7 @@ export default function MenuManagement() {
         selectedCategory === 'All'
           ? true
           : selectedCategory === 'Featured'
-            ? Boolean(item.is_featured)
+            ? isItemFeatured(item)
             : item.category === selectedCategory;
       return matchesSearch && matchesCategory;
     })
@@ -642,7 +654,7 @@ export default function MenuManagement() {
                   )}
                   <span>
                     {cat === 'Featured'
-                      ? `Featured (${items.filter((i) => i.is_featured).length})`
+                      ? `Featured (${items.filter(isItemFeatured).length})`
                       : cat}
                   </span>
                 </button>
@@ -1107,116 +1119,119 @@ export default function MenuManagement() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {filteredItems.map((item) => (
-              <div 
-                key={item.id} 
-                className="card flex flex-col justify-between hover:shadow-md transition-all"
-              >
-                <div>
-                  <div className="flex gap-3.5 mb-3">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-[#ede5da] flex-shrink-0 relative">
-                      <img 
-                        src={item.image_url || SAMPLE_PRESET_IMAGES[0].url} 
-                        alt={item.name} 
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover" 
-                      />
-                      {item.is_featured && (
-                        <div className="absolute top-1 left-1 bg-amber-500 text-white rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-sm">
-                          <Sparkles size={9} className="fill-white" /> Featured
-                        </div>
-                      )}
-                      {!item.is_available && (
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider">
-                          Sold Out
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <span className="text-[10px] font-bold text-brand-primary uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded">
-                          {item.category || 'General'}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <button 
-                            onClick={() => moveItemOrder(item, 'up')}
-                            title="Move Up in Menu"
-                            className="p-1 text-[#a89080] hover:text-brand-dark hover:bg-[#ede5da] rounded-lg transition-colors cursor-pointer"
-                          >
-                            <ArrowUp size={14} />
-                          </button>
-                          <button 
-                            onClick={() => moveItemOrder(item, 'down')}
-                            title="Move Down in Menu"
-                            className="p-1 text-[#a89080] hover:text-brand-dark hover:bg-[#ede5da] rounded-lg transition-colors cursor-pointer"
-                          >
-                            <ArrowDown size={14} />
-                          </button>
-                          <button 
-                            onClick={() => openEditModal(item)}
-                            title="Edit Dish"
-                            className="p-1.5 text-[#a89080] hover:text-brand-primary hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Edit2 size={15} />
-                          </button>
-                          <button 
-                            onClick={() => setDeleteConfirmation({ id: item.id, name: item.name })}
-                            title="Delete Dish"
-                            className="p-1.5 text-[#a89080] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
+            {filteredItems.map((item) => {
+              const featured = isItemFeatured(item);
+              return (
+                <div 
+                  key={item.id} 
+                  className="card flex flex-col justify-between hover:shadow-md transition-all"
+                >
+                  <div>
+                    <div className="flex gap-3.5 mb-3">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-[#ede5da] flex-shrink-0 relative">
+                        <img 
+                          src={item.image_url || SAMPLE_PRESET_IMAGES[0].url} 
+                          alt={item.name} 
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover" 
+                        />
+                        {featured && (
+                          <div className="absolute top-1 left-1 bg-amber-500 text-white rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-sm">
+                            <Sparkles size={9} className="fill-white" /> Featured
+                          </div>
+                        )}
+                        {!item.is_available && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-wider">
+                            Sold Out
+                          </div>
+                        )}
                       </div>
-                      <h3 className="font-extrabold text-brand-dark text-sm sm:text-base mt-1 line-clamp-1">{item.name}</h3>
-                      <p className="text-brand-primary font-black text-base mt-0.5">₦{item.price.toLocaleString()}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <span className="text-[10px] font-bold text-brand-primary uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded">
+                            {item.category || 'General'}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button 
+                              onClick={() => moveItemOrder(item, 'up')}
+                              title="Move Up in Menu"
+                              className="p-1 text-[#a89080] hover:text-brand-dark hover:bg-[#ede5da] rounded-lg transition-colors cursor-pointer"
+                            >
+                              <ArrowUp size={14} />
+                            </button>
+                            <button 
+                              onClick={() => moveItemOrder(item, 'down')}
+                              title="Move Down in Menu"
+                              className="p-1 text-[#a89080] hover:text-brand-dark hover:bg-[#ede5da] rounded-lg transition-colors cursor-pointer"
+                            >
+                              <ArrowDown size={14} />
+                            </button>
+                            <button 
+                              onClick={() => openEditModal(item)}
+                              title="Edit Dish"
+                              className="p-1.5 text-[#a89080] hover:text-brand-primary hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Edit2 size={15} />
+                            </button>
+                            <button 
+                              onClick={() => setDeleteConfirmation({ id: item.id, name: item.name })}
+                              title="Delete Dish"
+                              className="p-1.5 text-[#a89080] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                        <h3 className="font-extrabold text-brand-dark text-sm sm:text-base mt-1 line-clamp-1">{item.name}</h3>
+                        <p className="text-brand-primary font-black text-base mt-0.5">₦{item.price.toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    {item.description && (
+                      <p className="text-xs text-[#7a6655] line-clamp-2 mb-3 bg-[#fdf8f3] p-2.5 rounded-xl border border-[#ede5da]">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-[#ede5da] flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${item.is_available ? 'bg-emerald-500 animate-pulse' : 'bg-[#c4b8a8]'}`} />
+                      <span className={`text-xs font-bold ${item.is_available ? 'text-emerald-600' : 'text-[#a89080]'}`}>
+                        {item.is_available ? 'Active in Menu' : 'Sold Out'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button 
+                        type="button"
+                        onClick={() => toggleFeatured(item.id, featured)}
+                        title={featured ? 'Remove from Homepage Featured' : 'Feature on Homepage'}
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                          featured 
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' 
+                            : 'bg-[#ede5da] text-[#7a6655] hover:bg-amber-50 hover:text-amber-800'
+                        }`}
+                      >
+                        <Sparkles size={12} className={featured ? 'text-amber-600 fill-amber-500' : 'text-[#a89080]'} />
+                        <span>{featured ? 'Featured' : 'Feature'}</span>
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => toggleAvailability(item.id, item.is_available)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          item.is_available 
+                            ? 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]' 
+                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {item.is_available ? 'Mark Sold Out' : 'Mark Active'}
+                      </button>
                     </div>
                   </div>
-
-                  {item.description && (
-                    <p className="text-xs text-[#7a6655] line-clamp-2 mb-3 bg-[#fdf8f3] p-2.5 rounded-xl border border-[#ede5da]">
-                      {item.description}
-                    </p>
-                  )}
                 </div>
-
-                <div className="pt-3 border-t border-[#ede5da] flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${item.is_available ? 'bg-emerald-500 animate-pulse' : 'bg-[#c4b8a8]'}`} />
-                    <span className={`text-xs font-bold ${item.is_available ? 'text-emerald-600' : 'text-[#a89080]'}`}>
-                      {item.is_available ? 'Active in Menu' : 'Sold Out'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      type="button"
-                      onClick={() => toggleFeatured(item.id, Boolean(item.is_featured))}
-                      title={item.is_featured ? 'Remove from Homepage Featured' : 'Feature on Homepage'}
-                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                        item.is_featured 
-                          ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' 
-                          : 'bg-[#ede5da] text-[#7a6655] hover:bg-amber-50 hover:text-amber-800'
-                      }`}
-                    >
-                      <Sparkles size={12} className={item.is_featured ? 'text-amber-600 fill-amber-500' : 'text-[#a89080]'} />
-                      <span>{item.is_featured ? 'Featured' : 'Feature'}</span>
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => toggleAvailability(item.id, item.is_available)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        item.is_available 
-                          ? 'bg-[#ede5da] text-[#7a6655] hover:bg-[#e0d5c5]' 
-                          : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                      }`}
-                    >
-                      {item.is_available ? 'Mark Sold Out' : 'Mark Active'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {filteredItems.length === 0 && (
               <div className="col-span-full py-16 bg-white rounded-3xl border border-dashed border-[#ede5da] flex flex-col items-center text-center p-8">

@@ -14,6 +14,7 @@ import AddToCartPopup from '@/components/AddToCartPopup';
 import CategoryCarousel from '@/components/CategoryCarousel';
 import { getItemRecommendations } from '@/lib/recommendations';
 import { useFeatureSettings } from '@/context/FeatureSettingsContext';
+import { isItemFeatured } from '@/lib/featured';
 import {
   UtensilsCrossed,
   ArrowRight,
@@ -171,14 +172,15 @@ export default function HomePage() {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.filter((d: FoodItem) => Boolean(d.is_featured));
+            const feat = parsed.filter(isItemFeatured);
+            if (feat.length > 0) return feat;
           }
         }
       } catch (e) {
         console.warn('HomePage featured cache read error:', e);
       }
     }
-    return [];
+    return APPROVED_CATALOGUE.filter(isItemFeatured).map((item, idx) => ({ id: `cat-feat-${idx}`, ...item } as FoodItem));
   });
   const [customCategories, setCustomCategories] = useState<{ name: string; image_url?: string; tag?: string }[]>(() => {
     if (typeof window !== 'undefined') {
@@ -205,8 +207,12 @@ export default function HomePage() {
             .map((d) => ({ id: d.id, ...d.data() } as FoodItem))
             .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
           setAllItems(itemsList);
-          const highlighted = itemsList.filter((d) => Boolean(d.is_featured));
-          setFeaturedItems(highlighted);
+          const highlighted = itemsList.filter(isItemFeatured);
+          setFeaturedItems(
+            highlighted.length > 0
+              ? highlighted
+              : APPROVED_CATALOGUE.filter(isItemFeatured).map((item, idx) => ({ id: `cat-feat-${idx}`, ...item } as FoodItem))
+          );
           try {
             localStorage.setItem('deskilz_menu_cache', JSON.stringify(itemsList));
           } catch (e) {
@@ -215,12 +221,13 @@ export default function HomePage() {
         } else {
           const fallback = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
           setAllItems(fallback);
-          setFeaturedItems(fallback.filter((d) => Boolean(d.is_featured)));
+          setFeaturedItems(fallback.filter(isItemFeatured));
         }
       },
       (err) => {
         console.warn('Items listener error:', err);
         setAllItems((prev) => prev.length > 0 ? prev : APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem)));
+        setFeaturedItems((prev) => prev.length > 0 ? prev : APPROVED_CATALOGUE.filter(isItemFeatured).map((item, idx) => ({ id: `cat-feat-${idx}`, ...item } as FoodItem)));
       }
     );
 
