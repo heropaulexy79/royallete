@@ -111,7 +111,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1642962002196-80415d487f3b?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
   {
     name: 'Double Chicken Suya Special',
@@ -121,7 +120,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1561651823-34feb02250e4?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
 
   // ── B. Pizza (9 products) ────────────────────────────────────
@@ -160,7 +158,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
   {
     name: 'Meatball Pizza — Small Size',
@@ -197,7 +194,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
   {
     name: 'Meatball Pizza — Medium Size',
@@ -227,7 +223,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
 
   // ── D. Chicken & Chips (4 products) ──────────────────────────
@@ -266,7 +261,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1518013034477-2990fa317e23?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
 
   // ── E. Food (8 products) ─────────────────────────────────────
@@ -287,7 +281,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1512058560566-d8d437a17364?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
   {
     name: 'Fried Rice',
@@ -342,7 +335,6 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1512058560566-d8d437a17364?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
 
   // ── F. Drinks (18 products) ──────────────────────────────────
@@ -664,6 +656,5 @@ export const APPROVED_CATALOGUE: ApprovedProductSeed[] = [
     image_url: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=800',
     is_available: true,
     restaurant_id: 'deskilz',
-    is_featured: true,
   },
 ];

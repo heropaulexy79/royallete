@@ -12,12 +12,14 @@ import {
   updateDoc, 
   deleteDoc, 
   doc,
-  setDoc
+  setDoc,
+  getDocs,
+  where
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { FoodItem, ProductCategory, CategoryMeta } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
-import { isItemFeatured, DEFAULT_FEATURED_NAMES } from '@/lib/featured';
+import { isItemFeatured } from '@/lib/featured';
 import { 
   Plus, 
   Trash2, 
@@ -193,17 +195,6 @@ export default function MenuManagement() {
         } catch (e) {
           console.warn("Admin menu cache write error:", e);
         }
-
-        // Auto-sync initial featured status to Firestore documents if not yet explicitly stored
-        snapshot.docs.forEach((d) => {
-          const data = d.data();
-          if (data.is_featured === undefined) {
-            const norm = (data.name || '').trim().toLowerCase();
-            if (DEFAULT_FEATURED_NAMES.has(norm)) {
-              updateDoc(doc(db, 'foodItems', d.id), { is_featured: true }).catch(() => {});
-            }
-          }
-        });
       }
       setLoading(false);
     }, (error) => {
@@ -404,35 +395,66 @@ export default function MenuManagement() {
   };
 
   const toggleAvailability = async (id: string, current: boolean) => {
+    const nextVal = !current;
     setItems((prev) => {
-      const next = prev.map((item) => (item.id === id ? { ...item, is_available: !current } : item));
+      const next = prev.map((item) => (item.id === id ? { ...item, is_available: nextVal } : item));
       try {
         localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
       } catch (e) {}
       return next;
     });
     try {
-      await updateDoc(doc(db, 'foodItems', id), { is_available: !current });
+      let targetDocId = id;
+      if (id.startsWith('seed-') || id.startsWith('cat-')) {
+        const itemObj = items.find((i) => i.id === id);
+        if (itemObj) {
+          const qSnap = await getDocs(query(collection(db, 'foodItems'), where('name', '==', itemObj.name)));
+          if (!qSnap.empty) {
+            targetDocId = qSnap.docs[0].id;
+          }
+        }
+      }
+      await setDoc(doc(db, 'foodItems', targetDocId), { is_available: nextVal }, { merge: true });
     } catch (err) {
       console.error('Failed to update availability in Firestore:', err);
-      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_available: current } : item)));
+      try {
+        await setDoc(doc(db, 'foodItems', id), { is_available: nextVal }, { merge: true });
+      } catch (err2) {
+        setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_available: current } : item)));
+      }
     }
   };
 
   const toggleFeatured = async (id: string, current: boolean) => {
+    const nextVal = !current;
     setItems((prev) => {
-      const next = prev.map((item) => (item.id === id ? { ...item, is_featured: !current } : item));
+      const next = prev.map((item) => (item.id === id ? { ...item, is_featured: nextVal } : item));
       try {
         localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
       } catch (e) {}
       return next;
     });
     try {
-      await updateDoc(doc(db, 'foodItems', id), { is_featured: !current });
+      let targetDocId = id;
+      if (id.startsWith('seed-') || id.startsWith('cat-')) {
+        const itemObj = items.find((i) => i.id === id);
+        if (itemObj) {
+          const qSnap = await getDocs(query(collection(db, 'foodItems'), where('name', '==', itemObj.name)));
+          if (!qSnap.empty) {
+            targetDocId = qSnap.docs[0].id;
+          }
+        }
+      }
+      await setDoc(doc(db, 'foodItems', targetDocId), { is_featured: nextVal }, { merge: true });
     } catch (err) {
       console.error('Toggle featured error:', err);
-      setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_featured: current } : item)));
-      alert('Failed to update featured status.');
+      try {
+        await setDoc(doc(db, 'foodItems', id), { is_featured: nextVal }, { merge: true });
+      } catch (err2) {
+        console.error('Final toggle featured error:', err2);
+        setItems((prev) => prev.map((item) => (item.id === id ? { ...item, is_featured: current } : item)));
+        alert('Failed to update featured status. Please check your internet connection.');
+      }
     }
   };
 

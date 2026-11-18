@@ -172,15 +172,14 @@ export default function HomePage() {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const feat = parsed.filter(isItemFeatured);
-            if (feat.length > 0) return feat;
+            return parsed.filter(isItemFeatured);
           }
         }
       } catch (e) {
         console.warn('HomePage featured cache read error:', e);
       }
     }
-    return APPROVED_CATALOGUE.filter(isItemFeatured).map((item, idx) => ({ id: `cat-feat-${idx}`, ...item } as FoodItem));
+    return [];
   });
   const [customCategories, setCustomCategories] = useState<{ name: string; image_url?: string; tag?: string }[]>(() => {
     if (typeof window !== 'undefined') {
@@ -208,11 +207,7 @@ export default function HomePage() {
             .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
           setAllItems(itemsList);
           const highlighted = itemsList.filter(isItemFeatured);
-          setFeaturedItems(
-            highlighted.length > 0
-              ? highlighted
-              : APPROVED_CATALOGUE.filter(isItemFeatured).map((item, idx) => ({ id: `cat-feat-${idx}`, ...item } as FoodItem))
-          );
+          setFeaturedItems(highlighted);
           try {
             localStorage.setItem('deskilz_menu_cache', JSON.stringify(itemsList));
           } catch (e) {
@@ -227,7 +222,6 @@ export default function HomePage() {
       (err) => {
         console.warn('Items listener error:', err);
         setAllItems((prev) => prev.length > 0 ? prev : APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem)));
-        setFeaturedItems((prev) => prev.length > 0 ? prev : APPROVED_CATALOGUE.filter(isItemFeatured).map((item, idx) => ({ id: `cat-feat-${idx}`, ...item } as FoodItem)));
       }
     );
 
