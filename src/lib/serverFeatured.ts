@@ -23,6 +23,53 @@ function getNumber(val?: FirestoreValue): number | undefined {
   return undefined;
 }
 
+export interface ServerCategory {
+  name: string;
+  image_url?: string;
+  tag?: string;
+}
+
+/**
+ * Fetches live category metadata (including admin-uploaded category banner images)
+ * directly from Firestore on the server so the homepage renders the exact admin
+ * category pictures immediately on reload without flashing hardcoded fallback images.
+ */
+export async function fetchServerCategories(): Promise<ServerCategory[]> {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId || projectId === 'placeholder') {
+    return [];
+  }
+
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/custom_categories?pageSize=100`;
+
+  try {
+    const res = await fetch(url, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(4500),
+    });
+
+    if (!res.ok) return [];
+
+    const data = (await res.json()) as { documents?: FirestoreDocument[] };
+    if (!Array.isArray(data.documents)) return [];
+
+    return data.documents
+      .map((doc) => {
+        const id = doc.name.split('/').pop() || '';
+        const f = doc.fields || {};
+        return {
+          name: f.name?.stringValue || id,
+          image_url: f.image_url?.stringValue || undefined,
+          tag: f.tag?.stringValue || undefined,
+        };
+      })
+      .filter((c) => Boolean(c.name));
+  } catch (err) {
+    console.warn('Server categories fetch fallback:', err);
+    return [];
+  }
+}
+
 /**
  * Fetches live featured dishes directly from Firestore on the server.
  * Only downloads documents where `is_featured == true`, keeping payload small

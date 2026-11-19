@@ -149,24 +149,20 @@ function FeaturedFoodCard({
   );
 }
 
-export default function HomeClient({ initialFeatured = [] }: { initialFeatured?: FoodItem[] }) {
+export default function HomeClient({
+  initialFeatured = [],
+  initialCategories = [],
+}: {
+  initialFeatured?: FoodItem[];
+  initialCategories?: { name: string; image_url?: string; tag?: string }[];
+}) {
   const { cart, addToCart } = useCart();
   const { settings } = useFeatureSettings();
   const [allItems, setAllItems] = useState<FoodItem[]>(() => {
     return loadMenuCache();
   });
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>(initialFeatured);
-  const [customCategories, setCustomCategories] = useState<{ name: string; image_url?: string; tag?: string }[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('deskilz_categories_cache');
-        if (cached) return JSON.parse(cached);
-      } catch (e) {
-        console.warn('HomePage categories cache read error:', e);
-      }
-    }
-    return [];
-  });
+  const [customCategories, setCustomCategories] = useState<{ name: string; image_url?: string; tag?: string }[]>(initialCategories);
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
@@ -178,6 +174,27 @@ export default function HomeClient({ initialFeatured = [] }: { initialFeatured?:
       const cachedFeatured = loadFeaturedCache();
       if (cachedFeatured.length > 0) {
         setFeaturedItems(cachedFeatured);
+      }
+    }
+
+    // Sync server-fetched categories into cache immediately, or hydrate from cache if SSR returned empty
+    if (initialCategories.length > 0) {
+      try {
+        localStorage.setItem('deskilz_categories_cache', JSON.stringify(initialCategories));
+      } catch (e) {
+        console.warn('HomePage categories cache write error:', e);
+      }
+    } else {
+      try {
+        const cached = localStorage.getItem('deskilz_categories_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCustomCategories(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('HomePage categories cache read error:', e);
       }
     }
 
@@ -249,7 +266,7 @@ export default function HomeClient({ initialFeatured = [] }: { initialFeatured?:
       unsubItems();
       unsubCats();
     };
-  }, [initialFeatured]);
+  }, [initialFeatured, initialCategories]);
 
   // Compute dynamic category tiles combining approved presets, custom categories, and any items in database
   const categoryTiles = React.useMemo(() => {
