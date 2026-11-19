@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   ShoppingCart,
   UtensilsCrossed,
@@ -62,6 +62,10 @@ function TikTokIcon({ size = 14, className = '' }: { size?: number; className?: 
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isFeaturedActive = pathname === '/';
+  const isMenuActive = pathname.startsWith('/menu');
+  const isCartActive = pathname.startsWith('/cart');
   const { cart } = useCart();
   const { settings } = useFeatureSettings();
   const activeWhatsAppNumber = settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER;
@@ -443,34 +447,64 @@ export default function Navbar() {
       </header>
 
       {/* Mobile Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 sm:hidden bg-[#faf6f0]/95 backdrop-blur-md border-t border-[#ede5da] shadow-2xl grid grid-cols-3 py-1">
+      <div className="fixed bottom-0 left-0 right-0 z-30 sm:hidden bg-[#faf6f0]/95 backdrop-blur-md border-t border-[#ede5da] shadow-2xl grid grid-cols-3 py-1 px-1.5">
         <Link
           href="/"
-          className="flex flex-col items-center justify-center py-2 gap-1 text-stone-600 hover:text-brand-primary active:scale-95 transition-all"
+          aria-current={isFeaturedActive ? 'page' : undefined}
+          className={`relative flex flex-col items-center justify-center py-2 gap-1 rounded-xl active:scale-95 transition-all ${
+            isFeaturedActive
+              ? 'bg-red-50 text-brand-primary'
+              : 'text-stone-500 hover:text-brand-primary'
+          }`}
         >
-          <Flame size={20} className="text-[#f59e0b]" />
-          <span className="text-[10px] font-bold">Featured</span>
+          {isFeaturedActive && (
+            <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-brand-primary" />
+          )}
+          <Flame size={20} className={isFeaturedActive ? 'text-brand-primary fill-amber-400/40' : 'text-stone-400'} />
+          <span className={`text-[10px] ${isFeaturedActive ? 'font-black text-brand-primary' : 'font-bold'}`}>
+            Featured
+          </span>
         </Link>
         <Link
           href="/menu"
-          className="flex flex-col items-center justify-center py-2 gap-1 text-stone-600 hover:text-brand-primary active:scale-95 transition-all"
+          aria-current={isMenuActive ? 'page' : undefined}
+          className={`relative flex flex-col items-center justify-center py-2 gap-1 rounded-xl active:scale-95 transition-all ${
+            isMenuActive
+              ? 'bg-red-50 text-brand-primary'
+              : 'text-stone-500 hover:text-brand-primary'
+          }`}
         >
-          <UtensilsCrossed size={20} className="text-brand-primary" />
-          <span className="text-[10px] font-bold">Menu</span>
+          {isMenuActive && (
+            <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-brand-primary" />
+          )}
+          <UtensilsCrossed size={20} className={isMenuActive ? 'text-brand-primary' : 'text-stone-400'} />
+          <span className={`text-[10px] ${isMenuActive ? 'font-black text-brand-primary' : 'font-bold'}`}>
+            Menu
+          </span>
         </Link>
         <Link
           href="/cart"
-          className="flex flex-col items-center justify-center py-2 gap-1 text-stone-600 hover:text-brand-primary relative active:scale-95 transition-all"
+          aria-current={isCartActive ? 'page' : undefined}
+          className={`relative flex flex-col items-center justify-center py-2 gap-1 rounded-xl active:scale-95 transition-all ${
+            isCartActive
+              ? 'bg-red-50 text-brand-primary'
+              : 'text-stone-500 hover:text-brand-primary'
+          }`}
         >
+          {isCartActive && (
+            <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-brand-primary" />
+          )}
           <div className="relative">
-            <ShoppingCart size={20} />
+            <ShoppingCart size={20} className={isCartActive ? 'text-brand-primary' : 'text-stone-400'} />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-brand-primary text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-[#faf6f0]">
                 {cartCount}
               </span>
             )}
           </div>
-          <span className="text-[10px] font-bold">Cart{cartCount > 0 ? ` (${cartCount})` : ''}</span>
+          <span className={`text-[10px] ${isCartActive ? 'font-black text-brand-primary' : 'font-bold'}`}>
+            Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+          </span>
         </Link>
       </div>
 
