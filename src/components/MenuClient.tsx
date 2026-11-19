@@ -1,0 +1,542 @@
+'use client';
+
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import Navbar from '@/components/Navbar';
+import { FoodItem, APPROVED_CATEGORIES } from '@/types/schema';
+import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
+import { useCart } from '@/context/CartContext';
+import { getRecommendations, getItemRecommendations } from '@/lib/recommendations';
+import AddToCartPopup from '@/components/AddToCartPopup';
+import CategoryCarousel from '@/components/CategoryCarousel';
+import { useFeatureSettings } from '@/context/FeatureSettingsContext';
+import { loadMenuCache, saveMenuCache, loadMenuIndexedDB } from '@/lib/menuCache';
+import {
+  Plus,
+  Minus,
+  Search,
+  UtensilsCrossed,
+  ShoppingCart,
+  Check,
+  Sparkles,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '@/lib/firebase';
+import { collection, query, onSnapshot, where, getDocs } from 'firebase/firestore';
+import { useSearchParams } from 'next/navigation';
+
+function FoodCard({ item, onAdd }: { item: FoodItem; onAdd: (item: FoodItem, qty: number) => void }) {
+  const [qty, setQty] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
+
+  const handleAdd = () => {
+    onAdd(item, qty);
+    setIsAdded(true);
+    setQty(1);
+    setTimeout(() => setIsAdded(false), 1800);
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      className="card group flex flex-col justify-between h-full bg-white relative hover:border-amber-300/80"
+    >
+      <div>
+        {/* Product Image & Badges */}
+        <div className="relative h-44 sm:h-52 -mx-3.5 sm:-mx-5 -mt-3.5 sm:-mt-5 mb-3.5 overflow-hidden rounded-t-2xl sm:rounded-t-3xl bg-[#f5efe6]">
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={item.name}
+              loading="lazy"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
+            />
+          ) : (
+            <div className="w-full h-full animate-pulse bg-gradient-to-br from-[#f5efe6] via-[#ede5da] to-[#f5efe6] flex items-center justify-center">
+              <UtensilsCrossed size={24} className="text-[#d6c7b5]" />
+            </div>
+          )}
+          {/* Price Tag */}
+          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full font-black text-brand-dark text-xs sm:text-sm shadow-md border border-[#ede5da]">
+            ₦{item.price.toLocaleString()}
+          </div>
+        </div>
+
+        {/* Info */}
+        <h3 className="font-extrabold text-sm sm:text-base text-brand-dark group-hover:text-brand-primary transition-colors leading-snug line-clamp-2 min-h-[2.5rem]">
+          {item.name}
+        </h3>
+
+        {item.description && (
+          <p className="text-xs text-stone-500 line-clamp-2 mt-1.5 leading-relaxed">
+            {item.description}
+          </p>
+        )}
+      </div>
+
+      {/* Action Row */}
+      <div className="mt-4 pt-3 border-t border-[#ede5da] space-y-2.5">
+        <div className="flex items-center justify-between bg-[#fbf8f3] p-1.5 rounded-xl border border-[#ede5da]">
+          <span className="text-[10px] font-bold text-stone-400 uppercase pl-1.5 hidden sm:inline">Qty</span>
+          <div className="flex items-center gap-2 mx-auto sm:mx-0">
+            <button
+              type="button"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+              aria-label="Decrease quantity"
+            >
+              <Minus size={12} />
+            </button>
+            <span className="w-5 text-center font-black text-brand-dark text-xs sm:text-sm">{qty}</span>
+            <button
+              type="button"
+              onClick={() => setQty((q) => q + 1)}
+              className="w-7 h-7 rounded-lg bg-white border border-[#ede5da] flex items-center justify-center text-stone-600 hover:border-brand-primary transition-colors active:scale-90"
+              aria-label="Increase quantity"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+          <span className="text-xs font-black text-brand-primary pr-1">
+            ₦{(item.price * qty).toLocaleString()}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAdd}
+          className={`w-full h-11 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-xs sm:text-sm ${
+            isAdded
+              ? 'bg-[#25D366] text-white shadow-emerald-500/20'
+              : 'bg-brand-primary hover:bg-[#c4131e] text-white shadow-red-600/20 active:scale-95'
+          }`}
+        >
+          <AnimatePresence mode="wait">
+            {isAdded ? (
+              <motion.div key="added" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                <Check size={16} /> Added!
+              </motion.div>
+            ) : (
+              <motion.div key="add" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-1.5">
+                <ShoppingCart size={15} /> Add to Cart
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function MenuInner({
+  initialItems = [],
+  initialCategories = [],
+  initialCategoryParam,
+}: {
+  initialItems?: FoodItem[];
+  initialCategories?: string[];
+  initialCategoryParam?: string;
+}) {
+  const { cart, addToCart } = useCart();
+  const { settings } = useFeatureSettings();
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get('category') || initialCategoryParam || 'All';
+
+  const [items, setItems] = useState<FoodItem[]>(initialItems);
+  const [dbCategories, setDbCategories] = useState<string[]>(initialCategories);
+  const [loading, setLoading] = useState(initialItems.length === 0);
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Popup state
+  const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
+  const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // 1. Hydrate full images from IndexedDB (~15-30ms) and fallback to localStorage if SSR returned empty
+    loadMenuIndexedDB().then((idbItems) => {
+      if (cancelled || idbItems.length === 0) return;
+      const imgMap = new Map<string, string>();
+      for (const it of idbItems) {
+        if (it.image_url) imgMap.set(it.id, it.image_url);
+      }
+      setItems((prev) => {
+        if (prev.length === 0) return idbItems;
+        return prev.map((item) => {
+          if (!item.image_url) {
+            const cachedImg = imgMap.get(item.id);
+            if (cachedImg) return { ...item, image_url: cachedImg };
+          }
+          return item;
+        });
+      });
+      setLoading(false);
+    });
+
+    if (initialItems.length === 0) {
+      const cached = loadMenuCache();
+      if (cached.length > 0) {
+        setItems(cached);
+        setLoading(false);
+      }
+    }
+
+    const q = query(collection(db, 'foodItems'));
+    const unsubItems = onSnapshot(
+      q,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const fetched = snapshot.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() } as FoodItem))
+            .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
+          setItems(fetched);
+          saveMenuCache(fetched);
+        } else {
+          setItems(APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
+        }
+        setLoading(false);
+      },
+      (err) => {
+        console.warn('Firestore menu snapshot listener fallback:', err);
+        setItems((prev) => prev.length > 0 ? prev : APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
+        setLoading(false);
+      }
+    );
+
+    const catQuery = query(collection(db, 'custom_categories'));
+    const unsubCats = onSnapshot(
+      catQuery,
+      (snapshot) => {
+        const cats = snapshot.docs.map((doc) => doc.data().name as string).filter(Boolean);
+        setDbCategories(cats);
+      },
+      (err) => {
+        console.warn('Category listener error in menu:', err);
+      }
+    );
+
+    return () => {
+      cancelled = true;
+      unsubItems();
+      unsubCats();
+    };
+  }, [initialItems.length]);
+
+  // Fast on-demand category image fetch when switching tabs before the full background catalog finishes
+  useEffect(() => {
+    if (!selectedCategory || selectedCategory === 'All') return;
+    const missingImagesInCategory = items.some(
+      (item) => item.category === selectedCategory && !item.image_url
+    );
+    if (!missingImagesInCategory) return;
+
+    let cancelled = false;
+    getDocs(query(collection(db, 'foodItems'), where('category', '==', selectedCategory)))
+      .then((snap) => {
+        if (cancelled || snap.empty) return;
+        const imgMap = new Map<string, string>();
+        snap.docs.forEach((d) => {
+          const data = d.data() as FoodItem;
+          if (data.image_url) imgMap.set(d.id, data.image_url);
+        });
+        if (imgMap.size === 0) return;
+        setItems((prev) =>
+          prev.map((item) => {
+            const img = imgMap.get(item.id);
+            return img && !item.image_url ? { ...item, image_url: img } : item;
+          })
+        );
+      })
+      .catch((err) => {
+        console.warn('Fast category image fetch error:', err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCategory, items]);
+
+  const filteredItems = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return items.filter((item) => {
+      const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
+      if (!term) return matchCat;
+
+      const matchSearch =
+        item.name.toLowerCase().includes(term) ||
+        (item.description && item.description.toLowerCase().includes(term)) ||
+        (item.category && item.category.toLowerCase().includes(term));
+      return matchCat && matchSearch;
+    });
+  }, [items, selectedCategory, searchTerm]);
+
+  const recommendations = useMemo(() => {
+    return getRecommendations({ cart, allItems: items, limit: 3 });
+  }, [cart, items]);
+
+  const categories = useMemo(() => {
+    const itemCats = items.map((i) => i.category).filter(Boolean);
+    const combined = Array.from(new Set([...APPROVED_CATEGORIES, ...dbCategories, ...itemCats]));
+    return ['All', ...combined];
+  }, [items, dbCategories]);
+
+  // Group items by category for carousels
+  const categoryGroups = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    // If user selected a specific category (not 'All'), only show that category
+    const activeCats = selectedCategory === 'All'
+      ? categories.filter((c) => c !== 'All')
+      : [selectedCategory];
+
+    return activeCats
+      .map((cat) => {
+        const catMatchesSearch = term && cat.toLowerCase().includes(term);
+
+        const catItems = items
+          .filter((item) => {
+            const matchCat = item.category === cat;
+            if (!matchCat) return false;
+            if (!term) return true;
+
+            // If the category itself matches (e.g. searching "shawarma"), show all items in this category
+            if (catMatchesSearch) return true;
+
+            return (
+              item.name.toLowerCase().includes(term) ||
+              (item.description && item.description.toLowerCase().includes(term))
+            );
+          })
+          .sort((a, b) => (a.order_index ?? 9999) - (b.order_index ?? 9999));
+
+        return {
+          category: cat,
+          items: catItems,
+        };
+      })
+      .filter((g) => g.items.length > 0);
+  }, [categories, items, selectedCategory, searchTerm]);
+
+  return (
+    <main className="min-h-screen bg-[#faf6f0] flex flex-col">
+      <Navbar />
+
+      {/* Header Banner in Espresso Dark + Amber Gold Highlights */}
+      <section className="bg-[#191514] text-white py-10 sm:py-16 px-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#f59e0b]/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-950/80 to-amber-950/60 text-[#fbbf24] border border-amber-400/30 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+            <Sparkles size={13} className="text-[#f59e0b]" /> Explore Our Menu
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-black mb-2 tracking-tight text-white">
+            Something Delicious <span className="text-[#fbbf24]">For Every Craving</span>
+          </h1>
+          <p className="text-[#ede5da]/80 text-sm sm:text-base max-w-xl mb-6 sm:mb-8 leading-relaxed">
+            From flavour-packed shawarmas and handcrafted pizzas to juicy burgers, freshly baked pastries, creamy ice cream to the tastiest rice, there&apos;s something for everyone at Déskilz.
+          </p>
+
+          {/* Search Bar */}
+          <div className="relative max-w-2xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search by dish name (e.g. Suya Shawarma, Meat Pie, Jollof Rice)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#241e1c] border border-stone-700/80 rounded-2xl py-3.5 pl-12 pr-10 text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm sm:text-base"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white text-xs bg-stone-800 px-2.5 py-1 rounded-lg"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 8 Approved Category Filter Tabs */}
+      <div className="sticky top-16 sm:top-20 z-30 bg-[#faf6f0]/95 backdrop-blur-md border-b border-[#ede5da] py-3 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {categories.map((cat) => {
+            const count =
+              cat === 'All'
+                ? items.length
+                : items.filter((i) => i.category === cat).length;
+
+            const isSelected = selectedCategory === cat;
+
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm whitespace-nowrap transition-all flex items-center gap-2 flex-shrink-0 ${
+                  isSelected
+                    ? 'bg-brand-primary text-white shadow-md shadow-red-600/25 scale-100'
+                    : 'bg-white hover:bg-amber-50/60 text-[#191514] border border-[#ede5da]'
+                }`}
+              >
+                <span>{cat}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    isSelected
+                      ? 'bg-white/20 text-[#fbbf24]'
+                      : 'bg-[#f5efe6] text-stone-600'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Contextual Upselling Bar in Harmonious Amber & Gold */}
+      {cart.length > 0 && recommendations.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 mt-6 w-full">
+          <div className="bg-gradient-to-r from-amber-50 via-red-50/50 to-amber-50 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
+            <div>
+              <span className="text-[11px] font-black text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles size={13} className="text-[#f59e0b]" /> Recommended Pairings
+              </span>
+              <p className="text-[#191514] font-extrabold text-sm sm:text-base mt-0.5">
+                Complete your meal with these complementary selections:
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              {recommendations.map((rec) => (
+                <div
+                  key={rec.id}
+                  className="bg-white p-2 rounded-xl border border-[#ede5da] shadow-xs flex items-center gap-2.5"
+                >
+                  <img
+                    src={rec.image_url}
+                    alt={rec.name}
+                    className="w-10 h-10 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="font-bold text-xs text-[#191514] leading-tight line-clamp-1">{rec.name}</p>
+                    <p className="text-[11px] font-black text-brand-primary">₦{rec.price.toLocaleString()}</p>
+                  </div>
+                  <button
+                    onClick={() => addToCart(rec, 1)}
+                    className="p-1.5 bg-brand-primary hover:bg-[#c4131e] text-white rounded-lg transition-transform active:scale-90"
+                    title={`Add ${rec.name} to cart`}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Carousels */}
+      <section className="max-w-7xl mx-auto px-4 py-8 sm:py-12 pb-28 sm:pb-20 w-full flex-1">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-stone-500 text-sm font-bold">Loading approved menu dishes...</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-xs sm:text-sm font-bold text-stone-500">
+                Showing <span className="text-[#191514] font-black">{filteredItems.length}</span> dishes across{' '}
+                <span className="text-brand-primary font-black">
+                  {selectedCategory === 'All' ? `${categoryGroups.length} categories` : selectedCategory}
+                </span>
+              </p>
+            </div>
+
+            {categoryGroups.map((group) => (
+              <CategoryCarousel
+                key={group.category}
+                category={group.category}
+                items={group.items}
+                renderItem={(item) => (
+                  <FoodCard
+                    key={item.id}
+                    item={item}
+                    onAdd={(itm, q) => {
+                      addToCart(itm, q);
+                      if (settings.enable_upsell_popup) {
+                        const recs = getItemRecommendations({ item: itm, cart, allItems: items, limit: 3 });
+                        setPopupRecs(recs);
+                        setPopupTriggerItem(itm);
+                      }
+                    }}
+                  />
+                )}
+              />
+            ))}
+
+            {categoryGroups.length === 0 && (
+              <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-[#ede5da] p-8 my-8">
+                <UtensilsCrossed size={48} className="mx-auto text-stone-300 mb-3" />
+                <h3 className="text-lg font-black text-brand-dark mb-1">No dishes match your filter</h3>
+                <p className="text-stone-500 text-sm mb-6 max-w-sm mx-auto">
+                  Try clearing your search query or selecting a different category.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('All');
+                  }}
+                  className="btn-primary py-2.5 px-6 text-sm"
+                >
+                  Reset Menu Filters
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Smart Add-to-Cart Recommendation Popup */}
+      {popupTriggerItem && (
+        <AddToCartPopup
+          triggerItem={popupTriggerItem}
+          recommendations={popupRecs}
+          onClose={() => setPopupTriggerItem(null)}
+        />
+      )}
+    </main>
+  );
+}
+
+export default function MenuClient({
+  initialItems = [],
+  initialCategories = [],
+  initialCategoryParam,
+}: {
+  initialItems?: FoodItem[];
+  initialCategories?: string[];
+  initialCategoryParam?: string;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#faf6f0] flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <MenuInner
+        initialItems={initialItems}
+        initialCategories={initialCategories}
+        initialCategoryParam={initialCategoryParam}
+      />
+    </Suspense>
+  );
+}

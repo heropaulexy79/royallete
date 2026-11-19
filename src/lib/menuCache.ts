@@ -4,6 +4,70 @@ import { isItemFeatured } from './featured';
 export const CACHE_KEY_MENU = 'deskilz_menu_v4';
 export const CACHE_KEY_FEATURED = 'deskilz_featured_v4';
 const LEGACY_CACHE_KEYS = ['deskilz_menu_cache', 'deskilz_menu_v2', 'deskilz_menu_v3'];
+const IDB_NAME = 'deskilz_cache_db';
+const IDB_STORE = 'kv';
+const IDB_MENU_KEY = 'full_menu_v4';
+
+function openCacheDB(): Promise<IDBDatabase | null> {
+  if (typeof window === 'undefined' || !('indexedDB' in window)) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    try {
+      const req = window.indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/**
+ * Save full menu (including all high-res Base64 images) to IndexedDB,
+ * which supports 50MB–1GB+ storage without localStorage's 5MB quota limit.
+ */
+export async function saveMenuIndexedDB(items: FoodItem[]): Promise<void> {
+  const db = await openCacheDB();
+  if (!db) return;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(items, IDB_MENU_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    } catch {
+      resolve();
+    }
+  });
+}
+
+/**
+ * Load full menu (with all images) from IndexedDB in ~15-30ms.
+ */
+export async function loadMenuIndexedDB(): Promise<FoodItem[]> {
+  const db = await openCacheDB();
+  if (!db) return [];
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(IDB_MENU_KEY);
+      req.onsuccess = () => {
+        const result = req.result;
+        resolve(Array.isArray(result) ? (result as FoodItem[]) : []);
+      };
+      req.onerror = () => resolve([]);
+    } catch {
+      resolve([]);
+    }
+  });
+}
 
 /**
  * Purge outdated or oversized legacy cache keys to prevent stale item counts
@@ -99,6 +163,9 @@ export function saveMenuCache(items: FoodItem[]): void {
   
   // 1. Always update the featured cache first
   saveFeaturedCache(items);
+
+  // 1b. Save full items (with all Base64 images) into IndexedDB asynchronously
+  void saveMenuIndexedDB(items);
 
   // 2. Try writing the full items array
   try {
