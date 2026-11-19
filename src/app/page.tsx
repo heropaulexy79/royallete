@@ -15,6 +15,7 @@ import CategoryCarousel from '@/components/CategoryCarousel';
 import { getItemRecommendations } from '@/lib/recommendations';
 import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 import { isItemFeatured } from '@/lib/featured';
+import { loadFeaturedCache, loadMenuCache, saveMenuCache } from '@/lib/menuCache';
 import {
   UtensilsCrossed,
   ArrowRight,
@@ -152,34 +153,10 @@ export default function HomePage() {
   const { cart, addToCart } = useCart();
   const { settings } = useFeatureSettings();
   const [allItems, setAllItems] = useState<FoodItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('deskilz_menu_cache');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        console.warn('HomePage cache read error:', e);
-      }
-    }
-    return [];
+    return loadMenuCache();
   });
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('deskilz_menu_cache');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.filter(isItemFeatured);
-          }
-        }
-      } catch (e) {
-        console.warn('HomePage featured cache read error:', e);
-      }
-    }
-    return [];
+    return loadFeaturedCache();
   });
   const [customCategories, setCustomCategories] = useState<{ name: string; image_url?: string; tag?: string }[]>(() => {
     if (typeof window !== 'undefined') {
@@ -208,11 +185,7 @@ export default function HomePage() {
           setAllItems(itemsList);
           const highlighted = itemsList.filter(isItemFeatured);
           setFeaturedItems(highlighted);
-          try {
-            localStorage.setItem('deskilz_menu_cache', JSON.stringify(itemsList));
-          } catch (e) {
-            console.warn('HomePage cache write error:', e);
-          }
+          saveMenuCache(itemsList);
         } else {
           const fallback = APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item } as FoodItem));
           setAllItems(fallback);

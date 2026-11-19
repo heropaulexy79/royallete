@@ -20,6 +20,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { FoodItem, ProductCategory, CategoryMeta } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { isItemFeatured } from '@/lib/featured';
+import { loadMenuCache, saveMenuCache } from '@/lib/menuCache';
 import { 
   Plus, 
   Trash2, 
@@ -117,17 +118,8 @@ function compressImageFile(file: File): Promise<string> {
 
 export default function MenuManagement() {
   const [items, setItems] = useState<FoodItem[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('deskilz_menu_cache');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        console.warn('Admin menu cache read error:', e);
-      }
-    }
+    const cached = loadMenuCache();
+    if (cached.length > 0) return cached;
     // Instant fallback so dishes display immediately without blank screen or long spinner
     return APPROVED_CATALOGUE.map((item, idx) => ({ id: `seed-${idx}`, ...item } as FoodItem));
   });
@@ -190,11 +182,7 @@ export default function MenuManagement() {
           .map(doc => ({ id: doc.id, ...doc.data() } as FoodItem))
           .filter(item => !(item as { is_legacy?: boolean }).is_legacy); // Filter out archived legacy items
         setItems(docs);
-        try {
-          localStorage.setItem('deskilz_menu_cache', JSON.stringify(docs));
-        } catch (e) {
-          console.warn("Admin menu cache write error:", e);
-        }
+        saveMenuCache(docs);
       }
       setLoading(false);
     }, (error) => {
@@ -307,9 +295,7 @@ export default function MenuManagement() {
                 }
               : item
           );
-          try {
-            localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
-          } catch (e) {}
+          saveMenuCache(next);
           return next;
         });
 
@@ -345,9 +331,7 @@ export default function MenuManagement() {
         const docRef = await addDoc(collection(db, 'foodItems'), newItemData);
         setItems((prev) => {
           const next = [{ id: docRef.id, ...newItemData } as FoodItem, ...prev];
-          try {
-            localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
-          } catch (e) {}
+          saveMenuCache(next);
           return next;
         });
       }
@@ -398,9 +382,7 @@ export default function MenuManagement() {
     const nextVal = !current;
     setItems((prev) => {
       const next = prev.map((item) => (item.id === id ? { ...item, is_available: nextVal } : item));
-      try {
-        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
-      } catch (e) {}
+      saveMenuCache(next);
       return next;
     });
     try {
@@ -429,9 +411,7 @@ export default function MenuManagement() {
     const nextVal = !current;
     setItems((prev) => {
       const next = prev.map((item) => (item.id === id ? { ...item, is_featured: nextVal } : item));
-      try {
-        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
-      } catch (e) {}
+      saveMenuCache(next);
       return next;
     });
     try {
@@ -464,9 +444,7 @@ export default function MenuManagement() {
     setDeleteConfirmation(null);
     setItems((prev) => {
       const next = prev.filter((item) => item.id !== targetId);
-      try {
-        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
-      } catch (e) {}
+      saveMenuCache(next);
       return next;
     });
     try {
@@ -506,9 +484,7 @@ export default function MenuManagement() {
         if (item.id === targetItem.id) return { ...item, order_index: currentOrder };
         return item;
       });
-      try {
-        localStorage.setItem('deskilz_menu_cache', JSON.stringify(next));
-      } catch (e) {}
+      saveMenuCache(next);
       return next;
     });
 

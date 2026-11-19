@@ -9,6 +9,7 @@ import { getRecommendations, getItemRecommendations } from '@/lib/recommendation
 import AddToCartPopup from '@/components/AddToCartPopup';
 import CategoryCarousel from '@/components/CategoryCarousel';
 import { useFeatureSettings } from '@/context/FeatureSettingsContext';
+import { loadMenuCache, saveMenuCache } from '@/lib/menuCache';
 import {
   Plus,
   Minus,
@@ -142,17 +143,10 @@ function MenuInner() {
 
   useEffect(() => {
     // 1. Try retrieving cached items from localStorage for instant, non-flickering display
-    try {
-      const cached = localStorage.getItem('deskilz_menu_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setItems(parsed);
-          setLoading(false);
-        }
-      }
-    } catch (e) {
-      console.warn('Menu cache read error:', e);
+    const cached = loadMenuCache();
+    if (cached.length > 0) {
+      setItems(cached);
+      setLoading(false);
     }
 
     const q = query(collection(db, 'foodItems'));
@@ -164,11 +158,7 @@ function MenuInner() {
             .map((doc) => ({ id: doc.id, ...doc.data() } as FoodItem))
             .filter((item) => !(item as { is_legacy?: boolean }).is_legacy && item.is_available !== false);
           setItems(fetched);
-          try {
-            localStorage.setItem('deskilz_menu_cache', JSON.stringify(fetched));
-          } catch (e) {
-            console.warn('Menu cache write error:', e);
-          }
+          saveMenuCache(fetched);
         } else {
           setItems(APPROVED_CATALOGUE.filter((item) => item.is_available !== false).map((item, idx) => ({ id: `cat-${idx}`, ...item })));
         }
