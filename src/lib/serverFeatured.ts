@@ -182,17 +182,26 @@ async function fetchServerMenuMetadata(): Promise<FoodItem[]> {
     'restaurant_id',
   ];
   const mask = fields.map((f) => `mask.fieldPaths=${f}`).join('&');
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/foodItems?pageSize=200&${mask}`;
+  const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/foodItems?pageSize=300&${mask}`;
 
   try {
-    const res = await fetch(url, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(4500),
-    });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { documents?: FirestoreDocument[] };
-    if (!Array.isArray(data.documents)) return [];
-    return data.documents
+    const allDocs: FirestoreDocument[] = [];
+    let pageToken = '';
+    do {
+      const url = pageToken ? `${baseUrl}&pageToken=${encodeURIComponent(pageToken)}` : baseUrl;
+      const res = await fetch(url, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(4500),
+      });
+      if (!res.ok) break;
+      const data = (await res.json()) as { documents?: FirestoreDocument[]; nextPageToken?: string };
+      if (Array.isArray(data.documents)) {
+        allDocs.push(...data.documents);
+      }
+      pageToken = data.nextPageToken || '';
+    } while (pageToken);
+
+    return allDocs
       .map(mapFirestoreDoc)
       .filter((item): item is FoodItem => item !== null);
   } catch (err) {
