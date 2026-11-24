@@ -151,6 +151,12 @@ function MenuInner({
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Keep selectedCategory in sync when navigating between /menu and /menu?category=...
+  useEffect(() => {
+    const paramCat = searchParams.get('category') || 'All';
+    setSelectedCategory(paramCat);
+  }, [searchParams]);
+
   // Popup state
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);

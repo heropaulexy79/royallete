@@ -5,7 +5,9 @@ import {
   fetchServerFeaturedItems,
 } from '@/lib/serverFeatured';
 
-export const dynamic = 'force-dynamic';
+// Edge-cached with 30s ISR so <Link href="/"> prefetches instantly (0ms tab switch, no blank flash)
+// while client onSnapshot listeners keep featured items, categories, and reviews live in real time.
+export const revalidate = 30;
 
 export default async function HomePage() {
   const [initialFeatured, initialCategories, initialReviews] = await Promise.all([
