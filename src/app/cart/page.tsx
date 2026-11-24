@@ -408,7 +408,7 @@ export default function CartPage() {
           </div>
           <h1 className="text-2xl sm:text-4xl font-black text-brand-dark mb-2">Your Cart is Empty</h1>
           <p className="text-stone-500 mb-8 max-w-sm mx-auto text-sm sm:text-base">
-            You haven&apos;t added any delicious dishes yet. Explore our full menu and pick your cravings!
+            You haven&apos;t added any delicious items yet. Explore our full menu and pick your cravings!
           </p>
           <Link href="/menu" className="btn-primary inline-flex gap-2 px-9 h-12 text-sm sm:text-base font-black">
             Browse Déskilz Menu <ArrowRight size={18} />
@@ -450,7 +450,7 @@ export default function CartPage() {
 
         {/* 3 Step Flow breadcrumb */}
         <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8 overflow-x-auto no-scrollbar">
-          {['1. Select Dishes', '2. Review Cart', '3. WhatsApp Kitchen'].map((step, idx) => (
+          {['1. Select Items', '2. Review Cart', '3. WhatsApp Kitchen'].map((step, idx) => (
             <React.Fragment key={step}>
               <div
                 className={`flex items-center gap-2 whitespace-nowrap text-xs font-bold ${
@@ -483,7 +483,7 @@ export default function CartPage() {
                 <ShoppingBag size={22} className="text-brand-primary" />
                 Your Order Basket
                 <span className="text-xs sm:text-sm font-semibold text-stone-400">
-                  ({cart.length} dish{cart.length !== 1 ? 'es' : ''})
+                  ({cart.length} item{cart.length !== 1 ? 's' : ''})
                 </span>
               </h1>
               <button

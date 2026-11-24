@@ -59,7 +59,7 @@ export default function CategoryCarousel({
             {category}
           </h2>
           <span className="text-xs font-bold text-stone-500 bg-[#ede5da]/70 px-2 py-0.5 rounded-full">
-            {items.length} {items.length === 1 ? 'dish' : 'dishes'}
+            {items.length} {items.length === 1 ? 'item' : 'items'}
           </span>
         </div>
 

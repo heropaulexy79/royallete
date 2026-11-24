@@ -610,14 +610,14 @@ export default function MenuManagement() {
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-brand-dark">Menu & Food Products</h1>
             <p className="text-[#7a6655] text-sm sm:text-base mt-0.5">
-              Live management for all {items.length} dishes in the approved catalogue.
+              Live management for all {items.length} items in the approved catalogue.
             </p>
           </div>
           <button 
             onClick={openAddModal}
             className="btn-primary flex items-center gap-2 py-3 px-6 rounded-xl text-sm font-extrabold cursor-pointer"
           >
-            <Plus size={18} /> Add Dish
+            <Plus size={18} /> Add Item
           </button>
         </div>
 
@@ -627,7 +627,7 @@ export default function MenuManagement() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a89080]" size={17} />
             <input 
               type="text" 
-              placeholder="Search dishes by name or category..." 
+              placeholder="Search items by name or category..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#fdf8f3] border border-[#ede5da] rounded-xl pl-11 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
@@ -755,7 +755,7 @@ export default function MenuManagement() {
                     {items.filter(i => i.category.toLowerCase() === editingCategory.name.toLowerCase() && i.image_url).length > 0 && (
                       <div className="pt-2">
                         <span className="text-[11px] font-bold text-stone-500 block mb-2">
-                          Or select from dishes in {editingCategory.name}:
+                          Or select from items in {editingCategory.name}:
                         </span>
                         <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1 bg-stone-50 rounded-xl border border-stone-200">
                           {items
@@ -835,7 +835,7 @@ export default function MenuManagement() {
                 <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#ede5da]">
                   <h2 className="text-xl sm:text-2xl font-black text-brand-dark flex items-center gap-2">
                     <Utensils className="text-brand-primary" size={22} />
-                    {editingItem ? 'Edit Dish' : 'Add New Dish'}
+                    {editingItem ? 'Edit Item' : 'Add New Item'}
                   </h2>
                   <button 
                     onClick={() => setIsModalOpen(false)}
@@ -850,7 +850,7 @@ export default function MenuManagement() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {/* Name */}
                     <div className="space-y-1.5 sm:col-span-2">
-                      <label className="text-xs font-bold text-brand-dark">Dish Name *</label>
+                      <label className="text-xs font-bold text-brand-dark">Item Name *</label>
                       <input 
                         required
                         type="text" 
@@ -1064,7 +1064,7 @@ export default function MenuManagement() {
                       type="submit" 
                       className="btn-primary px-7 py-2.5 rounded-xl text-sm font-extrabold cursor-pointer"
                     >
-                      {editingItem ? 'Save Changes' : 'Create Dish'}
+                      {editingItem ? 'Save Changes' : 'Create Item'}
                     </button>
                   </div>
                 </form>
@@ -1086,7 +1086,7 @@ export default function MenuManagement() {
                 <div className="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
                   <AlertTriangle size={28} />
                 </div>
-                <h3 className="text-lg font-black text-brand-dark">Confirm Dish Deletion</h3>
+                <h3 className="text-lg font-black text-brand-dark">Confirm Item Deletion</h3>
                 <p className="text-[#7a6655] text-xs sm:text-sm">
                   Are you sure you want to remove <strong>{deleteConfirmation.name}</strong> from the Déskilz catalogue?
                 </p>
@@ -1113,7 +1113,7 @@ export default function MenuManagement() {
         {loading ? (
           <div className="py-24 flex flex-col justify-center items-center">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-brand-primary border-t-transparent mb-3" />
-            <p className="text-[#a89080] text-xs font-bold">Loading dishes from Firestore...</p>
+            <p className="text-[#a89080] text-xs font-bold">Loading items from Firestore...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -1167,14 +1167,14 @@ export default function MenuManagement() {
                             </button>
                             <button 
                               onClick={() => openEditModal(item)}
-                              title="Edit Dish"
+                              title="Edit Item"
                               className="p-1.5 text-[#a89080] hover:text-brand-primary hover:bg-red-50 rounded-lg transition-colors"
                             >
                               <Edit2 size={15} />
                             </button>
                             <button 
                               onClick={() => setDeleteConfirmation({ id: item.id, name: item.name })}
-                              title="Delete Dish"
+                              title="Delete Item"
                               className="p-1.5 text-[#a89080] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                             >
                               <Trash2 size={15} />
@@ -1234,12 +1234,12 @@ export default function MenuManagement() {
             {filteredItems.length === 0 && (
               <div className="col-span-full py-16 bg-white rounded-3xl border border-dashed border-[#ede5da] flex flex-col items-center text-center p-8">
                 <Utensils size={44} className="text-[#c4b8a8] mb-3" />
-                <h3 className="text-base font-bold text-brand-dark mb-1">No dishes found</h3>
+                <h3 className="text-base font-bold text-brand-dark mb-1">No items found</h3>
                 <p className="text-[#a89080] text-xs mb-5 max-w-sm">
-                  {searchQuery ? 'No dishes match your search.' : 'No items found in this category.'}
+                  {searchQuery ? 'No items match your search.' : 'No items found in this category.'}
                 </p>
                 <button onClick={openAddModal} className="btn-primary py-2 px-5 text-xs font-bold">
-                  <Plus size={15} className="inline mr-1" /> Add New Dish
+                  <Plus size={15} className="inline mr-1" /> Add New Item
                 </button>
               </div>
             )}

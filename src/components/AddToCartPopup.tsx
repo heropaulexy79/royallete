@@ -173,7 +173,7 @@ export default function AddToCartPopup({ triggerItem, recommendations, onClose }
                   Frequently Bought Together
                 </p>
                 <p className="text-stone-300 text-[11px] mt-0.5">
-                  Customers usually complete this dish with:
+                  Customers usually complete this item with:
                 </p>
               </div>
 
@@ -221,7 +221,7 @@ export default function AddToCartPopup({ triggerItem, recommendations, onClose }
               onClick={onClose}
               className="w-full h-11 rounded-xl bg-white hover:bg-stone-100 text-[#191514] font-black text-sm border-2 border-[#191514] shadow-xs transition-all active:scale-95"
             >
-              Continue Browsing Dishes
+              Continue Browsing Items
             </button>
           </div>
         </motion.div>

@@ -313,7 +313,7 @@ export default function HomeClient({
       // Priority: Admin custom-chosen image > first available dish image > default preset image
       const displayImage = customMeta?.image_url || defaultInfo.image || itemsInCat[0]?.image_url;
       const displayTag = customMeta?.tag || defaultInfo.tag || 'Déskilz Special';
-      const countLabel = `${itemsInCat.length} ${itemsInCat.length === 1 ? 'dish' : 'items'}`;
+      const countLabel = `${itemsInCat.length} ${itemsInCat.length === 1 ? 'item' : 'items'}`;
 
       return {
         name: catName,

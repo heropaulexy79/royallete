@@ -396,7 +396,7 @@ export default function AdminDashboard() {
           <div className="lg:col-span-1 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#ede5da] flex flex-col justify-between">
             <div>
               <h3 className="text-lg sm:text-xl font-black text-brand-dark mb-5 flex items-center gap-2">
-                <Utensils className="text-brand-primary" size={20} /> Top Ordered Dishes
+                <Utensils className="text-brand-primary" size={20} /> Top Ordered Items
               </h3>
               <div className="space-y-4">
                 {topItems.length > 0 ? topItems.map((item, idx) => (
