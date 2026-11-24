@@ -55,6 +55,19 @@ service cloud.firestore {
       allow update: if request.resource.data.current == resource.data.current + 1;
     }
 
+    // Customer Reviews: Anyone can submit a validated review; admins can read/delete
+    match /reviews/{reviewId} {
+      allow create: if request.resource.data.rating is number
+                    && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5
+                    && request.resource.data.customer_name is string
+                    && request.resource.data.customer_name.size() > 0
+                    && request.resource.data.customer_name.size() < 100
+                    && request.resource.data.comment is string
+                    && request.resource.data.comment.size() <= 1000;
+      allow read, delete: if isAuthenticated();
+    }
+
     // Default deny all other collections
     match /{document=**} {
       allow read, write: if isAuthenticated();

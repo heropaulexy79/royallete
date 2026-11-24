@@ -76,3 +76,14 @@ export interface Order {
   payment_method: 'whatsapp';
   created_at?: unknown; // Firestore Timestamp
 }
+
+export interface Review {
+  id?: string;
+  order_id?: string;
+  order_number?: number;
+  customer_name: string;
+  phone?: string;
+  rating: number;
+  comment: string;
+  created_at?: unknown; // Firestore Timestamp
+}

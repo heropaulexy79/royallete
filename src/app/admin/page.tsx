@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { Order } from '@/types/schema';
+import { collection, onSnapshot, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { Order, Review } from '@/types/schema';
+import { formatOrderRef } from '@/lib/whatsapp';
 import { 
   DollarSign, 
   ShoppingBag, 
@@ -19,7 +20,10 @@ import {
   CheckCircle2,
   XCircle,
   Phone,
-  Save
+  Save,
+  Star,
+  MessageSquare,
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -92,7 +96,20 @@ export default function AdminDashboard() {
     return [];
   });
 
+  const [reviews, setReviews] = useState<Review[]>([]);
+
   useEffect(() => {
+    const reviewsQ = query(collection(db, 'reviews'), orderBy('created_at', 'desc'));
+    const unsubReviews = onSnapshot(
+      reviewsQ,
+      (snap) => {
+        setReviews(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Review)));
+      },
+      (error) => {
+        console.warn('Firestore snapshot listener error for reviews:', error);
+      }
+    );
+
     const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'));
     const unsub = onSnapshot(q, (ordersSnap) => {
       const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
@@ -139,8 +156,26 @@ export default function AdminDashboard() {
       console.warn("Firestore snapshot listener error in admin dashboard:", error);
     });
 
-    return () => unsub();
+    return () => {
+      unsub();
+      unsubReviews();
+    };
   }, []);
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Delete this customer review?')) return;
+    try {
+      await deleteDoc(doc(db, 'reviews', reviewId));
+    } catch (err) {
+      console.error('Failed to delete review:', err);
+      alert('Could not delete review.');
+    }
+  };
+
+  const averageRating =
+    reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviews.length).toFixed(1)
+      : null;
 
   return (
     <main className="min-h-screen bg-[#faf6f0] pb-24 sm:pb-12 flex flex-col">
@@ -392,7 +427,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-black text-[#facc15] text-sm">₦{order.total_price.toLocaleString()}</p>
-                    <p className="text-[10px] text-amber-200/50 font-mono">#{order.id?.slice(-5).toUpperCase()}</p>
+                    <p className="text-[10px] text-amber-200/50 font-mono">{formatOrderRef(order.order_number, order.id)}</p>
                   </div>
                 </div>
               )) : (
@@ -402,6 +437,111 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Customer Reviews Section */}
+        <div className="mt-8 sm:mt-10 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#ede5da]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-[#ede5da] mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
+                <Star size={20} className="fill-amber-400 text-amber-500" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-brand-dark">Customer Reviews</h2>
+                <p className="text-xs text-[#7a6655]">
+                  Live feedback submitted by customers after placing an order.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 self-start sm:self-auto">
+              {averageRating && (
+                <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-full text-xs font-black">
+                  <Star size={13} className="fill-amber-400 text-amber-500" />
+                  {averageRating} / 5.0
+                </span>
+              )}
+              <span className="text-xs font-bold text-stone-600 bg-[#faf6f0] px-3 py-1.5 rounded-full border border-[#ede5da]">
+                {reviews.length} {reviews.length === 1 ? 'Review' : 'Reviews'}
+              </span>
+            </div>
+          </div>
+
+          {reviews.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {reviews.map((review) => {
+                const createdDate =
+                  review.created_at && typeof (review.created_at as { toDate?: () => Date }).toDate === 'function'
+                    ? (review.created_at as { toDate: () => Date }).toDate().toLocaleDateString('en-NG', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : 'Just now';
+
+                return (
+                  <div
+                    key={review.id}
+                    className="p-4 sm:p-5 rounded-2xl bg-[#faf6f0] border border-[#ede5da] flex flex-col justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <p className="font-extrabold text-brand-dark text-sm">{review.customer_name}</p>
+                          <div className="flex items-center gap-2 text-[11px] text-[#a89080] font-semibold mt-0.5">
+                            {(review.order_number || review.order_id) && (
+                              <span className="font-mono text-brand-primary font-bold">
+                                {formatOrderRef(review.order_number, review.order_id)}
+                              </span>
+                            )}
+                            <span>•</span>
+                            <span>{createdDate}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-0.5 bg-white px-2 py-1 rounded-lg border border-[#ede5da]">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star
+                                key={s}
+                                size={12}
+                                className={
+                                  s <= (review.rating || 0)
+                                    ? 'text-amber-500 fill-amber-400'
+                                    : 'text-stone-300'
+                                }
+                              />
+                            ))}
+                          </div>
+                          {review.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReview(review.id!)}
+                              title="Delete Review"
+                              className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed flex items-start gap-2 mt-2">
+                        <MessageSquare size={14} className="text-stone-400 flex-shrink-0 mt-0.5" />
+                        <span>{review.comment}</span>
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-[#a89080] text-sm border-2 border-dashed border-[#ede5da] rounded-2xl">
+              <Star size={28} className="mx-auto mb-2 text-stone-300" />
+              <p className="font-bold text-stone-500">No customer reviews yet</p>
+              <p className="text-xs mt-1">Reviews left by customers after checkout will appear here automatically.</p>
+            </div>
+          )}
         </div>
       </div>
     </main>

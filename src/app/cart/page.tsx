@@ -22,6 +22,8 @@ import {
   ArrowLeft,
   Sparkles,
   ShieldCheck,
+  Star,
+  Send,
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,17 +31,69 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, where, doc, runTransaction } from 'firebase/firestore';
 import { generateWhatsAppUrl, formatOrderRef, RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 
+const RATING_LABELS: Record<number, string> = {
+  1: 'Poor',
+  2: 'Fair',
+  3: 'Good',
+  4: 'Very Good',
+  5: 'Excellent!',
+};
+
 function OrderConfirmed({
   orderId,
   orderNumber,
+  customerName,
+  customerPhone,
   whatsappUrl,
   restaurantNumber,
 }: {
   orderId: string;
   orderNumber?: number;
+  customerName?: string;
+  customerPhone?: string;
   whatsappUrl: string;
   restaurantNumber?: string;
 }) {
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewerName, setReviewerName] = useState(customerName || '');
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewerName.trim()) {
+      alert('Please enter your name.');
+      return;
+    }
+    if (!comment.trim()) {
+      alert('Please write a short comment about your experience.');
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      await addDoc(collection(db, 'reviews'), {
+        order_id: orderId,
+        ...(orderNumber !== undefined ? { order_number: orderNumber } : {}),
+        customer_name: reviewerName.trim().slice(0, 80),
+        phone: (customerPhone || '').trim().slice(0, 25),
+        rating,
+        comment: comment.trim().slice(0, 1000),
+        created_at: serverTimestamp(),
+      });
+      setReviewSubmitted(true);
+      setShowReviewForm(false);
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+      alert('Could not submit review right now. Please try again.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -64,6 +118,110 @@ function OrderConfirmed({
         </div>
       </div>
 
+      {/* Inline Review Form */}
+      <AnimatePresence>
+        {showReviewForm && !reviewSubmitted && (
+          <motion.form
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            onSubmit={handleSubmitReview}
+            className="bg-white rounded-2xl border border-[#ede5da] shadow-md p-5 mb-6 text-left space-y-4 overflow-hidden"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-brand-dark text-base flex items-center gap-1.5">
+                <Star size={18} className="text-amber-500 fill-amber-400" /> Rate Your Experience
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowReviewForm(false)}
+                className="text-xs font-bold text-stone-400 hover:text-stone-600"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {/* Star Picker */}
+            <div className="text-center py-2 bg-[#faf6f0] rounded-xl border border-[#ede5da]">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const active = (hoverRating || rating) >= star;
+                  return (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="p-1 transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                      aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                    >
+                      <Star
+                        size={28}
+                        className={active ? 'text-amber-500 fill-amber-400' : 'text-stone-300'}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-xs font-extrabold text-amber-700">
+                {RATING_LABELS[hoverRating || rating]}
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">
+                Your Name
+              </label>
+              <input
+                type="text"
+                required
+                value={reviewerName}
+                onChange={(e) => setReviewerName(e.target.value)}
+                placeholder="Enter your name"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede5da] bg-[#faf6f0] text-sm font-medium text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">
+                Your Review
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="How was the food or ordering experience?"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede5da] bg-[#faf6f0] text-sm text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-primary resize-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submittingReview}
+              className="w-full h-11 bg-brand-primary hover:bg-[#c4131e] text-white font-black rounded-xl flex items-center justify-center gap-2 text-sm shadow-md transition-all disabled:opacity-60 cursor-pointer"
+            >
+              {submittingReview ? (
+                'Submitting...'
+              ) : (
+                <>
+                  <Send size={15} /> Submit Review
+                </>
+              )}
+            </button>
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      {/* Submitted Confirmation Banner */}
+      {reviewSubmitted && (
+        <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold flex items-center justify-center gap-2">
+          <CheckCircle2 size={18} className="text-emerald-600 flex-shrink-0" />
+          <span>Thank you for your review! We appreciate your feedback.</span>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         <Link
           href="/"
@@ -71,12 +229,15 @@ function OrderConfirmed({
         >
           <span>← Back to Homepage</span>
         </Link>
-        <Link
-          href={`/track/${orderId}`}
-          className="h-12 bg-[#191514] hover:bg-stone-800 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm transition-all"
-        >
-          <Utensils size={18} /> Track Order Status
-        </Link>
+        {!reviewSubmitted && !showReviewForm && (
+          <button
+            type="button"
+            onClick={() => setShowReviewForm(true)}
+            className="h-12 bg-[#191514] hover:bg-stone-800 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm transition-all cursor-pointer"
+          >
+            <Star size={18} className="text-amber-400 fill-amber-400" /> Leave a Review
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -87,7 +248,13 @@ export default function CartPage() {
   const { settings } = useFeatureSettings();
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
-  const [orderComplete, setOrderComplete] = useState<{ id: string; orderNumber?: number; whatsappUrl: string } | null>(null);
+  const [orderComplete, setOrderComplete] = useState<{
+    id: string;
+    orderNumber?: number;
+    customerName: string;
+    customerPhone: string;
+    whatsappUrl: string;
+  } | null>(null);
   const [allItems, setAllItems] = useState<FoodItem[]>([]);
 
   useEffect(() => {
@@ -182,7 +349,13 @@ export default function CartPage() {
     );
 
     clearCart();
-    setOrderComplete({ id: orderId, orderNumber, whatsappUrl });
+    setOrderComplete({
+      id: orderId,
+      orderNumber,
+      customerName: formData.name.trim(),
+      customerPhone: formData.phone.trim(),
+      whatsappUrl,
+    });
     window.open(whatsappUrl, '_blank');
     setLoading(false);
   };
@@ -216,6 +389,8 @@ export default function CartPage() {
         <OrderConfirmed
           orderId={orderComplete.id}
           orderNumber={orderComplete.orderNumber}
+          customerName={orderComplete.customerName}
+          customerPhone={orderComplete.customerPhone}
           whatsappUrl={orderComplete.whatsappUrl}
           restaurantNumber={settings.whatsapp_number}
         />
