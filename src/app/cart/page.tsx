@@ -112,7 +112,11 @@ function OrderConfirmed({
         <div className="flex justify-between items-center border-b border-[#ede5da] pb-3">
           <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Order Ref</span>
           <span className="font-mono font-bold text-brand-dark text-sm">
-            {formatOrderRef(orderNumber, orderId)}
+            {orderNumber !== undefined
+              ? formatOrderRef(orderNumber, orderId)
+              : orderId.startsWith('pending-')
+              ? 'Assigning...'
+              : formatOrderRef(undefined, orderId)}
           </span>
         </div>
         <div className="flex justify-between items-center border-b border-[#ede5da] pb-3">
@@ -311,7 +315,7 @@ export default function CartPage() {
     fetchCoPurchaseHistory();
   }, []);
 
-  const handleSendOrder = async (e: React.FormEvent) => {
+  const handleSendOrder = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.phone.trim()) {
       alert('Please enter your name and phone number so the restaurant can confirm your order.');
@@ -322,79 +326,87 @@ export default function CartPage() {
       return;
     }
 
-    setLoading(true);
-    let orderId = 'ord-' + Date.now().toString(36);
-    let orderNumber: number | undefined;
+    const customerName = formData.name.trim();
+    const customerPhone = formData.phone.trim();
+    const cartSnapshot = [...cart];
+    const tempOrderId = 'pending-' + Date.now().toString(36);
 
-    // Compute verified price by matching items against allItems or items in catalogue
-    const verifiedTotalPrice = cart.reduce((sum, item) => {
+    // Compute verified price synchronously
+    const verifiedTotalPrice = cartSnapshot.reduce((sum, item) => {
       const match = allItems.find((d) => d.id === item.food_item_id) ||
                     APPROVED_CATALOGUE.find((d) => d.name === item.name);
       const truePrice = match?.price ?? item.price;
       return sum + truePrice * item.quantity;
     }, 0);
 
-    try {
-      // Atomically increment sequential order counter (#0001, #0002, #0003...)
-      try {
-        const counterRef = doc(db, 'counters', 'orders');
-        orderNumber = await runTransaction(db, async (tx) => {
-          const snap = await tx.get(counterRef);
-          const current = snap.exists() ? Number(snap.data()?.current) || 0 : 0;
-          const next = current + 1;
-          tx.set(counterRef, { current: next, updated_at: serverTimestamp() }, { merge: true });
-          return next;
-        });
-      } catch (counterErr) {
-        console.warn('Order counter transaction fallback:', counterErr);
-      }
-
-      const orderData = {
-        ...(orderNumber !== undefined ? { order_number: orderNumber } : {}),
-        customer_name: formData.name.trim().slice(0, 80),
-        phone: formData.phone.trim().slice(0, 25),
-        items: cart.map((i) => ({
-          food_item_id: i.food_item_id,
-          name: i.name.slice(0, 100),
-          price: Number(i.price) || 0,
-          quantity: Math.max(1, Math.min(99, Number(i.quantity) || 1)),
-          image_url: i.image_url || '',
-        })),
-        total_price: verifiedTotalPrice,
-        status: 'pending' as const,
-        payment_method: 'whatsapp' as const,
-        created_at: serverTimestamp(),
-      };
-      const docRef = await addDoc(collection(db, 'orders'), orderData);
-      orderId = docRef.id;
-    } catch (error) {
-      console.warn('Firestore offline or fallback order generation:', error);
-    }
-
     const targetWhatsAppNumber = settings.whatsapp_number || RESTAURANT_WHATSAPP_NUMBER;
 
     const whatsappUrl = generateWhatsAppUrl(
       {
-        orderId,
-        orderNumber,
-        customerName: formData.name,
-        phone: formData.phone,
-        items: cart,
+        orderId: tempOrderId,
+        customerName,
+        phone: customerPhone,
+        items: cartSnapshot,
         totalPrice: verifiedTotalPrice,
       },
       targetWhatsAppNumber
     );
 
+    // 1. Respond IMMEDIATELY (0ms): open WhatsApp synchronously inside the tap gesture & show confirmation
+    window.open(whatsappUrl, '_blank');
     clearCart();
     setOrderComplete({
-      id: orderId,
-      orderNumber,
-      customerName: formData.name.trim(),
-      customerPhone: formData.phone.trim(),
+      id: tempOrderId,
+      customerName,
+      customerPhone,
       whatsappUrl,
     });
-    window.open(whatsappUrl, '_blank');
     setLoading(false);
+
+    // 2. Persist order & assign sequential ascending Order Ref (#0001, #0002...) in the background
+    (async () => {
+      let orderNumber: number | undefined;
+      try {
+        try {
+          const counterRef = doc(db, 'counters', 'orders');
+          orderNumber = await runTransaction(db, async (tx) => {
+            const snap = await tx.get(counterRef);
+            const current = snap.exists() ? Number(snap.data()?.current) || 0 : 0;
+            const next = current + 1;
+            tx.set(counterRef, { current: next, updated_at: serverTimestamp() }, { merge: true });
+            return next;
+          });
+        } catch (counterErr) {
+          console.warn('Order counter transaction fallback:', counterErr);
+        }
+
+        const orderData = {
+          ...(orderNumber !== undefined ? { order_number: orderNumber } : {}),
+          customer_name: customerName.slice(0, 80),
+          phone: customerPhone.slice(0, 25),
+          items: cartSnapshot.map((i) => ({
+            food_item_id: i.food_item_id,
+            name: i.name.slice(0, 100),
+            price: Number(i.price) || 0,
+            quantity: Math.max(1, Math.min(99, Number(i.quantity) || 1)),
+            image_url: i.image_url || '',
+          })),
+          total_price: verifiedTotalPrice,
+          status: 'pending' as const,
+          payment_method: 'whatsapp' as const,
+          created_at: serverTimestamp(),
+        };
+        const docRef = await addDoc(collection(db, 'orders'), orderData);
+        setOrderComplete((prev) =>
+          prev ? { ...prev, id: docRef.id, orderNumber } : prev
+        );
+      } catch (error) {
+        console.warn('Firestore background order save fallback:', error);
+        setOrderComplete((prev) =>
+          prev ? { ...prev, id: 'ord-' + Date.now().toString(36) } : prev
+        );
+      }
+    })();
   };
 
   // Empty cart state

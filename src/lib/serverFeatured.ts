@@ -44,7 +44,7 @@ export async function fetchServerCategories(): Promise<ServerCategory[]> {
 
   try {
     const res = await fetch(url, {
-      cache: 'no-store',
+      next: { revalidate: 15 },
       signal: AbortSignal.timeout(4500),
     });
 
@@ -87,7 +87,7 @@ export async function fetchServerFeaturedItems(): Promise<FoodItem[]> {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
+      next: { revalidate: 15 },
       signal: AbortSignal.timeout(4500),
       body: JSON.stringify({
         structuredQuery: {
@@ -190,7 +190,7 @@ async function fetchServerMenuMetadata(): Promise<FoodItem[]> {
     do {
       const url = pageToken ? `${baseUrl}&pageToken=${encodeURIComponent(pageToken)}` : baseUrl;
       const res = await fetch(url, {
-        cache: 'no-store',
+        next: { revalidate: 15 },
         signal: AbortSignal.timeout(4500),
       });
       if (!res.ok) break;
@@ -223,7 +223,7 @@ async function fetchServerCategoryItems(category: string): Promise<FoodItem[]> {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
+      next: { revalidate: 15 },
       signal: AbortSignal.timeout(4500),
       body: JSON.stringify({
         structuredQuery: {
@@ -302,7 +302,7 @@ export async function fetchServerApprovedReviews(): Promise<Review[]> {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
+      next: { revalidate: 15 },
       signal: AbortSignal.timeout(4500),
       body: JSON.stringify({
         structuredQuery: {
