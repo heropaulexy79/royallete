@@ -372,7 +372,7 @@ export default function HomeClient({
               Popular Right Now
             </h2>
             <p className="text-stone-500 text-sm sm:text-base mt-2">
-              Cooked with authentic herbs, premium cuts, and fresh ingredients.
+              Delicious Choices. Something for Every Craving.
             </p>
           </div>
 
