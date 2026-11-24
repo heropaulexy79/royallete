@@ -7,7 +7,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { useParams } from 'next/navigation';
 import { Order, OrderStatus } from '@/types/schema';
 import { Check, Clock, Package, Utensils, MessageSquare, CheckCircle2, FileText, ShoppingBag } from 'lucide-react';
-import { RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
+import { RESTAURANT_WHATSAPP_NUMBER, formatOrderRef } from '@/lib/whatsapp';
 import Link from 'next/link';
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string, icon: React.ElementType, color: string, description: string }> = {
@@ -116,7 +116,7 @@ export default function TrackingPage() {
         {/* Status Header */}
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mb-8 text-center relative overflow-hidden">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-xs font-bold text-slate-600 mb-4 uppercase tracking-wider">
-            Order Ref: #{order.id ? order.id.slice(-6).toUpperCase() : 'DEMO'}
+            Order Ref: {order.order_number || order.id ? formatOrderRef(order.order_number, order.id) : '#DEMO'}
           </div>
 
           <div className="w-20 h-20 rounded-full bg-brand-primary/10 flex items-center justify-center mx-auto mb-4">

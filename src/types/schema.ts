@@ -66,6 +66,7 @@ export interface OrderItem {
 
 export interface Order {
   id?: string;
+  order_number?: number;
   customer_name: string;
   phone: string;
   order_notes?: string;

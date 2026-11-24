@@ -19,7 +19,7 @@ import {
   ShieldAlert,
   ArrowLeft
 } from 'lucide-react';
-import { computeOrderChecksum } from '@/lib/whatsapp';
+import { computeOrderChecksum, formatOrderRef } from '@/lib/whatsapp';
 
 const STATUS_FLOW: Record<OrderStatus, OrderStatus | null> = {
   pending: 'preparing',
@@ -152,7 +152,7 @@ export default function AdminOrders() {
                         <div>
                           <h3 className="font-bold text-base text-brand-dark leading-snug">{order.customer_name}</h3>
                           <div className="flex flex-wrap items-center gap-2 text-xs text-[#a89080] mt-0.5">
-                            <span className="font-mono">#{order.id?.slice(-6).toUpperCase()}</span>
+                            <span className="font-mono">{formatOrderRef(order.order_number, order.id)}</span>
                             <span>•</span>
                             <span>{order.phone}</span>
                           </div>
@@ -253,7 +253,7 @@ export default function AdminOrders() {
               {selectedOrder ? (
                 <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-[#ede5da] sticky top-20">
                   <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#ede5da]">
-                    <h3 className="font-black text-xl text-brand-dark">Order #{selectedOrder.id?.slice(-6).toUpperCase()}</h3>
+                    <h3 className="font-black text-xl text-brand-dark">Order {formatOrderRef(selectedOrder.order_number, selectedOrder.id)}</h3>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${STATUS_COLORS[selectedOrder.status]}`}>
                       {STATUS_LABELS[selectedOrder.status]}
                     </span>

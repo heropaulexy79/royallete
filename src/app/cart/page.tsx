@@ -26,15 +26,17 @@ import {
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
-import { generateWhatsAppUrl, RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
+import { collection, addDoc, serverTimestamp, getDocs, query, where, doc, runTransaction } from 'firebase/firestore';
+import { generateWhatsAppUrl, formatOrderRef, RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
 
 function OrderConfirmed({
   orderId,
+  orderNumber,
   whatsappUrl,
   restaurantNumber,
 }: {
   orderId: string;
+  orderNumber?: number;
   whatsappUrl: string;
   restaurantNumber?: string;
 }) {
@@ -48,19 +50,16 @@ function OrderConfirmed({
         <CheckCircle2 size={48} />
       </div>
       <h2 className="text-2xl sm:text-3xl font-black text-brand-dark mb-2">Order Sent to WhatsApp! 🎉</h2>
-      <p className="text-stone-500 mb-6 text-sm sm:text-base leading-relaxed">
-        WhatsApp was opened with your full order. Please tap <strong>Send</strong> in WhatsApp so our chefs can begin preparing your meal immediately!
-      </p>
 
       <div className="bg-white rounded-2xl border border-[#ede5da] shadow-sm p-5 mb-6 text-left space-y-3">
         <div className="flex justify-between items-center border-b border-[#ede5da] pb-3">
           <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Order Ref</span>
           <span className="font-mono font-bold text-brand-dark text-sm">
-            #{orderId.slice(-6).toUpperCase()}
+            {formatOrderRef(orderNumber, orderId)}
           </span>
         </div>
         <div className="flex justify-between items-center border-b border-[#ede5da] pb-3">
-          <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Déskilz Kitchen</span>
+          <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Déskilz Restaurant</span>
           <span className="font-bold text-stone-700 text-sm">+{restaurantNumber || RESTAURANT_WHATSAPP_NUMBER}</span>
         </div>
       </div>
@@ -72,14 +71,6 @@ function OrderConfirmed({
         >
           <span>← Back to Homepage</span>
         </Link>
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="h-12 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all hover:scale-[1.01] text-sm"
-        >
-          <MessageSquare size={18} /> Re-open WhatsApp
-        </a>
         <Link
           href={`/track/${orderId}`}
           className="h-12 bg-[#191514] hover:bg-stone-800 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-sm transition-all"
@@ -96,7 +87,7 @@ export default function CartPage() {
   const { settings } = useFeatureSettings();
   const [formData, setFormData] = useState({ name: '', phone: '' });
   const [loading, setLoading] = useState(false);
-  const [orderComplete, setOrderComplete] = useState<{ id: string; whatsappUrl: string } | null>(null);
+  const [orderComplete, setOrderComplete] = useState<{ id: string; orderNumber?: number; whatsappUrl: string } | null>(null);
   const [allItems, setAllItems] = useState<FoodItem[]>([]);
 
   useEffect(() => {
@@ -119,7 +110,7 @@ export default function CartPage() {
   const handleSendOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.phone.trim()) {
-      alert('Please enter your name and phone number so the kitchen can confirm your order.');
+      alert('Please enter your name and phone number so the restaurant can confirm your order.');
       return;
     }
     if (cart.length === 0) {
@@ -129,6 +120,7 @@ export default function CartPage() {
 
     setLoading(true);
     let orderId = 'ord-' + Date.now().toString(36);
+    let orderNumber: number | undefined;
 
     // Compute verified price by matching items against allItems or items in catalogue
     const verifiedTotalPrice = cart.reduce((sum, item) => {
@@ -139,7 +131,22 @@ export default function CartPage() {
     }, 0);
 
     try {
+      // Atomically increment sequential order counter (#0001, #0002, #0003...)
+      try {
+        const counterRef = doc(db, 'counters', 'orders');
+        orderNumber = await runTransaction(db, async (tx) => {
+          const snap = await tx.get(counterRef);
+          const current = snap.exists() ? Number(snap.data()?.current) || 0 : 0;
+          const next = current + 1;
+          tx.set(counterRef, { current: next, updated_at: serverTimestamp() }, { merge: true });
+          return next;
+        });
+      } catch (counterErr) {
+        console.warn('Order counter transaction fallback:', counterErr);
+      }
+
       const orderData = {
+        ...(orderNumber !== undefined ? { order_number: orderNumber } : {}),
         customer_name: formData.name.trim().slice(0, 80),
         phone: formData.phone.trim().slice(0, 25),
         items: cart.map((i) => ({
@@ -165,6 +172,7 @@ export default function CartPage() {
     const whatsappUrl = generateWhatsAppUrl(
       {
         orderId,
+        orderNumber,
         customerName: formData.name,
         phone: formData.phone,
         items: cart,
@@ -174,7 +182,7 @@ export default function CartPage() {
     );
 
     clearCart();
-    setOrderComplete({ id: orderId, whatsappUrl });
+    setOrderComplete({ id: orderId, orderNumber, whatsappUrl });
     window.open(whatsappUrl, '_blank');
     setLoading(false);
   };
@@ -207,6 +215,7 @@ export default function CartPage() {
         <Navbar />
         <OrderConfirmed
           orderId={orderComplete.id}
+          orderNumber={orderComplete.orderNumber}
           whatsappUrl={orderComplete.whatsappUrl}
           restaurantNumber={settings.whatsapp_number}
         />

@@ -4,11 +4,24 @@ export const RESTAURANT_WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBE
 
 export interface WhatsAppOrderDetails {
   orderId?: string;
+  orderNumber?: number;
   customerName: string;
   phone: string;
   orderNotes?: string;
   items: OrderItem[];
   totalPrice: number;
+}
+
+/**
+ * Formats an order reference for display.
+ * Uses ascending sequential numbers (e.g. #0001, #0002, #0003...) when available,
+ * falling back to the last 6 chars of the Firestore ID for legacy orders.
+ */
+export function formatOrderRef(orderNumber?: number, fallbackId?: string): string {
+  if (typeof orderNumber === 'number' && Number.isFinite(orderNumber) && orderNumber > 0) {
+    return `#${String(Math.floor(orderNumber)).padStart(4, '0')}`;
+  }
+  return fallbackId ? `#${fallbackId.slice(-6).toUpperCase()}` : '#N/A';
 }
 
 /**
