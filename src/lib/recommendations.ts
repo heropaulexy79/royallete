@@ -1,4 +1,4 @@
-﻿import { FoodItem, Order, OrderItem } from '@/types/schema';
+import { FoodItem, Order, OrderItem } from '@/types/schema';
 
 export type CoPurchaseMap = Record<string, Record<string, number>>;
 
