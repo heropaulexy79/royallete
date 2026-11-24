@@ -28,8 +28,10 @@ import {
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, where, doc, runTransaction } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where, doc, runTransaction, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 import { generateWhatsAppUrl, formatOrderRef, RESTAURANT_WHATSAPP_NUMBER } from '@/lib/whatsapp';
+import { buildCoPurchaseMap, CoPurchaseMap } from '@/lib/recommendations';
+import { loadMenuIndexedDB } from '@/lib/menuCache';
 
 const RATING_LABELS: Record<number, string> = {
   1: 'Poor',
@@ -256,9 +258,16 @@ export default function CartPage() {
     whatsappUrl: string;
   } | null>(null);
   const [allItems, setAllItems] = useState<FoodItem[]>([]);
+  const [coPurchaseMap, setCoPurchaseMap] = useState<CoPurchaseMap>({});
 
   useEffect(() => {
     async function fetchMenu() {
+      // Hydrate immediately from IndexedDB if available for instant add-on suggestions
+      const cachedIdb = await loadMenuIndexedDB();
+      if (cachedIdb.length > 0) {
+        setAllItems(cachedIdb.filter((i) => i.is_available !== false));
+      }
+
       try {
         const snap = await getDocs(query(collection(db, 'foodItems'), where('is_available', '==', true)));
         if (!snap.empty) {
@@ -269,9 +278,36 @@ export default function CartPage() {
       } catch (err) {
         console.warn('Using catalogue for recommendations in cart:', err);
       }
-      setAllItems(APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item })));
+      if (cachedIdb.length === 0) {
+        setAllItems(APPROVED_CATALOGUE.map((item, idx) => ({ id: `cat-${idx}`, ...item })));
+      }
     }
+
+    async function fetchCoPurchaseHistory() {
+      try {
+        const cached = sessionStorage.getItem('deskilz_copurchase_v1');
+        if (cached) {
+          setCoPurchaseMap(JSON.parse(cached));
+          return;
+        }
+        const snap = await getDocs(
+          query(collection(db, 'orders'), orderBy('created_at', 'desc'), firestoreLimit(100))
+        );
+        if (!snap.empty) {
+          const orders = snap.docs.map((d) => ({ items: d.data().items || [] }));
+          const map = buildCoPurchaseMap(orders);
+          setCoPurchaseMap(map);
+          try {
+            sessionStorage.setItem('deskilz_copurchase_v1', JSON.stringify(map));
+          } catch {}
+        }
+      } catch {
+        // Public users without orders list permission gracefully rely on the dish-aware pairing engine
+      }
+    }
+
     fetchMenu();
+    fetchCoPurchaseHistory();
   }, []);
 
   const handleSendOrder = async (e: React.FormEvent) => {
@@ -538,6 +574,7 @@ export default function CartPage() {
               <FrequentlyBoughtTogether
                 cart={cart}
                 allItems={allItems}
+                coPurchaseMap={coPurchaseMap}
                 onAddItems={(items) => {
                   items.forEach((item) => addToCart(item, 1));
                 }}

@@ -2,26 +2,28 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { FoodItem, OrderItem } from '@/types/schema';
-import { getRecommendations } from '@/lib/recommendations';
+import { getRecommendations, CoPurchaseMap } from '@/lib/recommendations';
 import { Plus, Check, Sparkles, ShoppingBag, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface FrequentlyBoughtTogetherProps {
   cart: OrderItem[];
   allItems: FoodItem[];
+  coPurchaseMap?: CoPurchaseMap;
   onAddItems: (items: FoodItem[]) => void;
 }
 
 export default function FrequentlyBoughtTogether({
   cart,
   allItems,
+  coPurchaseMap,
   onAddItems,
 }: FrequentlyBoughtTogetherProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [addedSuccess, setAddedSuccess] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Recommendations based on current cart (take more to allow 2-at-a-time scrolling carousel)
-  const recommendations = getRecommendations({ cart, allItems, limit: 6 });
+  // Recommendations based on current cart + historical co-purchase training data
+  const recommendations = getRecommendations({ cart, allItems, coPurchaseMap, limit: 6 });
 
   // Default select first 2 recommended add-ons when recommendations change
   useEffect(() => {
