@@ -179,7 +179,7 @@ export default function Navbar() {
               >
                 <Flame size={13} className="text-[#f59e0b] flex-shrink-0 group-hover:scale-110 transition-transform" />
                 <span>
-                  Chef Value Special:{' '}
+                  Deskilz Value Special:{' '}
                   <strong className="text-[#fbbf24] font-black group-hover:underline">
                     Rice Combo ₦3,000
                   </strong>{' '}
@@ -193,7 +193,7 @@ export default function Navbar() {
               <div className="inline-flex items-center gap-1.5 text-stone-300">
                 <Sparkles size={13} className="text-[#fbbf24] flex-shrink-0" />
                 <span className="text-stone-300">
-                  Freshly Cooked to Order <span className="text-stone-500">•</span> Zero Cold Reheating
+                  Fresh food, fast service, <span className="text-stone-500">•</span> great taste
                 </span>
               </div>
 
@@ -368,21 +368,6 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-
-            {/* Admin Trigger Button in Mobile Drawer */}
-            <button
-              type="button"
-              onClick={(e) => {
-                setMenuOpen(false);
-                handleAdminClick(e);
-              }}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-stone-600 hover:bg-white font-semibold text-xs transition-colors text-left"
-            >
-              <span className="flex items-center gap-3">
-                <ShieldAlert size={16} /> Admin Portal
-              </span>
-              <Lock size={13} className="text-stone-400" />
-            </button>
 
             <a
               href={`https://wa.me/${activeWhatsAppNumber}`}

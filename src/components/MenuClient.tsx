@@ -346,7 +346,7 @@ function MenuInner({
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
             <input
               type="text"
-              placeholder="Search by dish name (e.g. Suya Shawarma, Meat Pie, Jollof Rice)..."
+              placeholder="Search item by name (e.g. Suya Shawarma, Meat Pie, Jollof Rice)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-[#241e1c] border border-stone-700/80 rounded-2xl py-3.5 pl-12 pr-10 text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm sm:text-base"
@@ -446,13 +446,13 @@ function MenuInner({
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-stone-500 text-sm font-bold">Loading approved menu dishes...</p>
+            <p className="text-stone-500 text-sm font-bold">Loading approved menu items...</p>
           </div>
         ) : (
           <>
             <div className="flex justify-between items-center mb-6">
               <p className="text-xs sm:text-sm font-bold text-stone-500">
-                Showing <span className="text-[#191514] font-black">{filteredItems.length}</span> dishes across{' '}
+                Showing <span className="text-[#191514] font-black">{filteredItems.length}</span> Items across{' '}
                 <span className="text-brand-primary font-black">
                   {selectedCategory === 'All' ? `${categoryGroups.length} categories` : selectedCategory}
                 </span>
@@ -484,7 +484,7 @@ function MenuInner({
             {categoryGroups.length === 0 && (
               <div className="py-20 text-center bg-white rounded-3xl border border-dashed border-[#ede5da] p-8 my-8">
                 <UtensilsCrossed size={48} className="mx-auto text-stone-300 mb-3" />
-                <h3 className="text-lg font-black text-brand-dark mb-1">No dishes match your filter</h3>
+                <h3 className="text-lg font-black text-brand-dark mb-1">No items match your filter</h3>
                 <p className="text-stone-500 text-sm mb-6 max-w-sm mx-auto">
                   Try clearing your search query or selecting a different category.
                 </p>
