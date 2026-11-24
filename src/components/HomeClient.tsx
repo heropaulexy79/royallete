@@ -682,7 +682,7 @@ export default function HomeClient({
               </li>
               <li className="pt-1.5 border-t border-stone-800/80">
                 <a
-                  href="https://maps.google.com/?q=Mobil+filling+station,+Odo-Eran,+Obantoko"
+                  href="https://maps.app.goo.gl/zrtMfpWGHwBdsAFm9?g_st=awb"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-2 text-stone-300 hover:text-amber-300 transition-colors group"
@@ -705,7 +705,7 @@ export default function HomeClient({
         <div className="max-w-7xl mx-auto pt-8 border-t border-stone-800 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-stone-500">
           <p>© {new Date().getFullYear()} Déskilz Restaurant. All rights reserved.</p>
           <a
-            href="https://maps.google.com/?q=Mobil+filling+station,+Odo-Eran,+Obantoko"
+            href="https://maps.app.goo.gl/zrtMfpWGHwBdsAFm9?g_st=awb"
             target="_blank"
             rel="noopener noreferrer"
             className="text-stone-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors group"

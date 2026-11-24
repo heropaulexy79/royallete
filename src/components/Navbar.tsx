@@ -25,7 +25,7 @@ import AdminLoginModal from '@/components/AdminLoginModal';
 import { useFeatureSettings } from '@/context/FeatureSettingsContext';
 
 export const RESTAURANT_ADDRESS = 'Inside Mobil filling station, Odo-Eran, Obantoko';
-export const GOOGLE_MAPS_URL = 'https://maps.google.com/?q=Mobil+filling+station,+Odo-Eran,+Obantoko';
+export const GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/zrtMfpWGHwBdsAFm9?g_st=awb';
 
 function FacebookIcon({ size = 14, className = '' }: { size?: number; className?: string }) {
   return (
