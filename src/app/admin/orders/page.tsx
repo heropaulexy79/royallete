@@ -17,7 +17,8 @@ import {
   ShoppingBag,
   ShieldCheck,
   ShieldAlert,
-  ArrowLeft
+  ArrowLeft,
+  Star
 } from 'lucide-react';
 import { computeOrderChecksum, formatOrderRef } from '@/lib/whatsapp';
 
@@ -162,7 +163,7 @@ export default function AdminOrders() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {waChatUrl && (
                           <a
                             href={waChatUrl}
@@ -171,6 +172,21 @@ export default function AdminOrders() {
                             className="h-9 px-3 bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                           >
                             <MessageSquare size={14} /> WhatsApp
+                          </a>
+                        )}
+                        {waChatUrl && (
+                          <a
+                            href={`${waChatUrl}?text=${encodeURIComponent(
+                              `Hi ${order.customer_name || 'there'}! Thank you for ordering from Déskilz Restaurant. We'd love to hear how you enjoyed your meal! Please leave us a quick review here:\n${typeof window !== 'undefined' ? window.location.origin : 'https://deskilz.vercel.app'}/review?${new URLSearchParams({
+                                ...(order.order_number ? { order: String(order.order_number) } : {}),
+                                ...(order.customer_name ? { name: order.customer_name } : {}),
+                              }).toString()}`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-9 px-3 bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                          >
+                            <Star size={14} /> Request Review
                           </a>
                         )}
                         <button

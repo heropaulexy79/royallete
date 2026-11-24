@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import HeroSlider from '@/components/HeroSlider';
 import { useCart } from '@/context/CartContext';
-import { FoodItem } from '@/types/schema';
+import { FoodItem, Review } from '@/types/schema';
 import { APPROVED_CATALOGUE } from '@/data/approvedCatalogue';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
@@ -29,6 +29,8 @@ import {
   ShieldCheck,
   ChefHat,
   Flame,
+  Star,
+  Quote,
   Phone,
   MapPin,
   ExternalLink,
@@ -152,9 +154,11 @@ function FeaturedFoodCard({
 export default function HomeClient({
   initialFeatured = [],
   initialCategories = [],
+  initialReviews = [],
 }: {
   initialFeatured?: FoodItem[];
   initialCategories?: { name: string; image_url?: string; tag?: string }[];
+  initialReviews?: Review[];
 }) {
   const { cart, addToCart } = useCart();
   const { settings } = useFeatureSettings();
@@ -163,6 +167,7 @@ export default function HomeClient({
   });
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>(initialFeatured);
   const [customCategories, setCustomCategories] = useState<{ name: string; image_url?: string; tag?: string }[]>(initialCategories);
+  const [approvedReviews, setApprovedReviews] = useState<Review[]>(initialReviews);
   const [popupTriggerItem, setPopupTriggerItem] = useState<FoodItem | null>(null);
   const [popupRecs, setPopupRecs] = useState<FoodItem[]>([]);
 
@@ -261,10 +266,24 @@ export default function HomeClient({
       }
     );
 
+    // 3. Listen for admin-approved customer reviews to display on homepage
+    const reviewsQuery = query(collection(db, 'reviews'), where('show_on_homepage', '==', true));
+    const unsubReviews = onSnapshot(
+      reviewsQuery,
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Review));
+        setApprovedReviews(list);
+      },
+      (err) => {
+        console.warn('Approved reviews listener error on homepage:', err);
+      }
+    );
+
     return () => {
       unsubFeatured();
       unsubItems();
       unsubCats();
+      unsubReviews();
     };
   }, [initialFeatured, initialCategories]);
 
@@ -505,6 +524,68 @@ export default function HomeClient({
           </div>
         </div>
       </section>
+
+      {/* ── Section: Customer Reviews (Admin-Curated) ── */}
+      {approvedReviews.length > 0 && (
+        <section className="py-12 sm:py-16 px-4 bg-white border-t border-[#ede5da]">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
+              <span className="text-brand-primary font-black text-xs uppercase tracking-widest flex items-center justify-center gap-1.5">
+                <Star size={14} className="text-[#f59e0b] fill-[#f59e0b]" /> Customer Love
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-black text-brand-dark mt-2 mb-2">
+                What Our Customers Say
+              </h2>
+              <p className="text-stone-500 text-xs sm:text-base">
+                Real reviews from food lovers who ordered from Déskilz.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {approvedReviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="bg-[#faf6f0] rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-[#ede5da] flex flex-col justify-between gap-4 shadow-xs hover:shadow-md transition-shadow"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={15}
+                            className={
+                              s <= (review.rating || 5)
+                                ? 'text-amber-500 fill-amber-400'
+                                : 'text-stone-300'
+                            }
+                          />
+                        ))}
+                      </div>
+                      <Quote size={18} className="text-amber-400/60" />
+                    </div>
+                    <p className="text-stone-700 text-xs sm:text-sm leading-relaxed">
+                      &ldquo;{review.comment}&rdquo;
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-3 border-t border-[#ede5da]">
+                    <div className="w-8 h-8 rounded-full bg-brand-primary/10 text-brand-primary font-black text-xs flex items-center justify-center flex-shrink-0">
+                      {(review.customer_name || 'C').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-brand-dark text-xs sm:text-sm truncate">
+                        {review.customer_name}
+                      </p>
+                      <p className="text-[10px] font-bold text-emerald-700">Verified Customer</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Section: WhatsApp CTA Banner in Rich Red & Amber ── */}
       <section className="bg-gradient-to-br from-[#de1b27] via-[#c4131e] to-[#991b1b] text-white py-14 sm:py-18 px-4 relative overflow-hidden">

@@ -85,5 +85,6 @@ export interface Review {
   phone?: string;
   rating: number;
   comment: string;
+  show_on_homepage?: boolean;
   created_at?: unknown; // Firestore Timestamp
 }

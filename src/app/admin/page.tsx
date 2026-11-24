@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { Order, Review } from '@/types/schema';
 import { formatOrderRef } from '@/lib/whatsapp';
 import { 
@@ -23,7 +23,10 @@ import {
   Save,
   Star,
   MessageSquare,
-  Trash2
+  Trash2,
+  Copy,
+  Check,
+  Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -97,6 +100,29 @@ export default function AdminDashboard() {
   });
 
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [copiedReviewLink, setCopiedReviewLink] = useState(false);
+
+  const handleCopyReviewLink = async () => {
+    const link = `${window.location.origin}/review`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedReviewLink(true);
+      setTimeout(() => setCopiedReviewLink(false), 2500);
+    } catch {
+      window.prompt('Copy this customer review link:', link);
+    }
+  };
+
+  const handleToggleHomepageReview = async (reviewId: string, currentVal: boolean) => {
+    try {
+      await updateDoc(doc(db, 'reviews', reviewId), {
+        show_on_homepage: !currentVal,
+      });
+    } catch (err) {
+      console.error('Failed to update review homepage status:', err);
+      alert('Could not update review visibility. Please check your connection.');
+    }
+  };
 
   useEffect(() => {
     const reviewsQ = query(collection(db, 'reviews'), orderBy('created_at', 'desc'));
@@ -454,7 +480,22 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 self-start sm:self-auto">
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={handleCopyReviewLink}
+                className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white px-3.5 py-1.5 rounded-full text-xs font-black shadow-xs transition-all active:scale-95 cursor-pointer"
+              >
+                {copiedReviewLink ? (
+                  <>
+                    <Check size={13} /> Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={13} /> Copy Review Link
+                  </>
+                )}
+              </button>
               {averageRating && (
                 <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-full text-xs font-black">
                   <Star size={13} className="fill-amber-400 text-amber-500" />
@@ -531,6 +572,26 @@ export default function AdminDashboard() {
                         <span>{review.comment}</span>
                       </p>
                     </div>
+
+                    {review.id && (
+                      <div className="pt-3 border-t border-[#ede5da] flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-stone-500">
+                          {review.show_on_homepage ? 'Visible on Homepage' : 'Hidden from Homepage'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleHomepageReview(review.id!, Boolean(review.show_on_homepage))}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                            review.show_on_homepage
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                              : 'bg-white hover:bg-amber-50 text-brand-dark border border-[#ede5da]'
+                          }`}
+                        >
+                          <Globe size={12} />
+                          {review.show_on_homepage ? 'On Homepage ✓' : 'Show on Homepage'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

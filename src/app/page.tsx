@@ -1,17 +1,23 @@
 import HomeClient from '@/components/HomeClient';
-import { fetchServerCategories, fetchServerFeaturedItems } from '@/lib/serverFeatured';
+import {
+  fetchServerApprovedReviews,
+  fetchServerCategories,
+  fetchServerFeaturedItems,
+} from '@/lib/serverFeatured';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [initialFeatured, initialCategories] = await Promise.all([
+  const [initialFeatured, initialCategories, initialReviews] = await Promise.all([
     fetchServerFeaturedItems(),
     fetchServerCategories(),
+    fetchServerApprovedReviews(),
   ]);
   return (
     <HomeClient
       initialFeatured={initialFeatured}
       initialCategories={initialCategories}
+      initialReviews={initialReviews}
     />
   );
 }

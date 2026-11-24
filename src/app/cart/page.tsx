@@ -84,6 +84,7 @@ function OrderConfirmed({
         phone: (customerPhone || '').trim().slice(0, 25),
         rating,
         comment: comment.trim().slice(0, 1000),
+        show_on_homepage: false,
         created_at: serverTimestamp(),
       });
       setReviewSubmitted(true);

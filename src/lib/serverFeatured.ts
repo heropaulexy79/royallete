@@ -1,4 +1,4 @@
-import { FoodItem, ProductCategory } from '@/types/schema';
+import { FoodItem, ProductCategory, Review } from '@/types/schema';
 
 interface FirestoreValue {
   stringValue?: string;
@@ -286,4 +286,60 @@ export async function fetchServerMenuData(initialCategory?: string): Promise<{
     items: mergedItems,
     categories: serverCategories.map((c) => c.name),
   };
+}
+
+/**
+ * Fetches admin-approved reviews (`show_on_homepage == true`) on the server
+ * so the homepage review section renders immediately on reload.
+ */
+export async function fetchServerApprovedReviews(): Promise<Review[]> {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId || projectId === 'placeholder') return [];
+
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(4500),
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: 'reviews' }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: 'show_on_homepage' },
+              op: 'EQUAL',
+              value: { booleanValue: true },
+            },
+          },
+        },
+      }),
+    });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as RunQueryRow[];
+    if (!Array.isArray(rows)) return [];
+
+    const reviews: Review[] = [];
+    for (const row of rows) {
+      const doc = row.document;
+      if (!doc || !doc.fields) continue;
+      const f = doc.fields;
+      const id = doc.name.split('/').pop() || '';
+      reviews.push({
+        id,
+        customer_name: f.customer_name?.stringValue || 'Customer',
+        rating: getNumber(f.rating) ?? 5,
+        comment: f.comment?.stringValue || '',
+        order_number: getNumber(f.order_number),
+        order_id: f.order_id?.stringValue,
+        show_on_homepage: true,
+      });
+    }
+    return reviews;
+  } catch (err) {
+    console.warn('Server approved reviews fetch fallback:', err);
+    return [];
+  }
 }
