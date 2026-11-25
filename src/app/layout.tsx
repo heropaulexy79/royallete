@@ -3,38 +3,50 @@ import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import FloatingCart from "@/components/FloatingCart";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://deskilz.vercel.app';
+const SHARE_TITLE = 'Déskilz Restaurant | Fast Food, Shawarma & Pizza in Obantoko';
+const SHARE_DESCRIPTION =
+  'Looking for delicious food in Obantoko, Abeokuta? Enjoy Shawarma, Pizza, Burgers, Ice Cream, Snacks and more at Déskilz. We also offer bulk orders and party packs. Explore our full menu';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://deskilz.ng'),
-  title: "Déskilz Restaurant | Fresh Bites, Shawarma, Pizza & Fast WhatsApp Ordering",
-  description:
-    "Experience the delicious taste of Déskilz. Freshly prepared shawarma, artisanal pizza, flame-grilled burgers, authentic food, ice cream, and refreshing drinks ordered directly on WhatsApp.",
+  metadataBase: new URL(SITE_URL),
+  title: SHARE_TITLE,
+  description: SHARE_DESCRIPTION,
   keywords: [
     "Déskilz",
     "Déskilz Restaurant",
+    "Fast Food in Obantoko",
+    "Obantoko Abeokuta",
     "Shawarma",
     "Pizza",
     "Burgers",
-    "Nigerian Food",
-    "Jollof Rice",
     "Ice Cream",
+    "Snacks",
+    "Bulk Orders",
+    "Party Packs",
     "WhatsApp Food Ordering",
   ],
   openGraph: {
-    title: "Déskilz Restaurant | Satisfying Meals, Snacks & Drinks",
-    description:
-      "Order hot and freshly prepared meals from Déskilz directly through WhatsApp. Browse our full menu catalogue.",
-    url: "https://deskilz.ng",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    url: SITE_URL,
     siteName: "Déskilz Restaurant",
     images: [
       {
         url: "/image/deskilz-logo.png",
         width: 400,
         height: 400,
-        alt: "Déskilz Logo",
+        alt: "Déskilz Restaurant Logo",
       },
     ],
     locale: "en_NG",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    images: ["/image/deskilz-logo.png"],
   },
   icons: {
     icon: "/image/deskilz-logo.png",
